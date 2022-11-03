@@ -4,6 +4,7 @@ from typing import List
 def check_list_lengths(lists: List[List]) -> None:
     """
     Check if input lists are all of same length.
+
     Parameters
     ----------
     lists : List of lists of different possible types.

@@ -1,7 +1,9 @@
 from numbers import Number
 from typing import List, Tuple, Union
 
+from prettytable import PrettyTable
 import numpy as np
+import scipy
 
 from bayesian_testing.metrics.posteriors import (
     beta_posteriors_all,
@@ -24,9 +26,28 @@ def validate_bernoulli_input(totals: List[int], positives: List[int]) -> None:
         raise ValueError(msg)
 
 
-def estimate_probabilities(data: Union[List[List[Number]], np.ndarray]) -> List[float]:
+def expected_loss_accuracy_bernoulli(data: Union[List[List[Number]], np.ndarray]) -> None:
     """
-    Estimate probabilities for variants considering simulated data from respective posteriors.
+    Validate that the estimated expected loss is within <epsilon> of the true expected loss with probability <tau>.
+    """
+    epsilon = 0.0001
+    s_2 = len(data) * np.var(data[0])
+    for i in data[1:]:
+        s_2 += np.var(i)
+
+    n = data.shape[1]
+    tau = scipy.stats.norm.cdf(np.sqrt(n) * epsilon / np.sqrt(s_2))*2 - 1
+
+    if tau < 0.99:
+        msg = f"There is at least a 1% probability that the estimated expected loss is not within {epsilon} tolerance."
+        logger.error(msg)
+        raise ValueError(msg)
+
+
+def estimate_chance_to_beat(data: Union[List[List[Number]], np.ndarray]) -> List[float]:
+    """
+    For each variant, estimate probability of beating all other variants,
+    considering simulated data from respective posteriors.
 
     Parameters
     ----------
@@ -48,7 +69,7 @@ def estimate_probabilities(data: Union[List[List[Number]], np.ndarray]) -> List[
 
 def estimate_expected_loss(data: Union[List[List[Number]], np.ndarray]) -> List[float]:
     """
-    Estimate expected losses for variants considering simulated data from respective posteriors.
+    For each variant, estimate expected loss of selecting , considering simulated data from respective posteriors.
 
     Parameters
     ----------
@@ -60,17 +81,18 @@ def estimate_expected_loss(data: Union[List[List[Number]], np.ndarray]) -> List[
     """
     max_values = np.max(data, axis=0)
     res = list(np.mean(max_values - data, axis=1).round(7))
+
     return res
 
 
 def eval_bernoulli_agg(
-    totals: List[int],
-    positives: List[int],
-    a_priors_beta: List[Number] = None,
-    b_priors_beta: List[Number] = None,
-    sim_count: int = 20000,
-    seed: int = None,
-) -> Tuple[List[float], List[float]]:
+        totals: List[int],
+        positives: List[int],
+        a_priors_beta: List[Number] = None,
+        b_priors_beta: List[Number] = None,
+        sim_count: int = 200000,
+        seed: int = None,
+) -> Tuple[List[float], List[float], List[float]]:
     """
     Method estimating probabilities of being best and expected loss for beta-bernoulli
     aggregated data per variant.
@@ -104,23 +126,43 @@ def eval_bernoulli_agg(
         totals, positives, sim_count, a_priors_beta, b_priors_beta, seed
     )
 
-    res_pbbs = estimate_probabilities(beta_samples)
+    res_pbbs = estimate_chance_to_beat(beta_samples)
     res_loss = estimate_expected_loss(beta_samples)
 
-    return res_pbbs, res_loss
+    expected_loss_accuracy_bernoulli(beta_samples)
+
+    return res_pbbs, res_loss, beta_samples
+
+
+def print_bernoulli_evaluation(res: list) -> None:
+    """
+    Pretty print test output.
+    """
+    tab = PrettyTable()
+    tab.field_names = ['Variant', 'Totals', 'Positives', 'Positive rate', 'Chance to beat all', 'Expected loss']
+    for r in res:
+        temp_row = list(r.values())
+        temp_row[3] = f'{temp_row[3]:.2%}'
+        temp_row[4] = f'{temp_row[4]:.2%}'
+        tab.add_row(temp_row)
+
+    tab.reversesort = True
+    tab.sortby = 'Chance to beat all'
+
+    print(tab)
 
 
 def eval_normal_agg(
-    totals: List[int],
-    sums: List[float],
-    sums_2: List[float],
-    sim_count: int = 20000,
-    m_priors: List[Number] = None,
-    a_priors_ig: List[Number] = None,
-    b_priors_ig: List[Number] = None,
-    w_priors: List[Number] = None,
-    seed: int = None,
-) -> Tuple[List[float], List[float]]:
+        totals: List[int],
+        sums: List[float],
+        sums_2: List[float],
+        sim_count: int = 20000,
+        m_priors: List[Number] = None,
+        a_priors_ig: List[Number] = None,
+        b_priors_ig: List[Number] = None,
+        w_priors: List[Number] = None,
+        seed: int = None,
+) -> Tuple[List[float], List[float], List[float]]:
     """
     Method estimating probabilities of being best and expected loss for normal
     aggregated data per variant.
@@ -176,26 +218,26 @@ def eval_normal_agg(
         ]
     )
 
-    res_pbbs = estimate_probabilities(normal_samples)
+    res_pbbs = estimate_chance_to_beat(normal_samples)
     res_loss = estimate_expected_loss(normal_samples)
 
-    return res_pbbs, res_loss
+    return res_pbbs, res_loss, normal_samples
 
 
 def eval_delta_lognormal_agg(
-    totals: List[int],
-    non_zeros: List[int],
-    sum_logs: List[float],
-    sum_logs_2: List[float],
-    sim_count: int = 20000,
-    a_priors_beta: List[Number] = None,
-    b_priors_beta: List[Number] = None,
-    m_priors: List[Number] = None,
-    a_priors_ig: List[Number] = None,
-    b_priors_ig: List[Number] = None,
-    w_priors: List[Number] = None,
-    seed: int = None,
-) -> Tuple[List[float], List[float]]:
+        totals: List[int],
+        non_zeros: List[int],
+        sum_logs: List[float],
+        sum_logs_2: List[float],
+        sim_count: int = 20000,
+        a_priors_beta: List[Number] = None,
+        b_priors_beta: List[Number] = None,
+        m_priors: List[Number] = None,
+        a_priors_ig: List[Number] = None,
+        b_priors_ig: List[Number] = None,
+        w_priors: List[Number] = None,
+        seed: int = None,
+) -> Tuple[List[float], List[float], List[float]]:
     """
     Method estimating probabilities of being best and expected loss for delta-lognormal
     aggregated data per variant. For that reason, the method works with both totals and non_zeros.
@@ -269,19 +311,19 @@ def eval_delta_lognormal_agg(
 
         combined_samples = beta_samples * lognormal_samples
 
-        res_pbbs = estimate_probabilities(combined_samples)
+        res_pbbs = estimate_chance_to_beat(combined_samples)
         res_loss = estimate_expected_loss(combined_samples)
 
-        return res_pbbs, res_loss
+        return res_pbbs, res_loss, combined_samples
 
 
 def eval_numerical_dirichlet_agg(
-    states: List[Union[float, int]],
-    concentrations: List[List[int]],
-    prior_alphas: List[List[Union[float, int]]] = None,
-    sim_count: int = 20000,
-    seed: int = None,
-):
+        states: List[Union[float, int]],
+        concentrations: List[List[int]],
+        prior_alphas: List[List[Union[float, int]]] = None,
+        sim_count: int = 20000,
+        seed: int = None,
+) -> Tuple[List[float], List[float], List[float]]:
     """
     Method estimating probabilities of being best and expected loss for dirichlet-multinomial
     aggregated data per variant. States in this case are expected to be a numerical values
@@ -319,7 +361,7 @@ def eval_numerical_dirichlet_agg(
         means = np.sum(np.multiply(dir_post, np.array(states)), axis=1)
         means_samples.append(list(means))
 
-    res_pbbs = estimate_probabilities(means_samples)
+    res_pbbs = estimate_chance_to_beat(means_samples)
     res_loss = estimate_expected_loss(means_samples)
 
-    return res_pbbs, res_loss
+    return res_pbbs, res_loss, means_samples

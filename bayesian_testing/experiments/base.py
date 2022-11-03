@@ -1,5 +1,6 @@
 from typing import Tuple
 import warnings
+import numpy as np
 
 
 class BaseDataTest:
@@ -12,6 +13,7 @@ class BaseDataTest:
         Initialize BaseDataTest class.
         """
         self.data = {}
+        self.samples = [[]]
 
     @property
     def variant_names(self):

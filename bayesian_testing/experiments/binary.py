@@ -2,7 +2,7 @@ from numbers import Number
 from typing import List, Tuple
 
 from bayesian_testing.experiments.base import BaseDataTest
-from bayesian_testing.metrics import eval_bernoulli_agg
+from bayesian_testing.metrics import eval_bernoulli_agg, print_bernoulli_evaluation, expected_loss_accuracy_bernoulli
 from bayesian_testing.utilities import get_logger
 
 logger = get_logger("bayesian_testing")
@@ -38,7 +38,7 @@ class BinaryDataTest(BaseDataTest):
     def b_priors(self):
         return [self.data[k]["b_prior"] for k in self.data]
 
-    def eval_simulation(self, sim_count: int = 20000, seed: int = None) -> Tuple[dict, dict]:
+    def eval_simulation(self, sim_count: int = 200000, seed: int = None) -> Tuple[dict, dict]:
         """
         Calculate probabilities of being best and expected loss for a current class state.
 
@@ -52,7 +52,7 @@ class BinaryDataTest(BaseDataTest):
         res_pbbs : Dictionary with probabilities of being best for all variants in experiment.
         res_loss : Dictionary with expected loss for all variants in experiment.
         """
-        pbbs, loss = eval_bernoulli_agg(
+        pbbs, loss, self.samples = eval_bernoulli_agg(
             self.totals, self.positives, self.a_priors, self.b_priors, sim_count, seed
         )
         res_pbbs = dict(zip(self.variant_names, pbbs))
@@ -60,7 +60,11 @@ class BinaryDataTest(BaseDataTest):
 
         return res_pbbs, res_loss
 
-    def evaluate(self, sim_count: int = 20000, seed: int = None) -> List[dict]:
+    def evaluate(
+            self,
+                 sim_count: int = 200000,
+            seed: int = None
+    ) -> List[dict]:
         """
         Evaluation of experiment.
 
@@ -87,6 +91,8 @@ class BinaryDataTest(BaseDataTest):
         loss = list(eval_loss.values())
         data = [self.variant_names, self.totals, self.positives, positive_rate, pbbs, loss]
         res = [dict(zip(keys, item)) for item in zip(*data)]
+
+        print_bernoulli_evaluation(res)
 
         return res
 
