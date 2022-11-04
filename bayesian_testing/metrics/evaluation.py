@@ -123,10 +123,20 @@ def expected_loss_accuracy_bernoulli(data: Union[List[List[Number]], np.ndarray]
         warnings.warn(msg)
 
 
+def eval_closed_form_bernoulli_loss(a: Dict,
+                                    b: Dict) -> None:
+
+    """
+    Given two variants A and B, calculate the loss of choosing B over A (closed-form).
+    This is not currently implemented but may be implemented in a future release.
+    """
+    raise NotImplementedError
+
+
 def eval_closed_form_bernoulli_two(a: Dict,
                                    b: Dict) -> float:
     """
-    Given two variants A and B, calculate the probability that B will beat A.
+    Given two variants A and B, calculate the probability that B will beat A (closed-form).
 
     Parameters
     ----------
@@ -152,7 +162,7 @@ def eval_closed_form_bernoulli_three(a: Dict,
                                      b: Dict,
                                      c: Dict) -> float:
     """
-    Given three variants A, B, and C, calculate the probability that C will beat both B and A.
+    Given three variants A, B, and C, calculate the probability that C will beat both B and A (closed-form).
 
     Parameters
     ----------

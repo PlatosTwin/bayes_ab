@@ -1,7 +1,8 @@
 from typing import Tuple
 import warnings
 import numpy as np
-
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
 
 class BaseDataTest:
     """
@@ -73,3 +74,27 @@ class BaseDataTest:
             warnings.warn(f"Nothing to be deleted. Variant {name} is not in experiment.")
         else:
             del self.data[name]
+
+    def plot_distributions(self):
+        num_bins = 750
+
+        fig, ax = plt.subplots(figsize=(10, 8),)
+
+        for s, v in zip(self.samples, self.variant_names):
+            n, bins = np.histogram(s, num_bins)
+            sigma = np.var(s)**0.5
+            mu = np.mean(s)
+            y = ((1 / (np.sqrt(2 * np.pi) * sigma)) *
+                 np.exp(-0.5 * (1 / sigma * (bins - mu)) ** 2))
+
+            ax.plot(bins*100, y, label=f'{v}: $\mu={mu:.2%}$%')
+            ax.fill_between(bins*100, y, alpha=0.35)
+
+        ax.xaxis.set_major_formatter(mtick.PercentFormatter())
+
+        ax.set_xlabel('Probability')
+        ax.set_ylabel('Probability density')
+        ax.legend()
+
+        fig.tight_layout()
+        plt.show()

@@ -2,9 +2,6 @@ from numbers import Number
 from typing import List, Tuple
 import warnings
 
-import scipy.stats
-import numpy as np
-
 from bayesian_testing.experiments.base import BaseDataTest
 from bayesian_testing.metrics import eval_bernoulli_agg, print_bernoulli_evaluation, print_closed_form_comparison
 from bayesian_testing.metrics import eval_closed_form_bernoulli_two, eval_closed_form_bernoulli_three
@@ -72,7 +69,10 @@ class BinaryDataTest(BaseDataTest):
         For tests with many observations, the user may choose to implement an asymptotic forumla, as described by
         Chris Stucchio here: https://www.chrisstucchio.com/blog/2014/bayesian_asymptotics.html.
 
-        Credit: Closed-form solutions are due to Evan Miller (https://www.evanmiller.org/bayesian-ab-testing.html).
+        Credit: Closed-form chance-to-beat solutions (for two and three variants) are due to
+        Evan Miller (https://www.evanmiller.org/bayesian-ab-testing.html), and closed-form expected loss solution (for
+        two variants; not implemented currently, but may be implemented in a future release) is due to
+        Chris Stucchio (https://www.chrisstucchio.com/blog/2014/bayesian_ab_decision_rule.html).
 
         Returns
         -------
