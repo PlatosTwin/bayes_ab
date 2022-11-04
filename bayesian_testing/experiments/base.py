@@ -75,7 +75,7 @@ class BaseDataTest:
         else:
             del self.data[name]
 
-    def plot_distributions(self):
+    def plot_distributions(self, fname=None, dpi=300):
         num_bins = 750
 
         fig, ax = plt.subplots(figsize=(10, 8),)
@@ -97,4 +97,8 @@ class BaseDataTest:
         ax.legend()
 
         fig.tight_layout()
+
+        if fname:
+            plt.savefig(fname, dpi=dpi)
+
         plt.show()
