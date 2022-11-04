@@ -1,6 +1,6 @@
 from numbers import Number
-from typing import List, Tuple, Union
-
+from typing import List, Tuple, Union, Dict
+import warnings
 from prettytable import PrettyTable
 import numpy as np
 import scipy
@@ -14,34 +14,6 @@ from bayesian_testing.metrics.posteriors import (
 from bayesian_testing.utilities import get_logger
 
 logger = get_logger("bayesian_testing")
-
-
-def validate_bernoulli_input(totals: List[int], positives: List[int]) -> None:
-    """
-    Simple validation for pbb_bernoulli_agg inputs.
-    """
-    if len(totals) != len(positives):
-        msg = f"Totals ({totals}) and positives ({positives}) needs to have same length!"
-        logger.error(msg)
-        raise ValueError(msg)
-
-
-def expected_loss_accuracy_bernoulli(data: Union[List[List[Number]], np.ndarray]) -> None:
-    """
-    Validate that the estimated expected loss is within <epsilon> of the true expected loss with probability <tau>.
-    """
-    epsilon = 0.0001
-    s_2 = len(data) * np.var(data[0])
-    for i in data[1:]:
-        s_2 += np.var(i)
-
-    n = data.shape[1]
-    tau = scipy.stats.norm.cdf(np.sqrt(n) * epsilon / np.sqrt(s_2))*2 - 1
-
-    if tau < 0.99:
-        msg = f"There is at least a 1% probability that the estimated expected loss is not within {epsilon} tolerance."
-        logger.error(msg)
-        raise ValueError(msg)
 
 
 def estimate_chance_to_beat(data: Union[List[List[Number]], np.ndarray]) -> List[float]:
@@ -83,6 +55,129 @@ def estimate_expected_loss(data: Union[List[List[Number]], np.ndarray]) -> List[
     res = list(np.mean(max_values - data, axis=1).round(7))
 
     return res
+
+
+def print_bernoulli_evaluation(res: list) -> None:
+    """
+    Pretty-print output of running standard binary test.
+    """
+    tab = PrettyTable()
+    tab.field_names = ['Variant', 'Totals', 'Positives', 'Positive rate',
+                       'Chance to beat all', 'Expected loss', 'Uplift vs. "A"']
+    for r in res:
+        temp_row = r.copy()
+        for i in ['positive_rate', 'prob_being_best', 'expected_loss', 'uplift_vs_a']:
+            temp_row[i] = f'{temp_row[i]:.2%}'
+        temp_row = list(temp_row.values())
+
+        tab.add_row(temp_row)
+
+    tab.reversesort = True
+    tab.sortby = 'Chance to beat all'
+
+    print(tab)
+
+
+def print_closed_form_comparison(variants: list,
+                                 pbbs: list,
+                                 cf_pbbs: list) -> None:
+    """
+    Pretty-print output comparing the estimate to the exact chance to beat all.
+    """
+    tab = PrettyTable()
+    tab.field_names = ['Variant', 'Est. chance to beat all', 'Exact chance to beat all', 'Delta']
+    for var, est, cf in zip(variants, pbbs, cf_pbbs):
+        tab.add_row([var, f'{est:.2%}', f'{cf:.2%}',  f'{(est - cf)/cf:.2%}'])
+
+    tab.reversesort = True
+    tab.sortby = 'Est. chance to beat all'
+
+    print(tab)
+
+
+def validate_bernoulli_input(totals: List[int], positives: List[int]) -> None:
+    """
+    Simple validation for pbb_bernoulli_agg inputs.
+    """
+    if len(totals) != len(positives):
+        msg = f"Totals ({totals}) and positives ({positives}) needs to have same length!"
+        logger.error(msg)
+        raise ValueError(msg)
+
+
+def expected_loss_accuracy_bernoulli(data: Union[List[List[Number]], np.ndarray]) -> None:
+    """
+    Validate that the estimated expected loss is within <epsilon> of the true expected loss with probability <tau>.
+    """
+    epsilon = 0.0001
+    s_2 = len(data) * np.var(data[0])
+    for i in data[1:]:
+        s_2 += np.var(i)
+
+    n = data.shape[1]
+    tau = scipy.stats.norm.cdf(np.sqrt(n) * epsilon / np.sqrt(s_2))*2 - 1
+
+    if tau < 0.99:
+        msg = f"There is at least a 1% probability that the estimated expected loss is not within {epsilon} tolerance."
+        logger.warn(msg)
+        warnings.warn(msg)
+
+
+def eval_closed_form_bernoulli_two(a: Dict,
+                                   b: Dict) -> float:
+    """
+    Given two variants A and B, calculate the probability that B will beat A.
+
+    Parameters
+    ----------
+    a : Dictionary containing summary statistics for variant A; must contain total observations, positives.
+    b : Dictionary containing summary statistics for variant B; must contain total observations, positives.
+
+    Returns
+    -------
+    total : Probability that B will beat A.
+    """
+    total = 0
+    for k in range(b['positives'] + 1):
+        total += np.exp(scipy.special.betaln(a['positives'] + 1 + k,
+                                             2 + b['totals'] - b['positives'] + a['totals'] - a['positives']) -
+                        np.log(b['totals'] - b['positives'] + 1 + k) -
+                        scipy.special.betaln(1 + k, b['totals'] - b['positives'] + 1) -
+                        scipy.special.betaln(a['positives'] + 1, 1 + a['totals'] - a['positives']))
+
+    return total
+
+
+def eval_closed_form_bernoulli_three(a: Dict,
+                                     b: Dict,
+                                     c: Dict) -> float:
+    """
+    Given three variants A, B, and C, calculate the probability that C will beat both B and A.
+
+    Parameters
+    ----------
+    a : Dictionary containing summary statistics for variant A; must contain total observations, positives.
+    b : Dictionary containing summary statistics for variant B; must contain total observations, positives.
+    C : Dictionary containing summary statistics for variant C; must contain total observations, positives.
+
+    Returns
+    -------
+    total : Probability that C will beat both B and A.
+    """
+    total = 0.0
+    for i in range(a['positives'] + 1):
+        for j in range(b['positives'] + 1):
+            beta_A = a['totals'] - a['positives'] + 1
+            beta_B = b['totals'] - b['positives'] + 1
+            beta_C = c['totals'] - c['positives'] + 1
+
+            total += np.exp(scipy.special.betaln(c['positives'] + 1 + i + j, beta_A + beta_B + beta_C)
+                            - np.log(beta_A + i) - np.log(beta_B + j)
+                            - scipy.special.betaln(1 + i, beta_A)
+                            - scipy.special.betaln(1 + j, beta_B)
+                            - scipy.special.betaln(c['positives'] + 1, beta_C))
+
+    return total
 
 
 def eval_bernoulli_agg(
@@ -132,24 +227,6 @@ def eval_bernoulli_agg(
     expected_loss_accuracy_bernoulli(beta_samples)
 
     return res_pbbs, res_loss, beta_samples
-
-
-def print_bernoulli_evaluation(res: list) -> None:
-    """
-    Pretty print test output.
-    """
-    tab = PrettyTable()
-    tab.field_names = ['Variant', 'Totals', 'Positives', 'Positive rate', 'Chance to beat all', 'Expected loss']
-    for r in res:
-        temp_row = list(r.values())
-        temp_row[3] = f'{temp_row[3]:.2%}'
-        temp_row[4] = f'{temp_row[4]:.2%}'
-        tab.add_row(temp_row)
-
-    tab.reversesort = True
-    tab.sortby = 'Chance to beat all'
-
-    print(tab)
 
 
 def eval_normal_agg(

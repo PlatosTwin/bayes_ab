@@ -46,7 +46,7 @@ def normal_posteriors(
     total: int,
     sums: float,
     sums_2: float,
-    sim_count: int = 20000,
+    sim_count: int = 200000,
     prior_m: Union[float, int] = 1,
     prior_a: Union[float, int] = 0,
     prior_b: Union[float, int] = 0,
@@ -99,7 +99,7 @@ def lognormal_posteriors(
     total: int,
     sum_logs: float,
     sum_logs_2: float,
-    sim_count: int = 20000,
+    sim_count: int = 200000,
     prior_m: Union[float, int] = 1,
     prior_a: Union[float, int] = 0,
     prior_b: Union[float, int] = 0,
@@ -148,7 +148,7 @@ def lognormal_posteriors(
 def dirichlet_posteriors(
     concentration: List[int],
     prior: List[Union[float, int]],
-    sim_count: int = 20000,
+    sim_count: int = 200000,
     seed: Union[int, np.random.bit_generator.SeedSequence] = None,
 ) -> np.ndarray:
     """
