@@ -72,7 +72,7 @@ class DeltaLognormalDataTest(BaseDataTest):
     def w_priors(self):
         return [self.data[k]["w_prior"] for k in self.data]
 
-    def eval_simulation(self, sim_count: int = 20000, seed: int = None) -> Tuple[dict, dict]:
+    def _eval_simulation(self, sim_count: int = 20000, seed: int = None) -> Tuple[dict, dict]:
         """
         Calculate probabilities of being best and expected loss for a current class state.
 
@@ -130,7 +130,7 @@ class DeltaLognormalDataTest(BaseDataTest):
         ]
         avg_values = [round(i[0] / i[1], 5) for i in zip(self.sum_values, self.totals)]
         avg_pos_values = [round(i[0] / i[1], 5) for i in zip(self.sum_values, self.positives)]
-        eval_pbbs, eval_loss = self.eval_simulation(sim_count, seed)
+        eval_pbbs, eval_loss = self._eval_simulation(sim_count, seed)
         pbbs = list(eval_pbbs.values())
         loss = list(eval_loss.values())
         data = [

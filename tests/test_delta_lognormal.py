@@ -78,12 +78,12 @@ def test_w_priors(rev_test):
 
 
 def test_probabs_of_being_best(rev_test):
-    pbbs = rev_test.probabs_of_being_best(sim_count=20000, seed=152)
+    pbbs = rev_test._probabs_of_being_best(sim_count=20000, seed=152)
     assert pbbs == {"A": 0.0004, "B": 0.03355, "C": 0.96605}
 
 
 def test_expected_loss(rev_test):
-    loss = rev_test.expected_loss(sim_count=20000, seed=152)
+    loss = rev_test._expected_loss(sim_count=20000, seed=152)
     assert loss == {"A": 0.2214416, "B": 0.1212818, "C": 0.0008639}
 
 

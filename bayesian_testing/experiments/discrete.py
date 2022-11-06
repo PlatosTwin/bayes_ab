@@ -48,7 +48,7 @@ class DiscreteDataTest(BaseDataTest):
                 res = False
         return res
 
-    def eval_simulation(self, sim_count: int = 20000, seed: int = None) -> Tuple[dict, dict]:
+    def _eval_simulation(self, sim_count: int = 20000, seed: int = None) -> Tuple[dict, dict]:
         """
         Calculate probabilities of being best and expected loss for a current class state.
 
@@ -84,7 +84,7 @@ class DiscreteDataTest(BaseDataTest):
         res : List of dictionaries with results per variant.
         """
         keys = ["variant", "concentration", "average_value", "prob_being_best", "expected_loss"]
-        eval_pbbs, eval_loss = self.eval_simulation(sim_count, seed)
+        eval_pbbs, eval_loss = self._eval_simulation(sim_count, seed)
         pbbs = list(eval_pbbs.values())
         loss = list(eval_loss.values())
         average_values = [

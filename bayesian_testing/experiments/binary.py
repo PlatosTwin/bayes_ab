@@ -40,7 +40,7 @@ class BinaryDataTest(BaseDataTest):
     def b_priors(self):
         return [self.data[k]["b_prior"] for k in self.data]
 
-    def eval_simulation(self, sim_count: int = 200000, seed: int = None) -> Tuple[dict, dict]:
+    def _eval_simulation(self, sim_count: int = 200000, seed: int = None) -> Tuple[dict, dict]:
         """
         Calculate probabilities of being best and expected loss for a current class state.
 
@@ -65,7 +65,7 @@ class BinaryDataTest(BaseDataTest):
 
         return res_pbbs, res_loss
 
-    def closed_form_bernoulli(self) -> dict:
+    def _closed_form_bernoulli(self) -> dict:
         """
         Calculate the probability to beat all via a closed-form solution.
         Implemented for up to three variants only; will generate a warning if run for test with many observations.
@@ -163,12 +163,12 @@ class BinaryDataTest(BaseDataTest):
             "uplift_vs_a"
         ]
 
-        eval_pbbs, eval_loss = self.eval_simulation(sim_count, seed)
+        eval_pbbs, eval_loss = self._eval_simulation(sim_count, seed)
         pbbs = list(eval_pbbs.values())
         loss = list(eval_loss.values())
 
         if closed_form:
-            cf_pbbs = list(self.closed_form_bernoulli().values())
+            cf_pbbs = list(self._closed_form_bernoulli().values())
             print_closed_form_comparison(self.variant_names, pbbs, cf_pbbs)
 
         positive_rate = [round(i[0] / i[1], 5) for i in zip(self.positives, self.totals)]
@@ -201,17 +201,17 @@ class BinaryDataTest(BaseDataTest):
         of an appropriate prior is not always straightforward, the effect of selecting the Bayes-Laplace over
         either the Jeffreys or the Haldane priors will be minimal for any reasonably large number of observations.
 
-        For one comparison of these three priors, the user is advised to consult the below resource:
-        Richard Gerlach. Kerrie Mengersen. Frank Tuyl.
-        "Posterior predictive arguments in favor of the Bayes-Laplace prior
-        as the consensus prior for binomial and multinomial parameters."
-        Bayesian Anal. 4 (1) 151 - 158, March 2009. https://doi.org/10.1214/09-BA405
+        For one comparison of these three priors, the user is advised to consult,
+        "Posterior Predictive Arguments in Favor of the Bayes-Laplace Prior
+        as the Consensus Prior for Binomial and Multinomial Parameters" (https://doi.org/10.1214/09-BA405).
 
         Other resources include:
-            - Noninformative Bayesian Priors Interpretation And Problems With Construction And Applications
+            - "Noninformative Bayesian Priors Interpretation And Problems With Construction And Applications"
               (http://www.stats.org.uk/priors/noninformative/Syversveen1998.pdf)
-            - A Catalogue of Non-informative Priors
+            - "A Catalogue of Non-informative Priors"
               (http://www.stats.org.uk/priors/noninformative/YangBerger1998.pdf)
+            - "The Selection of Prior Distributions by Formal Rules"
+              (https://www.stat.cmu.edu/~kass/papers/rules.pdf)
 
         Parameters
         ----------
@@ -281,17 +281,17 @@ class BinaryDataTest(BaseDataTest):
         of an appropriate prior is not always straightforward, the effect of selecting the Bayes-Laplace over
         either the Jeffreys or the Haldane priors will be minimal for any reasonably large number of observations.
 
-        For one comparison of these three priors, the user is advised to consult the below resource:
-        Richard Gerlach. Kerrie Mengersen. Frank Tuyl.
-        "Posterior predictive arguments in favor of the Bayes-Laplace prior
-        as the consensus prior for binomial and multinomial parameters."
-        Bayesian Anal. 4 (1) 151 - 158, March 2009. https://doi.org/10.1214/09-BA405
+        For one comparison of these three priors, the user is advised to consult,
+        "Posterior Predictive Arguments in Favor of the Bayes-Laplace Prior
+        as the Consensus Prior for Binomial and Multinomial Parameters" (https://doi.org/10.1214/09-BA405).
 
         Other resources include:
-            - Noninformative Bayesian Priors Interpretation And Problems With Construction And Applications
+            - "Noninformative Bayesian Priors Interpretation And Problems With Construction And Applications"
               (http://www.stats.org.uk/priors/noninformative/Syversveen1998.pdf)
-            - A Catalogue of Non-informative Priors
+            - "A Catalogue of Non-informative Priors"
               (http://www.stats.org.uk/priors/noninformative/YangBerger1998.pdf)
+            - "The Selection of Prior Distributions by Formal Rules"
+              (https://www.stat.cmu.edu/~kass/papers/rules.pdf)
 
         Parameters
         ----------

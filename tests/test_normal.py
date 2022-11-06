@@ -125,12 +125,12 @@ def test_w_priors(norm_test):
 
 
 def test_probabs_of_being_best(norm_test):
-    pbbs = norm_test.probabs_of_being_best(sim_count=20000, seed=52)
+    pbbs = norm_test._probabs_of_being_best(sim_count=20000, seed=52)
     assert pbbs == {"A": 0.05105, "B": 0.27935, "C": 0.6696}
 
 
 def test_expected_loss(norm_test):
-    loss = norm_test.expected_loss(sim_count=20000, seed=52)
+    loss = norm_test._expected_loss(sim_count=20000, seed=52)
     assert loss == {"A": 2.2696341, "B": 1.4580033, "C": 0.4464154}
 
 

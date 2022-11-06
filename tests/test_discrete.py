@@ -33,12 +33,12 @@ def test_concentrations(discrete_test):
 
 
 def test_probabs_of_being_best(discrete_test):
-    pbbs = discrete_test.probabs_of_being_best(sim_count=20000, seed=52)
+    pbbs = discrete_test._probabs_of_being_best(sim_count=20000, seed=52)
     assert pbbs == {"A": 0.35595, "B": 0.59325, "C": 0.0508}
 
 
 def test_expected_loss(discrete_test):
-    loss = discrete_test.expected_loss(sim_count=20000, seed=52)
+    loss = discrete_test._expected_loss(sim_count=20000, seed=52)
     assert loss == {"A": 0.3053921, "B": 0.1560257, "C": 0.5328904}
 
 
