@@ -54,11 +54,14 @@ class BinaryDataTest(BaseDataTest):
         res_pbbs : Dictionary with probabilities of being best for all variants in experiment.
         res_loss : Dictionary with expected loss for all variants in experiment.
         """
-        pbbs, loss, self.samples = eval_bernoulli_agg(
+        pbbs, loss, samples = eval_bernoulli_agg(
             self.totals, self.positives, self.a_priors, self.b_priors, sim_count, seed
         )
         res_pbbs = dict(zip(self.variant_names, pbbs))
         res_loss = dict(zip(self.variant_names, loss))
+
+        for i, var in enumerate(self.variant_names):
+            self.data[var]['samples'] = samples[i]
 
         return res_pbbs, res_loss
 
@@ -78,6 +81,11 @@ class BinaryDataTest(BaseDataTest):
         -------
         pbbs : Dictionary with probabilities of being best for all variants in experiment.
         """
+        if sum(self.totals) >= 45000:
+            msg = f"The closed-form solution for {sum(self.totals):,} observations it too computationally intensive."
+            logger.error(msg)
+            raise ValueError(msg)
+
         if sum(self.totals) >= 35000:
             msg = f"The closed-form solution for {sum(self.totals):,} observations may consume significant resources."
             logger.warn(msg)
@@ -87,6 +95,12 @@ class BinaryDataTest(BaseDataTest):
             msg = f"The closed-form solution is not implemented for more than three variants."
             logger.error(msg)
             raise NotImplementedError(msg)
+
+        for d in self.data.values():
+            if int(d['a_prior']) != d['a_prior'] or int(d['b_prior']) != d['b_prior']:
+                msg = f"The closed-form solution requires integer values of a, b for all beta(a, b) priors."
+                logger.error(msg)
+                raise ValueError(msg)
 
         pbbs = []
         if len(self.totals) == 2:
@@ -174,15 +188,30 @@ class BinaryDataTest(BaseDataTest):
         name: str,
         totals: int,
         positives: int,
-        a_prior: Number = 0.5,
-        b_prior: Number = 0.5,
+        a_prior: Number = 1,
+        b_prior: Number = 1,
         replace: bool = True,
     ) -> None:
         """
         Add variant data to test class using aggregated binary data.
         This can be convenient as aggregation can be done on database level.
 
-        Default prior setup is set for Beta(1/2, 1/2) which is non-information prior.
+        Default prior is Beta(1, 1), which is the Bayes-Laplace non-informative prior. Other
+        common non-informative priors are the Jeffreys beta(1/2, 1/2) and Haldane beta(0, 0). While the selection
+        of an appropriate prior is not always straightforward, the effect of selecting the Bayes-Laplace over
+        either the Jeffreys or the Haldane priors will be minimal for any reasonably large number of observations.
+
+        For one comparison of these three priors, the user is advised to consult the below resource:
+        Richard Gerlach. Kerrie Mengersen. Frank Tuyl.
+        "Posterior predictive arguments in favor of the Bayes-Laplace prior
+        as the consensus prior for binomial and multinomial parameters."
+        Bayesian Anal. 4 (1) 151 - 158, March 2009. https://doi.org/10.1214/09-BA405
+
+        Other resources include:
+            - Noninformative Bayesian Priors Interpretation And Problems With Construction And Applications
+              (http://www.stats.org.uk/priors/noninformative/Syversveen1998.pdf)
+            - A Catalogue of Non-informative Priors
+              (http://www.stats.org.uk/priors/noninformative/YangBerger1998.pdf)
 
         Parameters
         ----------
@@ -190,9 +219,9 @@ class BinaryDataTest(BaseDataTest):
         totals : Total number of experiment observations (e.g. number of sessions).
         positives : Total number of ones for a given variant (e.g. number of conversions).
         a_prior : Prior alpha parameter for Beta distributions.
-            Default value 0.5 is based on non-information prior Beta(0.5, 0.5).
+            Default value 1 is based on the Bayes-Laplace non-informative prior Beta(1, 1).
         b_prior : Prior beta parameter for Beta distributions.
-            Default value 0.5 is based on non-information prior Beta(0.5, 0.5).
+            Default value 1 is based on the Bayes-Laplace non-informative prior Beta(1, 1).
         replace : Replace data if variant already exists.
             If set to False, data of existing variant will be appended to existing data.
         """
@@ -240,23 +269,38 @@ class BinaryDataTest(BaseDataTest):
         self,
         name: str,
         data: List[int],
-        a_prior: Number = 0.5,
-        b_prior: Number = 0.5,
+        a_prior: Number = 1,
+        b_prior: Number = 1,
         replace: bool = True,
     ) -> None:
         """
         Add variant data to test class using raw binary data.
 
-        Default prior setup is set for Beta(1/2, 1/2) which is non-information prior.
+        Default prior is Beta(1, 1), which is the Bayes-Laplace non-informative prior. Other
+        common non-informative priors are the Jeffreys beta(1/2, 1/2) and Haldane beta(0, 0). While the selection
+        of an appropriate prior is not always straightforward, the effect of selecting the Bayes-Laplace over
+        either the Jeffreys or the Haldane priors will be minimal for any reasonably large number of observations.
+
+        For one comparison of these three priors, the user is advised to consult the below resource:
+        Richard Gerlach. Kerrie Mengersen. Frank Tuyl.
+        "Posterior predictive arguments in favor of the Bayes-Laplace prior
+        as the consensus prior for binomial and multinomial parameters."
+        Bayesian Anal. 4 (1) 151 - 158, March 2009. https://doi.org/10.1214/09-BA405
+
+        Other resources include:
+            - Noninformative Bayesian Priors Interpretation And Problems With Construction And Applications
+              (http://www.stats.org.uk/priors/noninformative/Syversveen1998.pdf)
+            - A Catalogue of Non-informative Priors
+              (http://www.stats.org.uk/priors/noninformative/YangBerger1998.pdf)
 
         Parameters
         ----------
         name : Variant name.
         data : List of binary data containing zeros (non-conversion) and ones (conversions).
         a_prior : Prior alpha parameter for Beta distributions.
-            Default value 0.5 is based on non-information prior Beta(0.5, 0.5).
+            Default value 1 is based on the Bayes-Laplace non-informative prior Beta(1, 1).
         b_prior : Prior beta parameter for Beta distributions.
-            Default value 0.5 is based on non-information prior Beta(0.5, 0.5).
+            Default value 1 is based on the Bayes-Laplace non-informative prior Beta(1, 1).
         replace : Replace data if variant already exists.
             If set to False, data of existing variant will be appended to existing data.
         """

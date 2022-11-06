@@ -75,20 +75,48 @@ class BaseDataTest:
         else:
             del self.data[name]
 
-    def plot_distributions(self, fname=None, dpi=300):
+    def plot_posteriors(self, fname: str = None, dpi: int = 300) -> None:
+        """
+        For each variant, plot its posterior distribution.
+        """
         num_bins = 750
 
         fig, ax = plt.subplots(figsize=(10, 8),)
 
-        for s, v in zip(self.samples, self.variant_names):
+        for var in self.data:
+            s = self.data[var]['samples']
             n, bins = np.histogram(s, num_bins)
             sigma = np.var(s)**0.5
             mu = np.mean(s)
             y = ((1 / (np.sqrt(2 * np.pi) * sigma)) *
                  np.exp(-0.5 * (1 / sigma * (bins - mu)) ** 2))
 
-            ax.plot(bins*100, y, label=f'{v}: $\mu={mu:.2%}$%')
+            ax.plot(bins*100, y, label=f'{var}: $\mu={mu:.2%}$%')
             ax.fill_between(bins*100, y, alpha=0.35)
+
+        ax.xaxis.set_major_formatter(mtick.PercentFormatter())
+
+        ax.set_xlabel('Probability')
+        ax.set_ylabel('Probability density')
+        ax.legend()
+
+        fig.tight_layout()
+
+        if fname:
+            plt.savefig(fname, dpi=dpi)
+
+        plt.show()
+
+    def plot_differences(self, control: str, fname: str = None, dpi: int = 300) -> None:
+        """
+        For each variant, plot the difference between its posterior and the posterior for <control>.
+        """
+        num_bins = 250
+        fig, ax = plt.subplots(figsize=(10, 8),)
+
+        for var in [i for i in self.variant_names if i != control]:
+            temp_sample = self.data[var]['samples'] - self.data[control]['samples']
+            ax.hist(temp_sample, num_bins, label=f'{var}: $\mu={np.mean(temp_sample):.2%}$%', alpha=0.65)
 
         ax.xaxis.set_major_formatter(mtick.PercentFormatter())
 
