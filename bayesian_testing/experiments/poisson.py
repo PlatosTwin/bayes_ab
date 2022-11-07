@@ -93,18 +93,19 @@ class PoissonDataTest(BaseDataTest):
             raise NotImplementedError(msg)
 
         if sum(self.sums) >= 5000:
-            msg = f"The closed-form solution for {sum(self.sums):,} observations it too computationally intensive."
+            msg = f"The closed-form solution for {sum(self.sums):,} total counts it too computationally intensive."
             logger.error(msg)
             raise ValueError(msg)
 
         if sum(self.sums) >= 3000:
-            msg = f"The closed-form solution for {sum(self.sums):,} observations may consume significant resources."
+            msg = f"The closed-form solution for {sum(self.sums):,} total counts may consume significant resources."
             logger.warn(msg)
             warnings.warn(msg)
 
         for d in self.data.values():
             if int(d['a_prior']) != d['a_prior'] or int(d['b_prior']) != d['b_prior']:
-                msg = f"The closed-form solution requires integer values of a, b for all beta(a, b) priors."
+                msg = (f"The closed-form solution requires integer values of a, b "
+                       f"for all gamma(a, b) and beta(a, b) priors.")
                 logger.error(msg)
                 raise ValueError(msg)
 

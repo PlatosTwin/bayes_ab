@@ -215,7 +215,7 @@ PBB_NUMERICAL_DIRICHLET_AGG_INPUTS = [
     },
 ]
 
-PBB_NUMERICAL_DIRICHLET_AGG_INPUTS = [
+PBB_POISSON_AGG_INPUTS = [
 {
         "input": {
             "totals": [31500, 32000, 31000],
