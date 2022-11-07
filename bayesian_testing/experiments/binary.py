@@ -115,22 +115,22 @@ class BinaryDataTest(BaseDataTest):
             c = self.data[self.variant_names[2]]
 
             # a beats all
-            b_beats_a = eval_closed_form_bernoulli_two(a, b)  # chance of A to beat C
-            c_beats_a = eval_closed_form_bernoulli_two(a, c)  # chance of B to beat C
+            b_beats_a = eval_closed_form_bernoulli_two(a, b)  # chance of B to beat A
+            c_beats_a = eval_closed_form_bernoulli_two(a, c)  # chance of C to beat A
             correction = eval_closed_form_bernoulli_three(b, c, a)
-            pbbs.append(1 - b_beats_a - c_beats_a + correction)  # chance of B to beat A
+            pbbs.append(1 - b_beats_a - c_beats_a + correction)  # chance of A to beat all
 
             # b beats all
-            a_beats_b = eval_closed_form_bernoulli_two(b, a)  # chance of A to beat C
-            c_beats_b = eval_closed_form_bernoulli_two(b, c)  # chance of B to beat C
+            a_beats_b = eval_closed_form_bernoulli_two(b, a)  # chance of A to beat B
+            c_beats_b = eval_closed_form_bernoulli_two(b, c)  # chance of C to beat B
             correction = eval_closed_form_bernoulli_three(c, a, b)
-            pbbs.append(1 - a_beats_b - c_beats_b + correction)  # chance of B to beat A
+            pbbs.append(1 - a_beats_b - c_beats_b + correction)  # chance of B to beat all
 
             # c beats all
             a_beats_c = eval_closed_form_bernoulli_two(c, a)  # chance of A to beat C
             b_beats_c = eval_closed_form_bernoulli_two(c, b)  # chance of B to beat C
             correction = eval_closed_form_bernoulli_three(a, b, c)
-            pbbs.append(1 - a_beats_c - b_beats_c + correction)  # chance of B to beat A
+            pbbs.append(1 - a_beats_c - b_beats_c + correction)  # chance of A to beat all
 
         return dict(zip(self.variant_names, pbbs))
 
@@ -138,7 +138,8 @@ class BinaryDataTest(BaseDataTest):
             self,
             closed_form: bool = False,
             sim_count: int = 200000,
-            seed: int = None
+            seed: int = None,
+            verbose: bool = True
     ) -> List[dict]:
         """
         Evaluation of experiment.
@@ -148,6 +149,7 @@ class BinaryDataTest(BaseDataTest):
         closed_form : If True, compare the results of MC simulation to the closed-form result.
         sim_count : Number of simulations to be used for probability estimation.
         seed : Random seed.
+        verbose : If True, output prints to console.
 
         Returns
         -------
@@ -167,30 +169,31 @@ class BinaryDataTest(BaseDataTest):
         pbbs = list(eval_pbbs.values())
         loss = list(eval_loss.values())
 
-        if closed_form:
+        if closed_form and verbose:
             cf_pbbs = list(self._closed_form_bernoulli().values())
             print_closed_form_comparison(self.variant_names, pbbs, cf_pbbs)
 
         positive_rate = [round(i[0] / i[1], 5) for i in zip(self.positives, self.totals)]
         uplift = [0]
         for i in positive_rate[1:]:
-            uplift.append((i - positive_rate[0]) / positive_rate[0])
+            uplift.append(round((i - positive_rate[0]) / positive_rate[0], 5))
 
         data = [self.variant_names, self.totals, self.positives, positive_rate, pbbs, loss, uplift]
         res = [dict(zip(keys, item)) for item in zip(*data)]
 
-        print_bernoulli_evaluation(res)
+        if verbose:
+            print_bernoulli_evaluation(res)
 
         return res
 
     def add_variant_data_agg(
-        self,
-        name: str,
-        totals: int,
-        positives: int,
-        a_prior: Number = 1,
-        b_prior: Number = 1,
-        replace: bool = True,
+            self,
+            name: str,
+            totals: int,
+            positives: int,
+            a_prior: Number = 1,
+            b_prior: Number = 1,
+            replace: bool = True,
     ) -> None:
         """
         Add variant data to test class using aggregated binary data.
@@ -266,12 +269,12 @@ class BinaryDataTest(BaseDataTest):
             self.data[name]["positives"] += positives
 
     def add_variant_data(
-        self,
-        name: str,
-        data: List[int],
-        a_prior: Number = 1,
-        b_prior: Number = 1,
-        replace: bool = True,
+            self,
+            name: str,
+            data: List[int],
+            a_prior: Number = 1,
+            b_prior: Number = 1,
+            replace: bool = True,
     ) -> None:
         """
         Add variant data to test class using raw binary data.

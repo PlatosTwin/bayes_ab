@@ -62,11 +62,14 @@ class DiscreteDataTest(BaseDataTest):
         res_pbbs : Dictionary with probabilities of being best for all variants in experiment.
         res_loss : Dictionary with expected loss for all variants in experiment.
         """
-        pbbs, loss, self.samples = eval_numerical_dirichlet_agg(
+        pbbs, loss, samples = eval_numerical_dirichlet_agg(
             self.states, self.concentrations, self.prior_alphas, sim_count, seed
         )
         res_pbbs = dict(zip(self.variant_names, pbbs))
         res_loss = dict(zip(self.variant_names, loss))
+
+        for i, var in enumerate(self.variant_names):
+            self.data[var]['samples'] = samples[i]
 
         return res_pbbs, res_loss
 
@@ -98,6 +101,7 @@ class DiscreteDataTest(BaseDataTest):
             loss,
         ]
         res = [dict(zip(keys, item)) for item in zip(*data)]
+
 
         return res
 

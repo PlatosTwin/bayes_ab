@@ -6,6 +6,7 @@ from bayesian_testing.metrics import (
     eval_normal_agg,
     eval_delta_lognormal_agg,
     eval_numerical_dirichlet_agg,
+    eval_poisson_agg
 )
 
 PBB_BERNOULLI_AGG_INPUTS = [
@@ -214,6 +215,57 @@ PBB_NUMERICAL_DIRICHLET_AGG_INPUTS = [
     },
 ]
 
+PBB_NUMERICAL_DIRICHLET_AGG_INPUTS = [
+{
+        "input": {
+            "totals": [31500, 32000, 31000],
+            "mean": [1580, 1700, 1550],
+            "obs_sum": [],
+            "a_prior": [],
+            "b_prior": [],
+            "sim_count": 20000,
+            "seed": 314,
+        },
+        "expected_output": ([0.04185, 0.92235, 0.0358], [0.0030138, 6.06e-05, 0.0031649]),
+    },
+    {
+        "input": {
+            "totals": [100, 200],
+            "successes": [80, 160],
+            "sim_count": 10000,
+            "seed": 52,
+        },
+        "expected_output": ([0.4899, 0.5101], [0.0204051, 0.0182965]),
+    },
+    {
+        "input": {
+            "totals": [100, 100],
+            "successes": [0, 0],
+            "sim_count": 20000,
+            "seed": 52,
+        },
+        "expected_output": ([0.5008, 0.4992], [0.0030829, 0.0031614]),
+    },
+    {
+        "input": {
+            "totals": [100],
+            "successes": [77],
+            "sim_count": 20000,
+            "seed": 52,
+        },
+        "expected_output": ([1], [0]),
+    },
+    {
+        "input": {
+            "totals": [],
+            "successes": [],
+            "sim_count": 20000,
+            "seed": 52,
+        },
+        "expected_output": ([], []),
+    },
+]
+
 
 @pytest.mark.parametrize("inp", PBB_BERNOULLI_AGG_INPUTS)
 def test_eval_bernoulli_agg(inp):
@@ -276,4 +328,24 @@ def test_eval_numerical_dirichlet_agg_different_runs():
     # two different runs of same input without seed should be different
     run1 = eval_numerical_dirichlet_agg([1, 20], [[10, 10], [20, 20]])
     run2 = eval_numerical_dirichlet_agg([1, 20], [[10, 10], [20, 20]])
+    assert run1 != run2
+
+
+@pytest.mark.parametrize("inp", PBB_POISSON_AGG_INPUTS)
+def test_eval_poisson_agg(inp):
+    i = inp["input"]
+    res = eval_normal_agg(
+        i["totals"],
+        i["sums"],
+        i["sums_2"],
+        sim_count=i["sim_count"],
+        seed=i["seed"],
+    )
+    assert res == inp["expected_output"]
+
+
+def test_eval_poisson_agg_different_runs():
+    # two different runs of same input without seed should be different
+    run1 = eval_poisson_agg([100, 100], [10, 10], [20, 20])
+    run2 = eval_poisson_agg([100, 100], [10, 10], [20, 20])
     assert run1 != run2

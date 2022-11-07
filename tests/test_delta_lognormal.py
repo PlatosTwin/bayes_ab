@@ -54,11 +54,11 @@ def test_sum_logs_2(rev_test):
 
 
 def test_a_priors_beta(rev_test):
-    assert rev_test.a_priors_beta == [1, 0.5, 0.5]
+    assert rev_test.a_priors_beta == [1, 1, 1]
 
 
 def test_b_priors_beta(rev_test):
-    assert rev_test.b_priors_beta == [0.5, 0.5, 0.5]
+    assert rev_test.b_priors_beta == [1, 1, 1]
 
 
 def test_m_priors(rev_test):
@@ -78,17 +78,17 @@ def test_w_priors(rev_test):
 
 
 def test_probabs_of_being_best(rev_test):
-    pbbs = rev_test._probabs_of_being_best(sim_count=20000, seed=152)
-    assert pbbs == {"A": 0.0004, "B": 0.03355, "C": 0.96605}
+    pbbs = rev_test._probabs_of_being_best(sim_count=2000000, seed=314)
+    assert pbbs == {"A": 0.000164, "B": 0.0326735, "C": 0.9671625}
 
 
 def test_expected_loss(rev_test):
-    loss = rev_test._expected_loss(sim_count=20000, seed=152)
-    assert loss == {"A": 0.2214416, "B": 0.1212818, "C": 0.0008639}
+    loss = rev_test._expected_loss(sim_count=2000000, seed=314)
+    assert loss == {"A": 0.2211504, "B": 0.1213452, "C": 0.000838}
 
 
 def test_evaluate(rev_test):
-    eval_report = rev_test.evaluate(sim_count=20000, seed=152)
+    eval_report = rev_test.evaluate(sim_count=2000000, seed=314)
     assert eval_report == [
         {
             "variant": "A",
@@ -97,8 +97,8 @@ def test_evaluate(rev_test):
             "sum_values": 30830.02561,
             "avg_values": 0.97873,
             "avg_positive_values": 19.51267,
-            "prob_being_best": 0.0004,
-            "expected_loss": 0.2214416,
+            "prob_being_best": 0.000164,
+            "expected_loss": 0.2211504,
         },
         {
             "variant": "B",
@@ -107,8 +107,8 @@ def test_evaluate(rev_test):
             "sum_values": 35203.21689,
             "avg_values": 1.1001,
             "avg_positive_values": 20.70777,
-            "prob_being_best": 0.03355,
-            "expected_loss": 0.1212818,
+            "prob_being_best": 0.0326735,
+            "expected_loss": 0.1213452,
         },
         {
             "variant": "C",
@@ -117,7 +117,7 @@ def test_evaluate(rev_test):
             "sum_values": 37259.56336,
             "avg_values": 1.20192,
             "avg_positive_values": 24.03843,
-            "prob_being_best": 0.96605,
-            "expected_loss": 0.0008639,
+            "prob_being_best": 0.9671625,
+            "expected_loss": 0.000838,
         },
     ]

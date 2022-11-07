@@ -10,6 +10,7 @@ from bayesian_testing.metrics.posteriors import (
     lognormal_posteriors,
     normal_posteriors,
     dirichlet_posteriors,
+    gamma_posteriors
 )
 from bayesian_testing.utilities import get_logger
 
@@ -41,7 +42,7 @@ def estimate_chance_to_beat(data: Union[List[List[Number]], np.ndarray]) -> List
 
 def estimate_expected_loss(data: Union[List[List[Number]], np.ndarray]) -> List[float]:
     """
-    For each variant, estimate expected loss of selecting , considering simulated data from respective posteriors.
+    For each variant, estimate expected loss of selecting, considering simulated data from respective posteriors.
 
     Parameters
     ----------
@@ -57,6 +58,21 @@ def estimate_expected_loss(data: Union[List[List[Number]], np.ndarray]) -> List[
     return res
 
 
+def print_closed_form_comparison(variants: list, pbbs: list, cf_pbbs: list) -> None:
+    """
+    Pretty-print output comparing the estimate to the exact chance to beat all.
+    """
+    tab = PrettyTable()
+    tab.field_names = ['Variant', 'Est. chance to beat all', 'Exact chance to beat all', 'Delta']
+    for var, est, cf in zip(variants, pbbs, cf_pbbs):
+        tab.add_row([var, f'{est:.2%}', f'{cf:.2%}', f'{(est - cf) / cf:.2%}'])
+
+    tab.reversesort = True
+    tab.sortby = 'Est. chance to beat all'
+
+    print(tab)
+
+
 def print_bernoulli_evaluation(res: list) -> None:
     """
     Pretty-print output of running standard binary test.
@@ -68,7 +84,13 @@ def print_bernoulli_evaluation(res: list) -> None:
         temp_row = r.copy()
         for i in ['positive_rate', 'prob_being_best', 'expected_loss', 'uplift_vs_a']:
             temp_row[i] = f'{temp_row[i]:.2%}'
-        temp_row = list(temp_row.values())
+        temp_row = [temp_row['variant'],
+                    temp_row['totals'],
+                    temp_row['positives'],
+                    temp_row['positive_rate'],
+                    temp_row['prob_being_best'],
+                    temp_row['expected_loss'],
+                    temp_row['uplift_vs_a']]
 
         tab.add_row(temp_row)
 
@@ -78,21 +100,100 @@ def print_bernoulli_evaluation(res: list) -> None:
     print(tab)
 
 
-def print_closed_form_comparison(variants: list,
-                                 pbbs: list,
-                                 cf_pbbs: list) -> None:
+def print_poisson_evaluation(res: list) -> None:
     """
-    Pretty-print output comparing the estimate to the exact chance to beat all.
+    Pretty-print output of running Poisson test.
     """
     tab = PrettyTable()
-    tab.field_names = ['Variant', 'Est. chance to beat all', 'Exact chance to beat all', 'Delta']
-    for var, est, cf in zip(variants, pbbs, cf_pbbs):
-        tab.add_row([var, f'{est:.2%}', f'{cf:.2%}',  f'{(est - cf)/cf:.2%}'])
+    tab.field_names = ['Variant', 'Observations', 'Mean', 'Chance to beat all', 'Expected loss']
+    for r in res:
+        temp_row = r.copy()
+        temp_row['prob_being_best'] = f"{temp_row['prob_being_best']:.2%}"
+        temp_row['expected_loss'] = round(temp_row['expected_loss'], 2)
+        temp_row['mean'] = round(temp_row['mean'], 1)
+        temp_row = [temp_row['variant'],
+                    temp_row['totals'],
+                    temp_row['mean'],
+                    temp_row['prob_being_best'],
+                    temp_row['expected_loss']]
+
+        tab.add_row(temp_row)
 
     tab.reversesort = True
-    tab.sortby = 'Est. chance to beat all'
+    tab.sortby = 'Chance to beat all'
 
     print(tab)
+
+
+def eval_closed_form_poisson_loss() -> None:
+    """
+    This is not currently implemented but may be implemented in a future release.
+    """
+    raise NotImplementedError
+
+
+def eval_closed_form_poisson_two(alpha_a: List[Number],
+                                 alpha_b: List[Number],
+                                 beta_a: List[Number] = 1,
+                                 beta_b: List[Number] = 1
+                                 ) -> float:
+    """
+    Given two variants A and B, calculate the probability that B will beat A (closed-form).
+
+    Parameters
+    ----------
+    alpha_a : List containing observation counts for variant A.
+    alpha_b : List containing observation counts for variant B.
+    beta_a : Exposure value for variant A.
+    beta_b : Exposure value for variant B.
+
+    Returns
+    -------
+    total : Probability that A will beat B.
+    """
+    total = 0
+    for k in range(alpha_a + 1):
+        total += np.exp(k * np.log(beta_a) + alpha_b * np.log(beta_b) - (k + alpha_b) * np.log(beta_a + beta_b)
+                        - np.log(k + alpha_b) - scipy.special.betaln(k + 1, alpha_b))
+
+    return total
+
+
+def eval_closed_form_poisson_three(alpha_a: List[Number],
+                                   alpha_b: List[Number],
+                                   alpha_c: List[Number],
+                                   beta_a: List[Number] = 1,
+                                   beta_b: List[Number] = 1,
+                                   beta_c: List[Number] = 1
+                                   ) -> float:
+    """
+    Given three variants A, B, and C, calculate the probability that A will beat both B and C (closed-form).
+
+    Parameters
+    ----------
+    alpha_a : List containing observation counts for variant A.
+    alpha_b : List containing observation counts for variant B.
+    alpha_c : List containing observation counts for variant C.
+    beta_a : Exposure value for variant A.
+    beta_b : Exposure value for variant B.
+    beta_c : Exposure value for variant C.
+
+    Returns
+    -------
+    total : Probability that A will beat B and C.
+    """
+    total = 0
+    for k in range(alpha_b + 1):
+        for j in range(alpha_c + 1):
+            total += np.exp(alpha_a * np.log(beta_a) +
+                            k * np.log(beta_b) +
+                            j * np.log(beta_c) -
+                            (k + j + alpha_a) * np.log(beta_a + beta_b + beta_c) +
+                            scipy.special.gammaln(k + j + alpha_a) -
+                            scipy.special.gammaln(k + 1) -
+                            scipy.special.gammaln(j + 1) - scipy.special.gammaln(alpha_a))
+
+    return total
 
 
 def validate_bernoulli_input(totals: List[int], positives: List[int]) -> None:
@@ -105,36 +206,14 @@ def validate_bernoulli_input(totals: List[int], positives: List[int]) -> None:
         raise ValueError(msg)
 
 
-def expected_loss_accuracy_bernoulli(data: Union[List[List[Number]], np.ndarray]) -> None:
+def eval_closed_form_bernoulli_loss() -> None:
     """
-    Validate that the estimated expected loss is within <epsilon> of the true expected loss with probability <tau>.
-    """
-    epsilon = 0.0001
-    s_2 = len(data) * np.var(data[0])
-    for i in data[1:]:
-        s_2 += np.var(i)
-
-    n = data.shape[1]
-    tau = scipy.stats.norm.cdf(np.sqrt(n) * epsilon / np.sqrt(s_2))*2 - 1
-
-    if tau < 0.99:
-        msg = f"There is at least a 1% probability that the estimated expected loss is not within {epsilon} tolerance."
-        logger.warn(msg)
-        warnings.warn(msg)
-
-
-def eval_closed_form_bernoulli_loss(a: Dict,
-                                    b: Dict) -> None:
-
-    """
-    Given two variants A and B, calculate the loss of choosing B over A (closed-form).
     This is not currently implemented but may be implemented in a future release.
     """
     raise NotImplementedError
 
 
-def eval_closed_form_bernoulli_two(a: Dict,
-                                   b: Dict) -> float:
+def eval_closed_form_bernoulli_two(a: Dict, b: Dict) -> float:
     """
     Given two variants A and B, calculate the probability that B will beat A (closed-form).
 
@@ -158,9 +237,7 @@ def eval_closed_form_bernoulli_two(a: Dict,
     return total
 
 
-def eval_closed_form_bernoulli_three(a: Dict,
-                                     b: Dict,
-                                     c: Dict) -> float:
+def eval_closed_form_bernoulli_three(a: Dict, b: Dict, c: Dict) -> float:
     """
     Given three variants A, B, and C, calculate the probability that C will beat both B and A (closed-form).
 
@@ -168,7 +245,7 @@ def eval_closed_form_bernoulli_three(a: Dict,
     ----------
     a : Dictionary containing summary statistics for variant A; must contain total observations, positives.
     b : Dictionary containing summary statistics for variant B; must contain total observations, positives.
-    C : Dictionary containing summary statistics for variant C; must contain total observations, positives.
+    c : Dictionary containing summary statistics for variant C; must contain total observations, positives.
 
     Returns
     -------
@@ -188,6 +265,24 @@ def eval_closed_form_bernoulli_three(a: Dict,
                             - scipy.special.betaln(c['positives'] + 1, beta_C))
 
     return total
+
+
+def expected_loss_accuracy_bernoulli(data: Union[List[List[Number]], np.ndarray]) -> None:
+    """
+    Validate that the estimated expected loss is within <epsilon> of the true expected loss with probability <tau>.
+    """
+    epsilon = 0.0001
+    s_2 = len(data) * np.var(data[0])
+    for i in data[1:]:
+        s_2 += np.var(i)
+
+    n = data.shape[1]
+    tau = scipy.stats.norm.cdf(np.sqrt(n) * epsilon / np.sqrt(s_2)) * 2 - 1
+
+    if tau < 0.99:
+        msg = f"There is at least a 1% probability that the estimated expected loss is not within {epsilon} tolerance."
+        logger.warn(msg)
+        warnings.warn(msg)
 
 
 def eval_bernoulli_agg(
@@ -223,9 +318,9 @@ def eval_bernoulli_agg(
 
     # Default prior for all variants is Beta(0.5, 0.5) which is non-information prior.
     if not a_priors_beta:
-        a_priors_beta = [0.5] * len(totals)
+        a_priors_beta = [1] * len(totals)
     if not b_priors_beta:
-        b_priors_beta = [0.5] * len(totals)
+        b_priors_beta = [1] * len(totals)
 
     beta_samples = beta_posteriors_all(
         totals, positives, sim_count, a_priors_beta, b_priors_beta, seed
@@ -273,6 +368,7 @@ def eval_normal_agg(
     """
     if len(totals) == 0:
         return [], []
+
     # Same default priors for all variants if they are not provided.
     if not m_priors:
         m_priors = [1] * len(totals)
@@ -353,9 +449,9 @@ def eval_delta_lognormal_agg(
         return [], []
     # Same default priors for all variants if they are not provided.
     if not a_priors_beta:
-        a_priors_beta = [0.5] * len(totals)
+        a_priors_beta = [1] * len(totals)
     if not b_priors_beta:
-        b_priors_beta = [0.5] * len(totals)
+        b_priors_beta = [1] * len(totals)
     if not m_priors:
         m_priors = [1] * len(totals)
     if not a_priors_ig:
@@ -452,3 +548,52 @@ def eval_numerical_dirichlet_agg(
     res_loss = estimate_expected_loss(means_samples)
 
     return res_pbbs, res_loss, means_samples
+
+
+def eval_poisson_agg(
+        totals: List[int],
+        mean: List[Number],
+        a_priors_gamma: List[Number] = None,
+        b_priors_gamma: List[Number] = None,
+        sim_count: int = 200000,
+        seed: int = None,
+) -> Tuple[List[float], List[float], List[float]]:
+    """
+    Method estimating probabilities of being best and expected loss for beta-bernoulli
+    aggregated data per variant.
+
+    Parameters
+    ----------
+    totals : List of numbers of experiment observations (e.g. number of sessions) for each variant.
+    mean : Mean of the observations for each variant.
+    a_priors_gamma : List of prior alpha parameters for Gamma distributions for each variant.
+    b_priors_gamma : List of prior beta parameters for Gamma distributions for each variant.
+    sim_count : Number of simulations to be used for probability estimation.
+    seed : Random seed.
+
+    Returns
+    -------
+    res_pbbs : List of probabilities of being best for each variant.
+    res_loss : List of expected loss for each variant.
+    """
+    # validate_poisson_input(totals, positives)
+
+    if len(totals) == 0:
+        return [], []
+
+    # Default prior for all variants is Beta(0.5, 0.5) which is non-information prior.
+    if not a_priors_gamma:
+        a_priors_gamma = [1] * len(totals)
+    if not b_priors_gamma:
+        b_priors_gamma = [1] * len(totals)
+
+    gamma_samples = gamma_posteriors(
+        totals, mean, a_priors_gamma, b_priors_gamma, sim_count, seed
+    )
+
+    res_pbbs = estimate_chance_to_beat(gamma_samples)
+    res_loss = estimate_expected_loss(gamma_samples)
+
+    # expected_loss_accuracy_poisson(gamma_samples)
+
+    return res_pbbs, res_loss, gamma_samples
