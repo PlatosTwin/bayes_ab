@@ -1,6 +1,6 @@
 import pytest
 
-from bayesian_testing.experiments import PoissonDataTest
+from bayes_ab.experiments import PoissonDataTest
 
 
 @pytest.fixture

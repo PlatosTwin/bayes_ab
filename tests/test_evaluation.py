@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from bayesian_testing.metrics import (
+from bayes_ab.metrics import (
     eval_bernoulli_agg,
     eval_normal_agg,
     eval_delta_lognormal_agg,

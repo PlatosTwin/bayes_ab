@@ -1,24 +1,27 @@
 [tool.poetry]
-name = "bayesian-testing"
-version = "0.3.0"
-description = "Bayesian A/B testing with simple probabilities."
-authors = ["Matus Baniar"]
+name = "bayes_ab"
+version = "0.1.0"
+description = "Bayesian A/B testing."
+authors = ["Nikita Bogdanov", "Matus Baniar"]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/Matt52/bayesian-testing"
-repository = "https://github.com/Matt52/bayesian-testing"
-keywords = ["ab testing", "bayes", "bayesian statistics"]
+homepage = "https://github.com/PlatosTwin/bayes_ab"
+repository = "https://github.com/PlatosTwin/bayes_ab"
+keywords = ["ab testing", "bayes", "bayesian statistics",]
 include = [
     "LICENSE",
 ]
 
 packages = [
-    {include = "bayesian_testing"}
+    {include = "bayes_ab"}
 ]
 
 [tool.poetry.dependencies]
 python = "^3.7.1"
 numpy = "^1.19.0"
+pretty_table = "^3.5.0"
+scipy="^1.9.3"
+matplotlib="^3.6.2"
 
 [tool.poetry.dev-dependencies]
 jupyter = "^1.0.0"

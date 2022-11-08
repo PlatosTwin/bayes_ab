@@ -4,11 +4,11 @@ import warnings
 import matplotlib.pyplot as plt
 import scipy.stats as stats
 
-from bayesian_testing.experiments.base import BaseDataTest
-from bayesian_testing.metrics import eval_poisson_agg, eval_closed_form_poisson_two, eval_closed_form_poisson_three
-from bayesian_testing.utilities import get_logger, print_poisson_evaluation, print_closed_form_comparison
+from bayes_ab.experiments.base import BaseDataTest
+from bayes_ab.metrics import eval_poisson_agg, eval_closed_form_poisson_two, eval_closed_form_poisson_three
+from bayes_ab.utilities import get_logger, print_poisson_evaluation, print_closed_form_comparison
 
-logger = get_logger("bayesian_testing")
+logger = get_logger("bayes_ab")
 
 
 class PoissonDataTest(BaseDataTest):

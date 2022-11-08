@@ -2,11 +2,11 @@ from numbers import Number
 from typing import List, Tuple, Union
 import numpy as np
 
-from bayesian_testing.experiments.base import BaseDataTest
-from bayesian_testing.metrics import eval_numerical_dirichlet_agg
-from bayesian_testing.utilities import get_logger
+from bayes_ab.experiments.base import BaseDataTest
+from bayes_ab.metrics import eval_numerical_dirichlet_agg
+from bayes_ab.utilities import get_logger
 
-logger = get_logger("bayesian_testing")
+logger = get_logger("bayes_ab")
 
 
 class DiscreteDataTest(BaseDataTest):

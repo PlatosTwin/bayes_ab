@@ -1,41 +1,44 @@
-[![Tests](https://github.com/Matt52/bayesian-testing/workflows/Tests/badge.svg)](https://github.com/Matt52/bayesian-testing/actions?workflow=Tests)
-[![Codecov](https://codecov.io/gh/Matt52/bayesian-testing/branch/main/graph/badge.svg)](https://codecov.io/gh/Matt52/bayesian-testing)
-[![PyPI](https://img.shields.io/pypi/v/bayesian-testing.svg)](https://pypi.org/project/bayesian-testing/)
+[![Tests](https://github.com/PlatosTwin/bayes-ab/workflows/Tests/badge.svg)](https://github.com/PlatosTwin/bayes-ab/actions?workflow=Tests)
+[![Codecov](https://codecov.io/gh/PlatosTwin/bayes-ab/branch/main/graph/badge.svg)](https://codecov.io/gh/PlatosTwin/bayes-ab)
+[![PyPI](https://img.shields.io/pypi/v/bayes-ab.svg)](https://pypi.org/project/bayes-ab/)
 # Bayesian A/B testing
-`bayesian_testing` is a small package for a quick evaluation of A/B (or A/B/C/...) tests using Bayesian approach.
+`bayes-ab` is a small package for runnin Bayesian A/B(/C/D/...) tests.
 
 **Implemented tests:**
-- [BinaryDataTest](bayesian_testing/experiments/binary.py)
-  - **_input data_** - binary (`[0, 1, 0, ...]`)
-  - convenient for conversion-like A/B testing
-- [NormalDataTest](bayesian_testing/experiments/normal.py)
-  - **_input data_** - normal data with unknown variance
-  - convenient for normal data A/B testing
-- [DeltaLognormalDataTest](bayesian_testing/experiments/delta_lognormal.py)
-  - **_input data_** - lognormal data with zeros
-  - convenient for revenue-like A/B testing
-- [DiscreteDataTest](bayesian_testing/experiments/discrete.py)
-  - **_input data_** - categorical data with numerical categories
-  - convenient for discrete data A/B testing (e.g. dice rolls, star ratings, 1-10 ratings)
+- [BinaryDataTest](bayes_ab/experiments/binary.py)
+  - **_Input data_** - binary (`[0, 1, 0, ...]`)
+  - Designed for binary data, such as conversions
+- [NormalDataTest](bayes_ab/experiments/normal.py)
+  - **_Input data_** - normal data with unknown variance
+  - Designed for normal data
+- [DeltaLognormalDataTest](bayes_ab/experiments/delta_lognormal.py)
+  - **_Input data_** - lognormal data with zeros
+  - Designed for lognormal data, such as revenue per conversions
+- [DiscreteDataTest](bayes_ab/experiments/discrete.py)
+  - **_Input data_** - categorical data with numerical categories
+  - Designed for discrete data (e.g. dice rolls, star ratings, 1-10 ratings)
+- [DiscreteDataTest](bayes_ab/experiments/discrete.py)
+  - **_Input data_** - categorical data with numerical categories
+  - Designed for discrete data (e.g. dice rolls, star ratings, 1-10 ratings)
 
 **Implemented evaluation metrics:**
 - `Probability of Being Best`
-  - probability of "being larger" from a data point of view
+  - Probability of beating all other alternatives
 - `Expected Loss`
-  - "risk" of choosing particular variant over other variants in the test
-  - measured in the same units as a tested measure (e.g. positive rate or average value)
+  - Risk associated with choosing a given variant over other variants
+  - Measured in the same units as the tested measure (e.g. positive rate or average value)
 
-Evaluation metrics are calculated using simulations from posterior distributions (considering given data).
+Evaluation metrics are calculated using Monte Carlo simulations from posterior distributions (considering given data).
 
 
 ## Installation
-`bayesian_testing` can be installed using pip:
+`bayes-ab` can be installed using pip:
 ```console
-pip install bayesian_testing
+pip install bayes-ab
 ```
 Alternatively, you can clone the repository and use `poetry` manually:
 ```console
-cd bayesian_testing
+cd bayes-ab
 pip install poetry
 poetry install
 poetry shell
@@ -47,6 +50,7 @@ The primary features are classes:
 - `NormalDataTest`
 - `DeltaLognormalDataTest`
 - `DiscreteDataTest`
+- `PoissonDataTest`
 
 In all cases, there are two methods to insert data:
 - `add_variant_data` - adding raw data for a variant as a list of observations (or numpy 1-D array)
@@ -70,7 +74,7 @@ Class for Bayesian A/B test for binary-like data (e.g. conversions, successes, e
 **Example:**
 ```python
 import numpy as np
-from bayesian_testing.experiments import BinaryDataTest
+from bayes_ab.experiments import BinaryDataTest
 
 # generating some random data
 rng = np.random.default_rng(52)
@@ -120,7 +124,7 @@ Class for Bayesian A/B test for normal data.
 **Example:**
 ```python
 import numpy as np
-from bayesian_testing.experiments import NormalDataTest
+from bayes_ab.experiments import NormalDataTest
 
 # generating some random data
 rng = np.random.default_rng(21)
@@ -172,7 +176,7 @@ To handle this data, the calculation is combining binary Bayes model for zero vs
 **Example:**
 ```python
 import numpy as np
-from bayesian_testing.experiments import DeltaLognormalDataTest
+from bayes_ab.experiments import DeltaLognormalDataTest
 
 test = DeltaLognormalDataTest()
 
@@ -224,7 +228,7 @@ This test can be used for instance for dice rolls data (when looking for the "be
 **Example:**
 ```python
 import numpy as np
-from bayesian_testing.experiments import DiscreteDataTest
+from bayes_ab.experiments import DiscreteDataTest
 
 # dice rolls data for 3 dice - A, B, C
 data_a = [2, 5, 1, 4, 6, 2, 2, 6, 3, 2, 6, 3, 4, 6, 3, 1, 6, 3, 5, 6]
@@ -273,16 +277,7 @@ poetry run pre-commit install
 ## Roadmap
 
 Test classes to be added:
-- `PoissonDataTest`
 - `ExponentialDataTest`
 
 Metrics to be added:
 - `Potential Value Remaining`
-
-Other functionality:
-- `Reversed testing` (case when "being best" = "being smaller")
-
-## References
-- `bayesian_testing` package itself depends only on [numpy](https://numpy.org) package.
-- Work on this package (including default priors selection) was inspired mainly by a Coursera
-course [Bayesian Statistics: From Concept to Data Analysis](https://www.coursera.org/learn/bayesian-statistics).

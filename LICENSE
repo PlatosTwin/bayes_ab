@@ -1,6 +1,7 @@
 MIT License
 
-Copyright (c) 2021 Matus Baniar
+Original project (up to and including bayesian_testing 0.3.0, commit eb66c7b0) is copyright (c) 2021 Matus Baniar.
+Additions and modifications since commit eb66c7b0 are copyright (c) 2022 Nikita Bogdanov.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -1,6 +1,6 @@
 import pytest
 
-from bayesian_testing.experiments import DeltaLognormalDataTest
+from bayes_ab.experiments import DeltaLognormalDataTest
 
 
 @pytest.fixture

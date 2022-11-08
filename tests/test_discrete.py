@@ -1,6 +1,6 @@
 import pytest
 
-from bayesian_testing.experiments import DiscreteDataTest
+from bayes_ab.experiments import DiscreteDataTest
 
 
 @pytest.fixture

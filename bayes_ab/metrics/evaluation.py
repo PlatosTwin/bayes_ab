@@ -4,8 +4,8 @@ import warnings
 import numpy as np
 import scipy
 
-from bayesian_testing.utilities import get_logger
-from bayesian_testing.metrics.posteriors import (
+from bayes_ab.utilities import get_logger
+from bayes_ab.metrics.posteriors import (
     beta_posteriors_all,
     lognormal_posteriors,
     normal_posteriors,
@@ -13,7 +13,7 @@ from bayesian_testing.metrics.posteriors import (
     gamma_posteriors
 )
 
-logger = get_logger("bayesian_testing")
+logger = get_logger("bayes_ab")
 
 
 def estimate_chance_to_beat(data: Union[List[List[Number]], np.ndarray]) -> List[float]:
