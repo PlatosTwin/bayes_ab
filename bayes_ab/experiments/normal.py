@@ -81,7 +81,7 @@ class NormalDataTest(BaseDataTest):
         res_loss = dict(zip(self.variant_names, loss))
 
         for i, var in enumerate(self.variant_names):
-            self.data[var]['samples'] = samples[i]
+            self.data[var]["samples"] = samples[i]
 
         return res_pbbs, res_loss
 

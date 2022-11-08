@@ -69,7 +69,7 @@ class DiscreteDataTest(BaseDataTest):
         res_loss = dict(zip(self.variant_names, loss))
 
         for i, var in enumerate(self.variant_names):
-            self.data[var]['samples'] = samples[i]
+            self.data[var]["samples"] = samples[i]
 
         return res_pbbs, res_loss
 
@@ -90,9 +90,7 @@ class DiscreteDataTest(BaseDataTest):
         eval_pbbs, eval_loss = self._eval_simulation(sim_count, seed)
         pbbs = list(eval_pbbs.values())
         loss = list(eval_loss.values())
-        average_values = [
-            np.sum(np.multiply(i, self.states)) / np.sum(i) for i in self.concentrations
-        ]
+        average_values = [np.sum(np.multiply(i, self.states)) / np.sum(i) for i in self.concentrations]
         data = [
             self.variant_names,
             [dict(zip(self.states, i)) for i in self.concentrations],
@@ -101,7 +99,6 @@ class DiscreteDataTest(BaseDataTest):
             loss,
         ]
         res = [dict(zip(keys, item)) for item in zip(*data)]
-
 
         return res
 
@@ -158,9 +155,7 @@ class DiscreteDataTest(BaseDataTest):
                 "If you wish to replace data instead, use replace=True."
             )
             logger.info(msg)
-            self.data[name]["concentration"] = [
-                sum(x) for x in zip(self.data[name]["concentration"], concentration)
-            ]
+            self.data[name]["concentration"] = [sum(x) for x in zip(self.data[name]["concentration"], concentration)]
 
     def add_variant_data(
         self,
@@ -186,9 +181,7 @@ class DiscreteDataTest(BaseDataTest):
         if len(data) == 0:
             raise ValueError("Data of added variant needs to have some observations.")
         if not min([i in self.states for i in data]):
-            msg = (
-                "Input data needs to be a list of numbers from possible states: " f"{self.states}."
-            )
+            msg = "Input data needs to be a list of numbers from possible states: " f"{self.states}."
             raise ValueError(msg)
 
         counter_dict = dict(zip(self.states, np.zeros(len(self.states))))

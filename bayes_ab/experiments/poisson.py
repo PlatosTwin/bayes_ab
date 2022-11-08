@@ -5,7 +5,11 @@ import matplotlib.pyplot as plt
 import scipy.stats as stats
 
 from bayes_ab.experiments.base import BaseDataTest
-from bayes_ab.metrics import eval_poisson_agg, eval_closed_form_poisson_two, eval_closed_form_poisson_three
+from bayes_ab.metrics import (
+    eval_poisson_agg,
+    eval_closed_form_poisson_two,
+    eval_closed_form_poisson_three,
+)
 from bayes_ab.utilities import get_logger, print_poisson_evaluation, print_closed_form_comparison
 
 logger = get_logger("bayes_ab")
@@ -77,20 +81,21 @@ class PoissonDataTest(BaseDataTest):
             self.a_priors,
             self.b_priors,
             sim_count=sim_count,
-            seed=seed
+            seed=seed,
         )
         res_pbbs = dict(zip(self.variant_names, pbbs))
         res_loss = dict(zip(self.variant_names, loss))
 
         for i, var in enumerate(self.variant_names):
-            self.data[var]['samples'] = samples[i]
+            self.data[var]["samples"] = samples[i]
 
         return res_pbbs, res_loss
 
     def _closed_form_poisson(self) -> dict:
         """
         Calculate the probability to beat all via a closed-form solution.
-        Implemented for up to three variants only; will generate a warning if run for test with many observations.
+        Implemented for up to three variants only; will generate a warning if run for test with
+        many observations.
 
         Credit: Closed-form chance-to-beat solutions (for two and three variants) are due to
         Evan Miller (https://www.evanmiller.org/bayesian-ab-testing.html).
@@ -105,34 +110,36 @@ class PoissonDataTest(BaseDataTest):
             raise NotImplementedError(msg)
 
         if sum(self.sums) >= 5000:
-            msg = f"The closed-form solution for {sum(self.sums):,} total counts it too computationally intensive."
+            msg = f"The closed-form solution for {sum(self.sums):,} total counts it too " f"computationally intensive."
             logger.error(msg)
             raise ValueError(msg)
 
         if sum(self.sums) >= 3000:
-            msg = f"The closed-form solution for {sum(self.sums):,} total counts may consume significant resources."
+            msg = f"The closed-form solution for {sum(self.sums):,} total counts may " f"consume significant resources."
             logger.warn(msg)
             warnings.warn(msg)
 
         for d in self.data.values():
-            if int(d['a_prior']) != d['a_prior'] or int(d['b_prior']) != d['b_prior']:
-                msg = (f"The closed-form solution requires integer values of a, b "
-                       f"for all gamma(a, b) and beta(a, b) priors.")
+            if int(d["a_prior"]) != d["a_prior"] or int(d["b_prior"]) != d["b_prior"]:
+                msg = (
+                    f"The closed-form solution requires integer values of a, b "
+                    f"for all gamma(a, b) and beta(a, b) priors."
+                )
                 logger.error(msg)
                 raise ValueError(msg)
 
         pbbs = []
         if len(self.totals) == 2:
-            a = self.data[self.variant_names[0]]['sum']
-            b = self.data[self.variant_names[1]]['sum']
+            a = self.data[self.variant_names[0]]["sum"]
+            b = self.data[self.variant_names[1]]["sum"]
 
             pbbs.append(eval_closed_form_poisson_two(a, b))  # chance of A to beat B
             pbbs.append(eval_closed_form_poisson_two(b, a))  # chance of B to beat A
 
         elif len(self.totals) == 3:
-            a = self.data[self.variant_names[0]]['sum']
-            b = self.data[self.variant_names[1]]['sum']
-            c = self.data[self.variant_names[2]]['sum']
+            a = self.data[self.variant_names[0]]["sum"]
+            b = self.data[self.variant_names[1]]["sum"]
+            c = self.data[self.variant_names[2]]["sum"]
 
             # A beats all
             b_beats_a = eval_closed_form_poisson_two(b, a)  # chance of B to beat A
@@ -155,37 +162,37 @@ class PoissonDataTest(BaseDataTest):
         return dict(zip(self.variant_names, pbbs))
 
     def _decision_rule(
-            self,
-            control: str,
-            rope: float,
-            precision: float,
-            interval: float,
-            verbose: bool
+        self, control: str, rope: float, precision: float, interval: float, verbose: bool
     ) -> Union[Dict, None]:
         """
-        This method implements a basic experimentation decision rule, based largely on the decision rules
-        outlined by Yanir Seroussi (https://yanirseroussi.com/2016/06/19/making-bayesian-ab-testing-more-accessible/),
+        This method implements a basic experimentation decision rule, based largely on the decision
+        rules outlined by Yanir Seroussi
+        (https://yanirseroussi.com/2016/06/19/making-bayesian-ab-testing-more-accessible/),
         themselves based on decision rules outlined by John K. Kruschke
-        (http://doingbayesiandataanalysis.blogspot.com/2013/11/optional-stopping-in-data-collection-p.html). The
-        motivation for both authors is outlined by David Robinson (http://varianceexplained.org/r/bayesian-ab-testing/).
+        (http://doingbayesiandataanalysis.blogspot.com/2013/11/
+        optional-stopping-in-data-collection-p.html). The motivation for both authors is outlined
+        by David Robinson (http://varianceexplained.org/r/bayesian-ab-testing/).
 
-        If the width of the high-density interval (HDI) is less than <precision>*<rope>, the decision is made with
-        high confidence; otherwise, the decision is made with low confidence.
+        If the width of the high-density interval (HDI) is less than <precision>*<rope>, the
+        decision is made with high confidence; otherwise, the decision is made with low confidence.
 
-        If the HDI fully excludes the Region of Practical Equivalence (ROPE), the recommendation is to stop and
-        select the better variant. If the HDI partially contains the ROPE, the recommendation is to continue
-        gathering data. If the HDI fully contains the ROPE, the decision is to select either variant.
+        If the HDI fully excludes the Region of Practical Equivalence (ROPE), the recommendation is
+        to stop and select the better variant. If the HDI partially contains the ROPE, the
+        recommendation is to continue gathering data. If the HDI fully contains the ROPE, the
+        decision is to select either variant.
 
         Parameters
         ----------
         control : Denotes the variant to treat as the control.
         rope : Region of Practical Equivalence. Should be passed in absolute terms: 0.1% = 0.001.
-        precision : Controls experiment stopping. HDI is compared to (rope * precision). Defaults to 0.8.
-        interval : The percentage width of the HDI. Defaults to 95%. Defaults to 95%. Must be in (0, 1).
+        precision : Controls experiment stopping. HDI is compared to (rope * precision). Defaults
+        to 0.8. interval : The percentage width of the HDI. Defaults to 95%. Defaults to 95%.
+        Must be in (0, 1).
 
         Returns
         -------
-        confidence : Whether the recommendation is made with high or low confidence, based on width of bound.
+        confidence : Whether the recommendation is made with high or low confidence, based on width
+        of bound.
         decision : The recommendation of what to do given the test data.
         lower_bound : The lower bound of the HDI given by <interval>.
         upper_bound : The upper bound of the HDI given by <interval>.
@@ -206,41 +213,48 @@ class PoissonDataTest(BaseDataTest):
         if len(self.totals) == 2:
             var_names = self.variant_names.copy()
             var_names.remove(control)
-            diff_distribution = self.data[var_names[0]]['samples'] - self.data[control]['samples']
-            lower_bound = np.percentile(diff_distribution, 100*(1 - interval) / 2)
-            upper_bound = np.percentile(diff_distribution, 100*(1 - interval) / 2 + 100*interval)
+            diff_distribution = self.data[var_names[0]]["samples"] - self.data[control]["samples"]
+            lower_bound = np.percentile(diff_distribution, 100 * (1 - interval) / 2)
+            upper_bound = np.percentile(diff_distribution, 100 * (1 - interval) / 2 + 100 * interval)
 
             if upper_bound - lower_bound < rope * precision:
-                confidence = 'High'
+                confidence = "High"
             else:
-                confidence = 'Low'
+                confidence = "Low"
 
             if rope < lower_bound or -rope > upper_bound:
-                decision = 'Stop and select better variant.'
+                decision = "Stop and select better variant."
             elif -rope > lower_bound and rope < upper_bound:
-                decision = 'Stop and implement either variant.'
+                decision = "Stop and implement either variant."
             else:
-                decision = 'Continue collecting data.'
+                decision = "Continue collecting data."
 
             if verbose:
-                print(f'Decision: {decision} Confidence: {confidence}. '
-                      f'Bounds: [{lower_bound:.1f}, {upper_bound:.1f}].', '\n')
+                print(
+                    f"Decision: {decision} Confidence: {confidence}. "
+                    f"Bounds: [{lower_bound:.1f}, {upper_bound:.1f}].",
+                    "\n",
+                )
 
-            assessment = {'decision': decision, 'confidence': confidence,
-                          'lower_bound': lower_bound, 'upper_bound': upper_bound}
+            assessment = {
+                "decision": decision,
+                "confidence": confidence,
+                "lower_bound": lower_bound,
+                "upper_bound": upper_bound,
+            }
 
             return assessment
 
     def evaluate(
-            self,
-            closed_form: bool = False,
-            sim_count: int = 200000,
-            seed: int = None,
-            verbose: bool = True,
-            control: str = None,
-            rope: float = None,
-            precision: float = 0.8,
-            interval: float = 0.95
+        self,
+        closed_form: bool = False,
+        sim_count: int = 200000,
+        seed: int = None,
+        verbose: bool = True,
+        control: str = None,
+        rope: float = None,
+        precision: float = 0.8,
+        interval: float = 0.95,
     ) -> Tuple[List[dict], Union[Dict, None]]:
         """
         Evaluation of experiment.
@@ -251,31 +265,29 @@ class PoissonDataTest(BaseDataTest):
         sim_count : Number of simulations to be used for probability estimation.
         seed : Random seed.
         verbose : If True, output prints to console.
-        control : Denotes the variant to treat as the control. If not None, used in generating a stopping decision.
-        rope : Region of Practical Equivalence. Variants with a difference less than ROPE are practically equivalent.
-        precision : Controls experiment stopping. HDI is compared to (rope * precision). Defaults to 0.8.
+        control : Denotes the variant to treat as the control. If not None, used in generating a s
+        topping decision.
+        rope : Region of Practical Equivalence. Variants with a difference less than ROPE are
+        practically equivalent.
+        precision : Controls experiment stopping. HDI is compared to (rope * precision).
+        Defaults to 0.8.
         interval : The percentage width of the HDI. Defaults to 95%. Must be in (0, 1).
 
         Returns
         -------
         res : List of dictionaries with results per variant.
         """
-        keys = [
-            "variant",
-            "total",
-            "mean",
-            "prob_being_best",
-            "expected_loss",
-            "bounds"
-        ]
+        keys = ["variant", "total", "mean", "prob_being_best", "expected_loss", "bounds"]
 
         eval_pbbs, eval_loss = self._eval_simulation(sim_count, seed)
         pbbs = list(eval_pbbs.values())
         loss = list(eval_loss.values())
 
-        if closed_form and verbose:
-            cf_pbbs = list(self._closed_form_poisson().values())
-            print_closed_form_comparison(self.variant_names, pbbs, cf_pbbs)
+        cf_pbbs = None
+        if closed_form:
+            cf_pbbs = list(self._closed_form_bernoulli().values())
+            if verbose:
+                print_closed_form_comparison(self.variant_names, pbbs, cf_pbbs)
 
         data = [self.variant_names, self.totals, self.means, pbbs, loss, self.bounds]
         res = [dict(zip(keys, item)) for item in zip(*data)]
@@ -285,17 +297,17 @@ class PoissonDataTest(BaseDataTest):
 
         assessment = self._decision_rule(control, rope, precision, interval, verbose)
 
-        return res, assessment
+        return res, cf_pbbs, assessment
 
     def add_variant_data_agg(
-            self,
-            name: str,
-            total: int,
-            obs_mean: float,
-            obs_sum: int,
-            a_prior: float = 1,
-            b_prior: float = 1,
-            replace: bool = True,
+        self,
+        name: str,
+        total: int,
+        obs_mean: float,
+        obs_sum: int,
+        a_prior: float = 1,
+        b_prior: float = 1,
+        replace: bool = True,
     ) -> None:
         """
         Add variant data to test class using aggregated normal data.
@@ -331,10 +343,16 @@ class PoissonDataTest(BaseDataTest):
                 "b_prior": b_prior,
                 "mean": round((a_prior + total * obs_mean) / (b_prior + total), 5),
                 "stdev": round(np.sqrt((a_prior + total * obs_mean)) / (b_prior + total), 5),
-                "bounds": [round(stats.gamma.ppf(1 - 0.95, a=a_prior + total * obs_mean,
-                                                 scale=1 / (b_prior + total)), 5),
-                           round(stats.gamma.ppf(0.95, a=a_prior + total * obs_mean,
-                                                 scale=1 / (b_prior + total)), 5)]
+                "bounds": [
+                    round(
+                        stats.gamma.ppf(1 - 0.95, a=a_prior + total * obs_mean, scale=1 / (b_prior + total)),
+                        5,
+                    ),
+                    round(
+                        stats.gamma.ppf(0.95, a=a_prior + total * obs_mean, scale=1 / (b_prior + total)),
+                        5,
+                    ),
+                ],
             }
         elif name in self.variant_names and replace:
             msg = (
@@ -350,10 +368,16 @@ class PoissonDataTest(BaseDataTest):
                 "b_prior": b_prior,
                 "mean": round((a_prior + total * obs_mean) / (b_prior + total), 5),
                 "stdev": round(np.sqrt((a_prior + total * obs_mean)) / (b_prior + total), 5),
-                "bounds": [round(stats.gamma.ppf(1 - 0.95, a=a_prior + total * obs_mean,
-                                                 scale=1 / (b_prior + total)), 5),
-                           round(stats.gamma.ppf(0.95, a=a_prior + total * obs_mean,
-                                                 scale=1 / (b_prior + total)), 5)]
+                "bounds": [
+                    round(
+                        stats.gamma.ppf(1 - 0.95, a=a_prior + total * obs_mean, scale=1 / (b_prior + total)),
+                        5,
+                    ),
+                    round(
+                        stats.gamma.ppf(0.95, a=a_prior + total * obs_mean, scale=1 / (b_prior + total)),
+                        5,
+                    ),
+                ],
             }
         elif name in self.variant_names and not replace:
             msg = (
@@ -362,28 +386,34 @@ class PoissonDataTest(BaseDataTest):
                 "If you wish to replace data instead, use replace=True."
             )
             logger.info(msg)
-            self.data[name]["obs_mean"] = (self.data[name]["obs_mean"] * self.data[name]["total"] +
-                                           obs_mean * total) / \
-                                          (total + self.data[name]["total"])
+            self.data[name]["obs_mean"] = (
+                self.data[name]["obs_mean"] * self.data[name]["total"] + obs_mean * total
+            ) / (total + self.data[name]["total"])
             self.data[name]["total"] += total
             self.data[name]["sum"] += obs_sum
 
             obs_mean = self.data[name]["obs_mean"]
             total = self.data[name]["total"]
-            self.data[name]["mean"] = round((a_prior + total * obs_mean) / (b_prior + total), 5),
+            self.data[name]["mean"] = (round((a_prior + total * obs_mean) / (b_prior + total), 5),)
             self.data[name]["stdev"] = round(np.sqrt((a_prior + total * obs_mean)) / (b_prior + total), 5)
-            self.data[name]["bounds"] = [round(stats.gamma.ppf(1 - 0.95, a=a_prior + total * obs_mean,
-                                                               scale=1 / (b_prior + total)), 5),
-                                         round(stats.gamma.ppf(0.95, a=a_prior + total * obs_mean,
-                                                               scale=1 / (b_prior + total)), 5)]
+            self.data[name]["bounds"] = [
+                round(
+                    stats.gamma.ppf(1 - 0.95, a=a_prior + total * obs_mean, scale=1 / (b_prior + total)),
+                    5,
+                ),
+                round(
+                    stats.gamma.ppf(0.95, a=a_prior + total * obs_mean, scale=1 / (b_prior + total)),
+                    5,
+                ),
+            ]
 
     def add_variant_data(
-            self,
-            name: str,
-            data: List[int],
-            a_prior: float = 1,
-            b_prior: float = 1,
-            replace: bool = True,
+        self,
+        name: str,
+        data: List[int],
+        a_prior: float = 1,
+        b_prior: float = 1,
+        replace: bool = True,
     ) -> None:
         """
         Add variant data to test class using raw normal data.
@@ -425,20 +455,22 @@ class PoissonDataTest(BaseDataTest):
         fname : Filename to which to save the resultant image; if None, the image is not saved.
         dpi : DPI setting for saved image; used only when fname is not None.
         """
-        fig, ax = plt.subplots(figsize=(10, 8), )
+        fig, ax = plt.subplots(
+            figsize=(10, 8),
+        )
 
         xmin = max(self.means) * 5
         xmax = 0
         for var in self.data:
-            a = self.data[var]['a_prior']
+            a = self.data[var]["a_prior"]
             totals = self.data[var]["total"]
-            obs_mean = self.data[var]['obs_mean']
-            b = self.data[var]['b_prior']
+            obs_mean = self.data[var]["obs_mean"]
+            b = self.data[var]["b_prior"]
             mu = (a + totals * obs_mean) / (b + totals)
 
             x = np.linspace(0, max(self.means) * 5, 10000)
             y = stats.gamma.pdf(x, a=a + totals * obs_mean, scale=1 / (b + totals))
-            ax.plot(x, y, label=f'{var}: $\mu={mu:.2f}$')
+            ax.plot(x, y, label=f"{var}: $\mu={mu:.2f}$")
             ax.fill_between(x, y, alpha=0.35)
 
             if x[np.where(y >= 0.0001)[0][0]] < xmin:
@@ -446,8 +478,8 @@ class PoissonDataTest(BaseDataTest):
             if x[np.where(y >= 0.0001)[0][-1]] > xmax:
                 xmax = x[np.where(y >= 0.0001)[0][-1]]
 
-        ax.set_ylabel('Probability density')
-        ax.set_xlabel('Count value')
+        ax.set_ylabel("Probability density")
+        ax.set_xlabel("Count value")
         ax.legend()
 
         plt.xlim([xmin * 0.9, xmax * 1.10])
@@ -465,24 +497,27 @@ class PoissonDataTest(BaseDataTest):
 
         Parameters
         ----------
-        control : The variant to treat as control; this variant will be subtracted from each other variant.
+        control : The variant to treat as control; this variant will be subtracted from each other
+        variant.
         fname : Filename to which to save the resultant image; if None, the image is not saved.
         dpi : DPI setting for saved image; used only when fname is not None.
         """
         num_bins = 250
-        fig, ax = plt.subplots(figsize=(10, 8), )
+        fig, ax = plt.subplots(
+            figsize=(10, 8),
+        )
 
         for var in [i for i in self.variant_names if i != control]:
-            temp_sample = self.data[var]['samples'] - self.data[control]['samples']
-            temp_mu = self.data[var]['mean'] - self.data[control]['mean']
+            temp_sample = self.data[var]["samples"] - self.data[control]["samples"]
+            temp_mu = self.data[var]["mean"] - self.data[control]["mean"]
 
-            ax.hist(temp_sample, num_bins, label=f'{var}: $\mu={temp_mu:.2f}$', alpha=0.65)
-            ax.set_xlabel('Value')
-            ax.set_ylabel('Unnormalized probability density')
+            ax.hist(temp_sample, num_bins, label=f"{var}: $\mu={temp_mu:.2f}$", alpha=0.65)
+            ax.set_xlabel("Value")
+            ax.set_ylabel("Unnormalized probability density")
 
         ax.legend()
 
-        plt.title(f'Difference from {control}')
+        plt.title(f"Difference from {control}")
         fig.tight_layout()
 
         if fname:

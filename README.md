@@ -1,77 +1,104 @@
 [![Tests](https://github.com/PlatosTwin/bayes-ab/workflows/Tests/badge.svg)](https://github.com/PlatosTwin/bayes-ab/actions?workflow=Tests)
 [![Codecov](https://codecov.io/gh/PlatosTwin/bayes-ab/branch/main/graph/badge.svg)](https://codecov.io/gh/PlatosTwin/bayes-ab)
 [![PyPI](https://img.shields.io/pypi/v/bayes-ab.svg)](https://pypi.org/project/bayes-ab/)
+
 # Bayesian A/B testing
-`bayes-ab` is a small package for runnin Bayesian A/B(/C/D/...) tests.
+
+`bayes_ab` is a small package for runnin Bayesian A/B(/C/D/...) tests.
 
 **Implemented tests:**
+
 - [BinaryDataTest](bayes_ab/experiments/binary.py)
-  - **_Input data_** - binary (`[0, 1, 0, ...]`)
-  - Designed for binary data, such as conversions
+    - **_Input data_** - binary (`[0, 1, 0, ...]`)
+    - Designed for binary data, such as conversions
+- [PoissonDataTest](bayes_ab/experiments/poisson.py)
+    - **_Input data_** - integer counts
+    - Designed for count data (e.g., number of sales per salesman, deaths per zip code)
 - [NormalDataTest](bayes_ab/experiments/normal.py)
-  - **_Input data_** - normal data with unknown variance
-  - Designed for normal data
+    - **_Input data_** - normal data with unknown variance
+    - Designed for normal data
 - [DeltaLognormalDataTest](bayes_ab/experiments/delta_lognormal.py)
-  - **_Input data_** - lognormal data with zeros
-  - Designed for lognormal data, such as revenue per conversions
+    - **_Input data_** - lognormal data with zeros
+    - Designed for lognormal data, such as revenue per conversions
 - [DiscreteDataTest](bayes_ab/experiments/discrete.py)
-  - **_Input data_** - categorical data with numerical categories
-  - Designed for discrete data (e.g. dice rolls, star ratings, 1-10 ratings)
-- [DiscreteDataTest](bayes_ab/experiments/discrete.py)
-  - **_Input data_** - categorical data with numerical categories
-  - Designed for discrete data (e.g. dice rolls, star ratings, 1-10 ratings)
+    - **_Input data_** - categorical data with numerical categories
+    - Designed for discrete data (e.g. dice rolls, star ratings, 1-10 ratings)
 
 **Implemented evaluation metrics:**
-- `Probability of Being Best`
-  - Probability of beating all other alternatives
+
+- `Chance to beat all`
+    - Probability of beating all other variants
 - `Expected Loss`
-  - Risk associated with choosing a given variant over other variants
-  - Measured in the same units as the tested measure (e.g. positive rate or average value)
+    - Risk associated with choosing a given variant over other variants
+    - Measured in the same units as the tested measure (e.g. positive rate or average value)
+- `Uplift vs. 'A'`
+    - Uplift of a given variant compared to the first variant added.
+- `95% HDI`
+    - 95% confidence interval. The Bayesian approach allows us to say with confidence that, 95% of the time, the given
+      interval will contain the true value.
 
-Evaluation metrics are calculated using Monte Carlo simulations from posterior distributions (considering given data).
+Evaluation metrics are calculated using Monte Carlo simulations from posterior distributions.
 
+**Closed form solutions:**
+
+For smaller Binary and Poisson samples, metrics calculated from Monte Carlo simulation can be checked against the
+closed-form solutions by passing `closed_form=True` to the `evaluate()` method. Larger samples generate warnings;
+samples that are too large will raise an error.
+
+**Error tolerance:**
+
+Binary tests with small sample sizes will raise a warning when the error for the expected loss estimate surpasses a set
+tolerance. To reduce error, increase the simulation count.
 
 ## Installation
-`bayes-ab` can be installed using pip:
+
+`bayes_ab` can be installed using pip:
+
 ```console
-pip install bayes-ab
+pip install bayes_ab
 ```
+
 Alternatively, you can clone the repository and use `poetry` manually:
+
 ```console
-cd bayes-ab
+cd bayes_ab
 pip install poetry
 poetry install
 poetry shell
 ```
 
 ## Basic Usage
+
 The primary features are classes:
+
 - `BinaryDataTest`
+- `PoissonDataTest`
 - `NormalDataTest`
 - `DeltaLognormalDataTest`
 - `DiscreteDataTest`
-- `PoissonDataTest`
 
-In all cases, there are two methods to insert data:
-- `add_variant_data` - adding raw data for a variant as a list of observations (or numpy 1-D array)
-- `add_variant_data_agg` - adding aggregated variant data (this can be practical for a large data, as the
-aggregation can be done on a database level)
+In all cases, there are two methods for inserting data:
 
-Both methods for adding data are allowing specification of prior distributions
-(see details in respective docstrings). Default prior setup should be sufficient for most of the cases
-(e.g. cases with unknown priors or large amounts of data).
+- `add_variant_data` - add raw data for a variant as a list of observations (or numpy 1-D array)
+- `add_variant_data_agg` - add aggregated variant data (this can be practical for a larger data set, as the aggregation
+  can be done outside of the package)
+
+Both methods for adding data allow the user to specify a prior distribution (see details in respective docstrings).
+The default priors are non-informative priors and should be sufficient for most use cases, and in particular when
+the number of samples or observations is large.
 
 To get the results of the test, simply call method `evaluate`.
 
-Probabilities of being best and expected loss are approximated using simulations, hence `evaluate` can return
-slightly different values for different runs. To stabilize it, you can set `sim_count` parameter of `evaluate`
-to higher value (default value is 20K), or even use `seed` parameter to fix it completely.
-
+Chance to beat all and expected loss are approximated using Monte Carlo simulation, so `evaluate` may return slightly
+different values for different runs. To decrease variation, you can set the `sim_count` parameter of `evaluate`
+to a higher value (default value is 200K); to fix values, set the `seed` parameter.
 
 ### BinaryDataTest
+
 Class for Bayesian A/B test for binary-like data (e.g. conversions, successes, etc.).
 
-**Example:**
+**Example with three variants:**
+
 ```python
 import numpy as np
 from bayes_ab.experiments import BinaryDataTest
@@ -93,35 +120,94 @@ test.add_variant_data("B", data_b)
 # test.add_variant_data("B", data_b, a_prior=1, b_prior=20)
 
 # add variant using aggregated data (same as raw data with 950 zeros and 50 ones):
-test.add_variant_data_agg("C", totals=1000, positives=50)
+test.add_variant_data_agg("C", total=1000, positives=50)
 
 # evaluate test:
 test.evaluate()
+
+# generate plots
+test.plot_posteriors(fname='binary_posteriors_example.png')
+test.plot_differences(control='A', fname='binary_differences_example.png')
 ```
 
-    [{'variant': 'A',
-      'totals': 1500,
-      'positives': 80,
-      'positive_rate': 0.05333,
-      'prob_being_best': 0.0669,
-      'expected_loss': 0.0138774},
-     {'variant': 'B',
-      'totals': 1200,
-      'positives': 80,
-      'positive_rate': 0.06667,
-      'prob_being_best': 0.8926,
-      'expected_loss': 0.0004599},
-     {'variant': 'C',
-      'totals': 1000,
-      'positives': 50,
-      'positive_rate': 0.05,
-      'prob_being_best': 0.0405,
-      'expected_loss': 0.0170356}]
+    +---------+--------+-----------+---------------+--------------------+---------------+----------------+----------------+
+    | Variant | Totals | Positives | Positive rate | Chance to beat all | Expected loss | Uplift vs. "A" |    95% HDI     |
+    +---------+--------+-----------+---------------+--------------------+---------------+----------------+----------------+
+    |    B    |  1200  |     80    |     6.74%     |       89.27%       |     0.05%     |     24.96%     | [5.59%, 7.97%] |
+    |    A    |  1500  |     80    |     5.39%     |       6.44%        |     1.40%     |     0.00%      | [4.47%, 6.38%] |
+    |    C    |  1000  |     50    |     5.09%     |       4.29%        |     1.69%     |     -5.62%     | [4.00%, 6.28%] |
+    +---------+--------+-----------+---------------+--------------------+---------------+----------------+----------------+
+
+Removing variant 'C' and passing `control='A'` and `rope=0.5` additionally returns a test-continuation recommendation:
+
+    Decision: Stop and implement either variant. Confidence: Low. Bounds: [-0.46%, 3.18%].
+
+Finally, we can plot the posterior distributions as well as the distribution of differences.
+
+![](https://raw.githubusercontent.com/PlatosTwin/bayes-ab/main/examples/plots/binary_posteriors_example.png)
+
+![](https://raw.githubusercontent.com/PlatosTwin/bayes-ab/main/examples/plots/binary_differences_example.png)
+
+### PoissonDataTest
+
+Class for Bayesian A/B test for count data. This can be used to compare, e.g., the number of sales per day from
+different salesmen, or the number of deaths from a given disease per zip code.
+
+**Example:**
+
+```python
+# generating some random data
+import numpy as np
+from bayes_ab.experiments import PoissonDataTest
+
+# generating some random data
+rng = np.random.default_rng(21)
+data_a = rng.poisson(42, size=20)
+data_b = rng.poisson(40, size=25)
+data_c = rng.poisson(43, size=15)
+
+# initialize a test:
+test = PoissonDataTest()
+
+# add variant using raw data:
+test.add_variant_data("A", data_a)
+test.add_variant_data("B", data_b)
+# test.add_variant_data("C", data_c)
+
+# add variant using aggregated data:
+test.add_variant_data_agg("C", total=len(data_c), obs_mean=np.mean(data_c), obs_sum=sum(data_c))
+
+# evaluate test:
+test.evaluate(sim_count=20000, seed=52)
+
+# generate plots
+test.plot_posteriors(fname='poisson_posteriors_example.png')
+test.plot_differences(control='A', fname='poisson_differences_example.png')
+```
+    +---------+--------------+------+--------------------+---------------+--------------+
+    | Variant | Observations | Mean | Chance to beat all | Expected loss |   95% HDI    |
+    +---------+--------------+------+--------------------+---------------+--------------+
+    |    C    |      15      | 42.5 |       56.38%       |      0.69     | [39.9, 45.2] |
+    |    A    |      20      | 42.1 |       42.57%       |      1.08     | [39.8, 44.5] |
+    |    B    |      25      | 39.2 |       1.05%        |      3.97     | [37.2, 41.3] |
+    +---------+--------------+------+--------------------+---------------+--------------+
+
+Removing variant 'C' and passing `control='A'` and `rope=0.5` additionally returns a test-continuation recommendation:
+
+    Decision: Stop and implement either variant. Confidence: Low. Bounds: [-6.6, 0.7].
+
+Finally, we can plot the posterior distributions as well as the distribution of differences.
+
+![](https://raw.githubusercontent.com/PlatosTwin/bayes-ab/main/examples/plots/poisson_posteriors_example.png)
+
+![](https://raw.githubusercontent.com/PlatosTwin/bayes-ab/main/examples/plots/poisson_differences_example.png)
 
 ### NormalDataTest
+
 Class for Bayesian A/B test for normal data.
 
 **Example:**
+
 ```python
 import numpy as np
 from bayes_ab.experiments import NormalDataTest
@@ -167,13 +253,14 @@ test.evaluate(sim_count=20000, seed=52)
       'expected_loss': 0.0169998}]
 
 ### DeltaLognormalDataTest
-Class for Bayesian A/B test for delta-lognormal data (log-normal with zeros).
-Delta-lognormal data is typical case of revenue per session data where many sessions have 0 revenue
-but non-zero values are positive numbers with possible log-normal distribution.
-To handle this data, the calculation is combining binary Bayes model for zero vs non-zero
+
+Class for Bayesian A/B test for delta-lognormal data (log-normal with zeros). Delta-lognormal data is typical case of
+revenue per session data where many sessions have 0 revenue but non-zero values are positive numbers with possible
+log-normal distribution. To handle this data, the calculation is combining binary Bayes model for zero vs non-zero
 "conversions" and log-normal model for non-zero values.
 
 **Example:**
+
 ```python
 import numpy as np
 from bayes_ab.experiments import DeltaLognormalDataTest
@@ -220,12 +307,14 @@ test.evaluate(seed=21)
       'expected_loss': 0.1588627}]
 
 ### DiscreteDataTest
-Class for Bayesian A/B test for discrete data with finite number of numerical categories (states),
-representing some value.
-This test can be used for instance for dice rolls data (when looking for the "best" of multiple dice) or rating data
+
+Class for Bayesian A/B test for discrete data with finite number of numerical categories (states), representing some
+value. This test can be used for instance for dice rolls data (when looking for the "best" of multiple dice) or rating
+data
 (e.g. 1-5 stars or 1-10 scale).
 
 **Example:**
+
 ```python
 import numpy as np
 from bayes_ab.experiments import DiscreteDataTest
@@ -267,7 +356,9 @@ test.evaluate(sim_count=20000, seed=52)
       'expected_loss': 0.2870247}]
 
 ## Development
+
 To set up a development environment, use [Poetry](https://python-poetry.org/) and [pre-commit](https://pre-commit.com):
+
 ```console
 pip install poetry
 poetry install
@@ -277,7 +368,9 @@ poetry run pre-commit install
 ## Roadmap
 
 Test classes to be added:
+
 - `ExponentialDataTest`
 
 Metrics to be added:
+
 - `Potential Value Remaining`

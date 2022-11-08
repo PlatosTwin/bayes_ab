@@ -6,9 +6,7 @@ from bayes_ab.experiments import DeltaLognormalDataTest
 @pytest.fixture
 def rev_test():
     rev = DeltaLognormalDataTest()
-    rev.add_variant_data_agg(
-        "A", 31500, 1580, 30830.02561, 3831.806394737816, 11029.923165846496, a_prior_beta=1
-    )
+    rev.add_variant_data_agg("A", 31500, 1580, 30830.02561, 3831.806394737816, 11029.923165846496, a_prior_beta=1)
     rev.add_variant_data_agg(
         "B", 32000, 1700, 35203.21689, 4211.72986767986, 12259.51868396913, m_prior=2, w_prior=0.02
     )

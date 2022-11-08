@@ -9,5 +9,5 @@ __all__ = [
     "NormalDataTest",
     "DeltaLognormalDataTest",
     "DiscreteDataTest",
-    "PoissonDataTest"
+    "PoissonDataTest",
 ]

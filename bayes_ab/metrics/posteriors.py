@@ -4,12 +4,12 @@ import numpy as np
 
 
 def beta_posteriors_all(
-        totals: List[int],
-        positives: List[int],
-        sim_count: int,
-        a_priors_beta: List[Union[float, int]],
-        b_priors_beta: List[Union[float, int]],
-        seed: Union[int, np.random.bit_generator.SeedSequence] = None,
+    totals: List[int],
+    positives: List[int],
+    sim_count: int,
+    a_priors_beta: List[Union[float, int]],
+    b_priors_beta: List[Union[float, int]],
+    seed: Union[int, np.random.bit_generator.SeedSequence] = None,
 ) -> np.ndarray:
     """
     Draw from beta posterior distributions for all variants at once.
@@ -43,15 +43,15 @@ def beta_posteriors_all(
 
 
 def normal_posteriors(
-        total: int,
-        sums: float,
-        sums_2: float,
-        sim_count: int = 200000,
-        prior_m: Union[float, int] = 1,
-        prior_a: Union[float, int] = 0,
-        prior_b: Union[float, int] = 0,
-        prior_w: Union[float, int] = 0.01,
-        seed: Union[int, np.random.bit_generator.SeedSequence] = None,
+    total: int,
+    sums: float,
+    sums_2: float,
+    sim_count: int = 200000,
+    prior_m: Union[float, int] = 1,
+    prior_a: Union[float, int] = 0,
+    prior_b: Union[float, int] = 0,
+    prior_w: Union[float, int] = 0.01,
+    seed: Union[int, np.random.bit_generator.SeedSequence] = None,
 ) -> Tuple[List[Union[float, int]], List[Union[float, int]]]:
     """
     Drawing mus and sigmas from posterior normal distribution considering given aggregated data.
@@ -80,9 +80,9 @@ def normal_posteriors(
     x_bar = sums / total
     a_post = prior_a + (total / 2)
     b_post = (
-            prior_b
-            + (1 / 2) * (sums_2 - 2 * sums * x_bar + total * (x_bar ** 2))
-            + ((total * prior_w) / (2 * (total + prior_w))) * ((x_bar - prior_m) ** 2)
+        prior_b
+        + (1 / 2) * (sums_2 - 2 * sums * x_bar + total * (x_bar**2))
+        + ((total * prior_w) / (2 * (total + prior_w))) * ((x_bar - prior_m) ** 2)
     )
 
     # here it has to be 1/b as it is a scale, and not a rate
@@ -96,15 +96,15 @@ def normal_posteriors(
 
 
 def lognormal_posteriors(
-        total: int,
-        sum_logs: float,
-        sum_logs_2: float,
-        sim_count: int = 200000,
-        prior_m: Union[float, int] = 1,
-        prior_a: Union[float, int] = 0,
-        prior_b: Union[float, int] = 0,
-        prior_w: Union[float, int] = 0.01,
-        seed: Union[int, np.random.bit_generator.SeedSequence] = None,
+    total: int,
+    sum_logs: float,
+    sum_logs_2: float,
+    sim_count: int = 200000,
+    prior_m: Union[float, int] = 1,
+    prior_a: Union[float, int] = 0,
+    prior_b: Union[float, int] = 0,
+    prior_w: Union[float, int] = 0.01,
+    seed: Union[int, np.random.bit_generator.SeedSequence] = None,
 ) -> List[float]:
     """
     Drawing from posterior lognormal distribution using logarithms of original (lognormal) data
@@ -146,10 +146,10 @@ def lognormal_posteriors(
 
 
 def dirichlet_posteriors(
-        concentration: List[int],
-        prior: List[Union[float, int]],
-        sim_count: int = 200000,
-        seed: Union[int, np.random.bit_generator.SeedSequence] = None,
+    concentration: List[int],
+    prior: List[Union[float, int]],
+    sim_count: int = 200000,
+    seed: Union[int, np.random.bit_generator.SeedSequence] = None,
 ) -> np.ndarray:
     """
     Drawing from dirichlet posterior for a single variant.
@@ -175,12 +175,12 @@ def dirichlet_posteriors(
 
 
 def gamma_posteriors(
-        totals: List[int],
-        mean: List[float],
-        a_priors_gamma: List[Union[float, int]],
-        b_priors_gamma: List[Union[float, int]],
-        sim_count: int,
-        seed: Union[int, np.random.bit_generator.SeedSequence] = None,
+    totals: List[int],
+    mean: List[float],
+    a_priors_gamma: List[Union[float, int]],
+    b_priors_gamma: List[Union[float, int]],
+    sim_count: int,
+    seed: Union[int, np.random.bit_generator.SeedSequence] = None,
 ) -> np.ndarray:
     """
     Drawing from Poisson posterior for a single variant.
@@ -203,8 +203,8 @@ def gamma_posteriors(
     gamma_samples = np.array(
         [
             rng.gamma(
-                a_priors_gamma[i] + totals[i]*mean[i],
-                1/(b_priors_gamma[i] + totals[i]),
+                a_priors_gamma[i] + totals[i] * mean[i],
+                1 / (b_priors_gamma[i] + totals[i]),
                 sim_count,
             )
             for i in range(len(totals))

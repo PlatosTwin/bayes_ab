@@ -59,11 +59,36 @@ def test_expected_loss(conv_test):
 
 
 def test_evaluate(conv_test):
-    eval_report, _ = conv_test.evaluate(sim_count=2000000, seed=314)
+    eval_report, _, _ = conv_test.evaluate(sim_count=2000000, seed=314)
     assert eval_report == [
-        {'variant': 'A', 'total': 10, 'positives': 3, 'positive_rate': 0.33333, 'prob_being_best': 0.58086,
-         'expected_loss': 0.0509394, 'uplift_vs_a': 0, 'bounds': [0.13508, 0.56437]},
-        {'variant': 'B', 'total': 10, 'positives': 2, 'positive_rate': 0.25, 'prob_being_best': 0.259051,
-         'expected_loss': 0.1340909, 'uplift_vs_a': -0.24999, 'bounds': [0.07882, 0.47009]},
-        {'variant': 'C', 'total': 11, 'positives': 2, 'positive_rate': 0.21429, 'prob_being_best': 0.160089,
-         'expected_loss': 0.1701915, 'uplift_vs_a': -0.35712, 'bounds': [0.06605, 0.4101]}]
+        {
+            "variant": "A",
+            "total": 10,
+            "positives": 3,
+            "positive_rate": 0.33333,
+            "prob_being_best": 0.58086,
+            "expected_loss": 0.0509394,
+            "uplift_vs_a": 0,
+            "bounds": [0.13508, 0.56437],
+        },
+        {
+            "variant": "B",
+            "total": 10,
+            "positives": 2,
+            "positive_rate": 0.25,
+            "prob_being_best": 0.259051,
+            "expected_loss": 0.1340909,
+            "uplift_vs_a": -0.24999,
+            "bounds": [0.07882, 0.47009],
+        },
+        {
+            "variant": "C",
+            "total": 11,
+            "positives": 2,
+            "positive_rate": 0.21429,
+            "prob_being_best": 0.160089,
+            "expected_loss": 0.1701915,
+            "uplift_vs_a": -0.35712,
+            "bounds": [0.06605, 0.4101],
+        },
+    ]

@@ -31,14 +31,14 @@ GAMMA_POSTERIORS_ALL_INPUTS = [
         "mean": [8, 16, 24],
         "a_priors_gamma": [1, 1, 1],
         "b_priors_gamma": [1, 1, 1],
-        "sim_count": 20
+        "sim_count": 20,
     },
     {
         "totals": [11, 15],
         "mean": [6, 7],
         "a_priors_gamma": [2, 2],
         "b_priors_gamma": [2, 2],
-        "sim_count": 10
+        "sim_count": 10,
     },
 ]
 
@@ -93,11 +93,7 @@ def test_beta_posteriors_all(inp):
 @pytest.mark.parametrize("inp", GAMMA_POSTERIORS_ALL_INPUTS)
 def test_gamma_posteriors(inp):
     all_pos = gamma_posteriors(
-        inp["totals"],
-        inp["mean"],
-        inp["a_priors_gamma"],
-        inp["b_priors_gamma"],
-        inp["sim_count"]
+        inp["totals"], inp["mean"], inp["a_priors_gamma"], inp["b_priors_gamma"], inp["sim_count"]
     )
     all_pos_shape = np.array(all_pos).shape
     assert all_pos_shape == (len(inp["totals"]), inp["sim_count"])

@@ -6,7 +6,7 @@ from bayes_ab.metrics import (
     eval_normal_agg,
     eval_delta_lognormal_agg,
     eval_numerical_dirichlet_agg,
-    eval_poisson_agg
+    eval_poisson_agg,
 )
 
 PBB_BERNOULLI_AGG_INPUTS = [
@@ -216,7 +216,7 @@ PBB_NUMERICAL_DIRICHLET_AGG_INPUTS = [
 ]
 
 PBB_POISSON_AGG_INPUTS = [
-{
+    {
         "input": {
             "totals": [31500, 32000, 31000],
             "mean": [1580, 1700, 1550],
@@ -318,9 +318,7 @@ def test_eval_delta_lognormal_agg_different_runs():
 @pytest.mark.parametrize("inp", PBB_NUMERICAL_DIRICHLET_AGG_INPUTS)
 def test_eval_numerical_dirichlet_agg(inp):
     i = inp["input"]
-    res = eval_numerical_dirichlet_agg(
-        i["states"], i["concentrations"], sim_count=i["sim_count"], seed=i["seed"]
-    )
+    res = eval_numerical_dirichlet_agg(i["states"], i["concentrations"], sim_count=i["sim_count"], seed=i["seed"])
     assert res == inp["expected_output"]
 
 

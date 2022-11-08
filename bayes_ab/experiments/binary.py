@@ -76,33 +76,43 @@ class BinaryDataTest(BaseDataTest):
         res_loss = dict(zip(self.variant_names, loss))
 
         for i, var in enumerate(self.variant_names):
-            self.data[var]['samples'] = samples[i]
+            self.data[var]["samples"] = samples[i]
 
         return res_pbbs, res_loss
 
     def _closed_form_bernoulli(self) -> dict:
         """
         Calculate the probability to beat all via a closed-form solution.
-        Implemented for up to three variants only; will generate a warning if run for test with many observations.
-        For tests with many observations, the user may choose to implement an asymptotic forumla, as described by
-        Chris Stucchio here: https://www.chrisstucchio.com/blog/2014/bayesian_asymptotics.html.
+        Implemented for up to three variants only; will generate a warning if run for test with
+        many observations. For tests with many observations, the user may choose to implement an
+        asymptotic forumla, as described by Chris Stucchio here:
+        https://www.chrisstucchio.com/blog/2014/bayesian_asymptotics.html.
 
         Credit: Closed-form chance-to-beat solutions (for two and three variants) are due to
-        Evan Miller (https://www.evanmiller.org/bayesian-ab-testing.html), and closed-form expected loss solution (for
-        two variants; not implemented currently, but may be implemented in a future release) is due to
-        Chris Stucchio (https://www.chrisstucchio.com/blog/2014/bayesian_ab_decision_rule.html).
+        Evan Miller (https://www.evanmiller.org/bayesian-ab-testing.html), and closed-form expected
+        loss solution (for two variants; not implemented currently, but may be implemented in a
+        future release) is due to Chris Stucchio
+        (https://www.chrisstucchio.com/blog/2014/bayesian_ab_decision_rule.html).
 
         Returns
         -------
         pbbs : Dictionary with probabilities of being best for all variants in experiment.
         """
-        if sum(self.totals) >= 45000:
-            msg = f"The closed-form solution for {sum(self.totals):,} observations it too computationally intensive."
+        if sum(self.totals) > 45000:
+            msg = (
+                f"The closed-form solution for {sum(self.totals):,} observations it too "
+                f"computationally intensive. "
+                "The current limit is at 45,000 samples for all variants combined."
+            )
             logger.error(msg)
             raise ValueError(msg)
 
-        if sum(self.totals) >= 35000:
-            msg = f"The closed-form solution for {sum(self.totals):,} observations may consume significant resources."
+        if sum(self.totals) > 35000:
+            msg = (
+                f"The closed-form solution for {sum(self.totals):,} observations may consume "
+                f"significant resources. "
+                "Try to limit the total number of samples across all variants to 35,000 or fewer."
+            )
             logger.warn(msg)
             warnings.warn(msg)
 
@@ -112,8 +122,8 @@ class BinaryDataTest(BaseDataTest):
             raise NotImplementedError(msg)
 
         for d in self.data.values():
-            if int(d['a_prior']) != d['a_prior'] or int(d['b_prior']) != d['b_prior']:
-                msg = f"The closed-form solution requires integer values of a, b for all beta(a, b) priors."
+            if int(d["a_prior"]) != d["a_prior"] or int(d["b_prior"]) != d["b_prior"]:
+                msg = f"The closed-form solution requires integer values of a, b " f"for all beta(a, b) priors."
                 logger.error(msg)
                 raise ValueError(msg)
 
@@ -150,37 +160,37 @@ class BinaryDataTest(BaseDataTest):
         return dict(zip(self.variant_names, pbbs))
 
     def _decision_rule(
-            self,
-            control: str,
-            rope: float,
-            precision: float,
-            interval: float,
-            verbose: bool
+        self, control: str, rope: float, precision: float, interval: float, verbose: bool
     ) -> Union[Dict, None]:
         """
-        This method implements a basic experimentation decision rule, based largely on the decision rules
-        outlined by Yanir Seroussi (https://yanirseroussi.com/2016/06/19/making-bayesian-ab-testing-more-accessible/),
+        This method implements a basic experimentation decision rule, based largely on the decision
+        rules outlined by Yanir Seroussi
+        (https://yanirseroussi.com/2016/06/19/making-bayesian-ab-testing-more-accessible/),
         themselves based on decision rules outlined by John K. Kruschke
-        (http://doingbayesiandataanalysis.blogspot.com/2013/11/optional-stopping-in-data-collection-p.html). The
-        motivation for both authors is outlined by David Robinson (http://varianceexplained.org/r/bayesian-ab-testing/).
+        (http://doingbayesiandataanalysis.blogspot.com/2013/11/
+        optional-stopping-in-data-collection-p.html). The motivation for both authors is outlined
+        by David Robinson (http://varianceexplained.org/r/bayesian-ab-testing/).
 
-        If the width of the high-density interval (HDI) is less than <precision>*<rope>, the decision is made with
-        high confidence; otherwise, the decision is made with low confidence.
+        If the width of the high-density interval (HDI) is less than <precision>*<rope>, the
+        decision is made with high confidence; otherwise, the decision is made with low confidence.
 
-        If the HDI fully excludes the Region of Practical Equivalence (ROPE), the recommendation is to stop and
-        select the better variant. If the HDI partially contains the ROPE, the recommendation is to continue
-        gathering data. If the HDI fully contains the ROPE, the decision is to select either variant.
-
+        If the HDI fully excludes the Region of Practical Equivalence (ROPE), the recommendation is
+        to stop and select the better variant. If the HDI partially contains the ROPE, the
+        recommendation is to continue gathering data. If the HDI fully contains the ROPE, the
+        decision is to select either variant.
         Parameters
         ----------
         control : Denotes the variant to treat as the control.
         rope : Region of Practical Equivalence. Should be passed in absolute terms: 0.1% = 0.001.
-        precision : Controls experiment stopping. HDI is compared to (rope * precision). Defaults to 0.8.
-        interval : The percentage width of the HDI. Defaults to 95%. Defaults to 95%. Must be in (0, 1).
+        precision : Controls experiment stopping. HDI is compared to (rope * precision). Defaults
+        to 0.8.
+        interval : The percentage width of the HDI. Defaults to 95%. Defaults to 95%.
+        Must be in (0, 1).
 
         Returns
         -------
-        confidence : Whether the recommendation is made with high or low confidence, based on width of bound.
+        confidence : Whether the recommendation is made with high or low confidence, based on width
+        of bound.
         decision : The recommendation of what to do given the test data.
         lower_bound : The lower bound of the HDI given by <interval>.
         upper_bound : The upper bound of the HDI given by <interval>.
@@ -191,41 +201,48 @@ class BinaryDataTest(BaseDataTest):
         if len(self.totals) == 2:
             var_names = self.variant_names.copy()
             var_names.remove(control)
-            diff_distribution = self.data[var_names[0]]['samples'] - self.data[control]['samples']
-            lower_bound = np.percentile(diff_distribution, 100*(1 - interval)/2)
-            upper_bound = np.percentile(diff_distribution, 100*(1 - interval)/2 + 100*interval)
+            diff_distribution = self.data[var_names[0]]["samples"] - self.data[control]["samples"]
+            lower_bound = np.percentile(diff_distribution, 100 * (1 - interval) / 2)
+            upper_bound = np.percentile(diff_distribution, 100 * (1 - interval) / 2 + 100 * interval)
 
             if upper_bound - lower_bound < rope * precision:
-                confidence = 'High'
+                confidence = "High"
             else:
-                confidence = 'Low'
+                confidence = "Low"
 
             if rope < lower_bound or -rope > upper_bound:
-                decision = 'Stop and select better variant.'
+                decision = "Stop and select better variant."
             elif -rope > lower_bound and rope < upper_bound:
-                decision = 'Stop and implement either variant.'
+                decision = "Stop and implement either variant."
             else:
-                decision = 'Continue collecting data.'
+                decision = "Continue collecting data."
 
             if verbose:
-                print(f'Decision: {decision} Confidence: {confidence}. '
-                      f'Bounds: [{lower_bound:.2%}, {upper_bound:.2%}].', '\n')
+                print(
+                    f"Decision: {decision} Confidence: {confidence}. "
+                    f"Bounds: [{lower_bound:.2%}, {upper_bound:.2%}].",
+                    "\n",
+                )
 
-            assessment = {'decision': decision, 'confidence': confidence,
-                          'lower_bound': lower_bound, 'upper_bound': upper_bound}
+            assessment = {
+                "decision": decision,
+                "confidence": confidence,
+                "lower_bound": lower_bound,
+                "upper_bound": upper_bound,
+            }
 
             return assessment
 
     def evaluate(
-            self,
-            closed_form: bool = False,
-            sim_count: int = 200000,
-            seed: int = None,
-            verbose: bool = True,
-            control: str = None,
-            rope: float = 0.001,
-            precision: float = 0.8,
-            interval: float = 0.95,
+        self,
+        closed_form: bool = False,
+        sim_count: int = 200000,
+        seed: int = None,
+        verbose: bool = True,
+        control: str = None,
+        rope: float = 0.001,
+        precision: float = 0.8,
+        interval: float = 0.95,
     ) -> List[dict]:
         """
         Evaluation of experiment.
@@ -236,9 +253,12 @@ class BinaryDataTest(BaseDataTest):
         sim_count : Number of simulations to be used for probability estimation.
         seed : Random seed.
         verbose : If True, output prints to console.
-        control : Denotes the variant to treat as the control. If not None, used in generating a stopping decision.
-        rope : Region of Practical Equivalence. Should be passed in absolute terms: 0.1% = 0.001. Defaults to 0.001.
-        precision : Controls experiment stopping. HDI is compared to (rope * precision). Defaults to 0.8.
+        control : Denotes the variant to treat as the control. If not None, used in generating a
+        stopping decision.
+        rope : Region of Practical Equivalence. Should be passed in absolute terms: 0.1% = 0.001.
+        Defaults to 0.001.
+        precision : Controls experiment stopping. HDI is compared to (rope * precision). Defaults
+        to 0.8.
         interval : The percentage width of the HDI. Defaults to 95%. Must be in (0, 1).
 
         Returns
@@ -253,22 +273,33 @@ class BinaryDataTest(BaseDataTest):
             "prob_being_best",
             "expected_loss",
             "uplift_vs_a",
-            "bounds"
+            "bounds",
         ]
 
         eval_pbbs, eval_loss = self._eval_simulation(sim_count, seed)
         pbbs = list(eval_pbbs.values())
         loss = list(eval_loss.values())
 
-        if closed_form and verbose:
+        cf_pbbs = None
+        if closed_form:
             cf_pbbs = list(self._closed_form_bernoulli().values())
-            print_closed_form_comparison(self.variant_names, pbbs, cf_pbbs)
+            if verbose:
+                print_closed_form_comparison(self.variant_names, pbbs, cf_pbbs)
 
         uplift = [0]
         for i in self.means[1:]:
             uplift.append(round((i - self.means[0]) / self.means[0], 5))
 
-        data = [self.variant_names, self.totals, self.positives, self.means, pbbs, loss, uplift, self.bounds]
+        data = [
+            self.variant_names,
+            self.totals,
+            self.positives,
+            self.means,
+            pbbs,
+            loss,
+            uplift,
+            self.bounds,
+        ]
         res = [dict(zip(keys, item)) for item in zip(*data)]
 
         if verbose:
@@ -276,32 +307,35 @@ class BinaryDataTest(BaseDataTest):
 
         assessment = self._decision_rule(control, rope, precision, interval, verbose)
 
-        return res, assessment
+        return res, cf_pbbs, assessment
 
     def add_variant_data_agg(
-            self,
-            name: str,
-            total: int,
-            positives: int,
-            a_prior: float = 1,
-            b_prior: float = 1,
-            replace: bool = True,
+        self,
+        name: str,
+        total: int,
+        positives: int,
+        a_prior: float = 1,
+        b_prior: float = 1,
+        replace: bool = True,
     ) -> None:
         """
         Add variant data to test class using aggregated binary data.
         This can be convenient as aggregation can be done on database level.
 
         Default prior is Beta(1, 1), which is the Bayes-Laplace non-informative prior. Other
-        common non-informative priors are the Jeffreys beta(1/2, 1/2) and Haldane beta(0, 0). While the selection
-        of an appropriate prior is not always straightforward, the effect of selecting the Bayes-Laplace over
-        either the Jeffreys or the Haldane priors will be minimal for any reasonably large number of observations.
+        common non-informative priors are the Jeffreys beta(1/2, 1/2) and Haldane beta(0, 0).
+        While the selection of an appropriate prior is not always straightforward, the effect of
+        selecting the Bayes-Laplace over either the Jeffreys or the Haldane priors will be
+        minimal for any reasonably large number of observations.
 
         For one comparison of these three priors, the user is advised to consult,
         "Posterior Predictive Arguments in Favor of the Bayes-Laplace Prior
-        as the Consensus Prior for Binomial and Multinomial Parameters" (https://doi.org/10.1214/09-BA405).
+        as the Consensus Prior for Binomial and Multinomial Parameters"
+        (https://doi.org/10.1214/09-BA405).
 
         Other resources include:
-            - "Noninformative Bayesian Priors Interpretation And Problems With Construction And Applications"
+            - "Noninformative Bayesian Priors Interpretation And Problems With Construction And
+               Applications"
               (http://www.stats.org.uk/priors/noninformative/Syversveen1998.pdf)
             - "A Catalogue of Non-informative Priors"
               (http://www.stats.org.uk/priors/noninformative/YangBerger1998.pdf)
@@ -338,11 +372,24 @@ class BinaryDataTest(BaseDataTest):
                 "a_prior": a_prior,
                 "b_prior": b_prior,
                 "mean": round((a_prior + positives) / (a_prior + positives + b_prior + total - positives), 5),
-                "stdev": round(np.sqrt((a_prior + positives) * (b_prior + total - positives) /
-                                       ((a_prior + positives + b_prior + total - positives) ** 2 *
-                                        (a_prior + positives + b_prior + total - positives + 1))), 5),
-                "bounds": [round(stats.beta.ppf(1 - 0.95, a_prior + positives, b_prior + total - positives), 5),
-                           round(stats.beta.ppf(0.95, a_prior + positives, b_prior + total - positives), 5)]
+                "stdev": round(
+                    np.sqrt(
+                        (a_prior + positives)
+                        * (b_prior + total - positives)
+                        / (
+                            (a_prior + positives + b_prior + total - positives) ** 2
+                            * (a_prior + positives + b_prior + total - positives + 1)
+                        )
+                    ),
+                    5,
+                ),
+                "bounds": [
+                    round(
+                        stats.beta.ppf(1 - 0.95, a_prior + positives, b_prior + total - positives),
+                        5,
+                    ),
+                    round(stats.beta.ppf(0.95, a_prior + positives, b_prior + total - positives), 5),
+                ],
             }
         elif name in self.variant_names and replace:
             msg = (
@@ -356,11 +403,21 @@ class BinaryDataTest(BaseDataTest):
                 "a_prior": a_prior,
                 "b_prior": b_prior,
                 "mean": round((a_prior + positives) / (a_prior + b_prior + total), 5),
-                "stdev": round(np.sqrt((a_prior + positives) * (b_prior + total - positives) /
-                                       ((a_prior + b_prior + total) ** 2 *
-                                        (a_prior + b_prior + total + 1))), 5),
-                "bounds": [round(stats.beta.ppf(1 - 0.95, a_prior + positives, b_prior + total - positives), 5),
-                           round(stats.beta.ppf(0.95, a_prior + positives, b_prior + total - positives), 5)]
+                "stdev": round(
+                    np.sqrt(
+                        (a_prior + positives)
+                        * (b_prior + total - positives)
+                        / ((a_prior + b_prior + total) ** 2 * (a_prior + b_prior + total + 1))
+                    ),
+                    5,
+                ),
+                "bounds": [
+                    round(
+                        stats.beta.ppf(1 - 0.95, a_prior + positives, b_prior + total - positives),
+                        5,
+                    ),
+                    round(stats.beta.ppf(0.95, a_prior + positives, b_prior + total - positives), 5),
+                ],
             }
         elif name in self.variant_names and not replace:
             msg = (
@@ -375,38 +432,49 @@ class BinaryDataTest(BaseDataTest):
             positives = self.data[name]["positives"]
             total = self.data[name]["total"]
 
-            self.data[name]['mean'] = round((a_prior + positives) /
-                                            (a_prior + b_prior + total), 5),
-            self.data[name]['stdev'] = round(np.sqrt((a_prior + positives) * (b_prior + total - positives) /
-                                                     ((a_prior + positives + b_prior + total - positives) ** 2 *
-                                                      (a_prior + positives + b_prior + total - positives + 1))), 5)
-            self.data[name]['bounds'] = [round(stats.beta.ppf(1 - 0.95,
-                                                              a_prior + positives, b_prior + total - positives), 5),
-                                         round(stats.beta.ppf(0.95,
-                                                              a_prior + positives, b_prior + total - positives), 5)]
+            self.data[name]["mean"] = (round((a_prior + positives) / (a_prior + b_prior + total), 5),)
+            self.data[name]["stdev"] = round(
+                np.sqrt(
+                    (a_prior + positives)
+                    * (b_prior + total - positives)
+                    / (
+                        (a_prior + positives + b_prior + total - positives) ** 2
+                        * (a_prior + positives + b_prior + total - positives + 1)
+                    )
+                ),
+                5,
+            )
+            self.data[name]["bounds"] = [
+                round(stats.beta.ppf(1 - 0.95, a_prior + positives, b_prior + total - positives), 5),
+                round(stats.beta.ppf(0.95, a_prior + positives, b_prior + total - positives), 5),
+            ]
 
     def add_variant_data(
-            self,
-            name: str,
-            data: List[int],
-            a_prior: float = 1,
-            b_prior: float = 1,
-            replace: bool = True,
+        self,
+        name: str,
+        data: List[int],
+        a_prior: float = 1,
+        b_prior: float = 1,
+        replace: bool = True,
     ) -> None:
         """
-        Add variant data to test class using raw binary data.
+        Add variant data to test class using aggregated binary data.
+        This can be convenient as aggregation can be done on database level.
 
         Default prior is Beta(1, 1), which is the Bayes-Laplace non-informative prior. Other
-        common non-informative priors are the Jeffreys beta(1/2, 1/2) and Haldane beta(0, 0). While the selection
-        of an appropriate prior is not always straightforward, the effect of selecting the Bayes-Laplace over
-        either the Jeffreys or the Haldane priors will be minimal for any reasonably large number of observations.
+        common non-informative priors are the Jeffreys beta(1/2, 1/2) and Haldane beta(0, 0).
+        While the selection of an appropriate prior is not always straightforward, the effect of
+        selecting the Bayes-Laplace over either the Jeffreys or the Haldane priors will be
+        minimal for any reasonably large number of observations.
 
         For one comparison of these three priors, the user is advised to consult,
         "Posterior Predictive Arguments in Favor of the Bayes-Laplace Prior
-        as the Consensus Prior for Binomial and Multinomial Parameters" (https://doi.org/10.1214/09-BA405).
+        as the Consensus Prior for Binomial and Multinomial Parameters"
+        (https://doi.org/10.1214/09-BA405).
 
         Other resources include:
-            - "Noninformative Bayesian Priors Interpretation And Problems With Construction And Applications"
+            - "Noninformative Bayesian Priors Interpretation And Problems With Construction And
+               Applications"
               (http://www.stats.org.uk/priors/noninformative/Syversveen1998.pdf)
             - "A Catalogue of Non-informative Priors"
               (http://www.stats.org.uk/priors/noninformative/YangBerger1998.pdf)
@@ -443,20 +511,22 @@ class BinaryDataTest(BaseDataTest):
         fname : Filename to which to save the resultant image; if None, the image is not saved.
         dpi : DPI setting for saved image; used only when fname is not None.
         """
-        fig, ax = plt.subplots(figsize=(10, 8), )
+        fig, ax = plt.subplots(
+            figsize=(10, 8),
+        )
 
         xmin = 1
         xmax = 0
         for var in self.data:
-            a = self.data[var]['a_prior']
-            c = self.data[var]['positives']
-            b = self.data[var]['b_prior']
+            a = self.data[var]["a_prior"]
+            c = self.data[var]["positives"]
+            b = self.data[var]["b_prior"]
             n = self.data[var]["total"]
-            mu = self.data[var]['mean']
+            mu = self.data[var]["mean"]
 
             x = np.linspace(0, 1, 10000)
             y = stats.beta.pdf(x, a + c, b + n - c)
-            ax.plot(x * 100, y, label=f'{var}: $\mu={mu:.2%}$%')
+            ax.plot(x * 100, y, label=f"{var}: $\mu={mu:.2%}$%")
             ax.fill_between(x * 100, y, alpha=0.35)
             ax.xaxis.set_major_formatter(mtick.PercentFormatter())
 
@@ -465,7 +535,7 @@ class BinaryDataTest(BaseDataTest):
             if x[np.where(y >= 0.0001)[0][-1]] > xmax:
                 xmax = x[np.where(y >= 0.0001)[0][-1]]
 
-        ax.set_ylabel('Probability density')
+        ax.set_ylabel("Probability density")
         ax.legend()
 
         plt.xlim(xmin * 80, xmax * 120)
@@ -483,25 +553,28 @@ class BinaryDataTest(BaseDataTest):
 
         Parameters
         ----------
-        control : The variant to treat as control; this variant will be subtracted from each other variant.
+        control : The variant to treat as control; this variant will be subtracted from each other
+        variant.
         fname : Filename to which to save the resultant image; if None, the image is not saved.
         dpi : DPI setting for saved image; used only when fname is not None.
         """
         num_bins = 250
-        fig, ax = plt.subplots(figsize=(10, 8), )
+        fig, ax = plt.subplots(
+            figsize=(10, 8),
+        )
 
         for var in [i for i in self.variant_names if i != control]:
-            temp_sample = self.data[var]['samples'] - self.data[control]['samples']
-            temp_mu = self.data[var]['mean'] - self.data[control]['mean']
+            temp_sample = self.data[var]["samples"] - self.data[control]["samples"]
+            temp_mu = self.data[var]["mean"] - self.data[control]["mean"]
 
-            ax.hist(temp_sample, num_bins, label=f'{var}: $\mu={temp_mu:.2%}$%', alpha=0.65)
+            ax.hist(temp_sample, num_bins, label=f"{var}: $\mu={temp_mu:.2%}$%", alpha=0.65)
             ax.xaxis.set_major_formatter(mtick.PercentFormatter())
-            ax.set_xlabel('Probability')
-            ax.set_ylabel('Probability density')
+            ax.set_xlabel("Probability")
+            ax.set_ylabel("Probability density")
 
         ax.legend()
 
-        plt.title(f'Difference from {control}')
+        plt.title(f"Difference from {control}")
         fig.tight_layout()
 
         if fname:
