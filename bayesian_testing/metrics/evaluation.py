@@ -58,22 +58,6 @@ def estimate_expected_loss(data: Union[List[List[Number]], np.ndarray]) -> List[
     return res
 
 
-def confidence_interval(data: Union[List[List[Number]], np.ndarray], interval: Number = 0.95) -> List[float]:
-    """
-    Return the lower- and upper-bound for the <interval>% confidence interval.
-
-    Parameters
-    ----------
-    data : List of simulated data for each variant.
-    interval : The width of the interval to be calculated; the default is 95%.
-
-    Returns
-    -------
-    interval : List of [lower-bound, upper-bound] for the <interval>% confidence interval.
-    """
-    pass
-
-
 def print_closed_form_comparison(variants: list, pbbs: list, cf_pbbs: list) -> None:
     """
     Pretty-print output comparing the estimate to the exact chance to beat all.
@@ -86,7 +70,7 @@ def print_closed_form_comparison(variants: list, pbbs: list, cf_pbbs: list) -> N
     tab.reversesort = True
     tab.sortby = 'Est. chance to beat all'
 
-    print(tab)
+    print(tab, '\n')
 
 
 def print_bernoulli_evaluation(res: list) -> None:
@@ -95,7 +79,7 @@ def print_bernoulli_evaluation(res: list) -> None:
     """
     tab = PrettyTable()
     tab.field_names = ['Variant', 'Totals', 'Positives', 'Positive rate',
-                       'Chance to beat all', 'Expected loss', 'Uplift vs. "A"']
+                       'Chance to beat all', 'Expected loss', 'Uplift vs. "A"', '95% HDI']
     for r in res:
         temp_row = r.copy()
         for i in ['positive_rate', 'prob_being_best', 'expected_loss', 'uplift_vs_a']:
@@ -106,14 +90,15 @@ def print_bernoulli_evaluation(res: list) -> None:
                     temp_row['positive_rate'],
                     temp_row['prob_being_best'],
                     temp_row['expected_loss'],
-                    temp_row['uplift_vs_a']]
+                    temp_row['uplift_vs_a'],
+                    f'[{temp_row["bounds"][0]:.2%}, {temp_row["bounds"][1]:.2%}]']
 
         tab.add_row(temp_row)
 
     tab.reversesort = True
     tab.sortby = 'Chance to beat all'
 
-    print(tab)
+    print(tab, '\n')
 
 
 def print_poisson_evaluation(res: list) -> None:
@@ -121,7 +106,7 @@ def print_poisson_evaluation(res: list) -> None:
     Pretty-print output of running Poisson test.
     """
     tab = PrettyTable()
-    tab.field_names = ['Variant', 'Observations', 'Mean', 'Chance to beat all', 'Expected loss']
+    tab.field_names = ['Variant', 'Observations', 'Mean', 'Chance to beat all', 'Expected loss', '95% HDI']
     for r in res:
         temp_row = r.copy()
         temp_row['prob_being_best'] = f"{temp_row['prob_being_best']:.2%}"
@@ -131,14 +116,15 @@ def print_poisson_evaluation(res: list) -> None:
                     temp_row["total"],
                     temp_row['mean'],
                     temp_row['prob_being_best'],
-                    temp_row['expected_loss']]
+                    temp_row['expected_loss'],
+                    f'[{temp_row["bounds"][0]:.1f}, {temp_row["bounds"][1]:.1f}]']
 
         tab.add_row(temp_row)
 
     tab.reversesort = True
     tab.sortby = 'Chance to beat all'
 
-    print(tab)
+    print(tab, '\n')
 
 
 def eval_closed_form_poisson_loss() -> None:

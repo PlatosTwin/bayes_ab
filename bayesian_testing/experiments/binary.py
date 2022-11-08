@@ -51,6 +51,10 @@ class BinaryDataTest(BaseDataTest):
     def stdevs(self):
         return [self.data[k]["stdev"] for k in self.data]
 
+    @property
+    def bounds(self):
+        return [self.data[k]["bounds"] for k in self.data]
+
     def _eval_simulation(self, sim_count: int = 200000, seed: int = None) -> Tuple[dict, dict]:
         """
         Calculate probabilities of being best and expected loss for a current class state.
@@ -151,12 +155,73 @@ class BinaryDataTest(BaseDataTest):
         """
         pass
 
+    def _decision_rule(
+            self,
+            control: str,
+            rope: float,
+            precision: float,
+            interval: float
+    ) -> None:
+        """
+        This method implements a basic experimentation decision rule, based largely on the decision rules
+        outlined by Yanir Seroussi (https://yanirseroussi.com/2016/06/19/making-bayesian-ab-testing-more-accessible/),
+        themselves based on decision rules outlined by John K. Kruschke
+        (http://doingbayesiandataanalysis.blogspot.com/2013/11/optional-stopping-in-data-collection-p.html). The
+        motivation for both authors is outlined by David Robinson (http://varianceexplained.org/r/bayesian-ab-testing/).
+
+        If the width of the high-density interval (HDI) is less than <precision>*<rope>, the decision is made with
+        high confidence; otherwise, the decision is made with low confidence.
+
+        If the HDI fully excludes the Region of Practical Equivalence (ROPE), the recommendation is to stop and
+        select the better variant. If the HDI partially contains the ROPE, the recommendation is to continue
+        gathering data. If the HDI fully contains the ROPE, the decision is to select either variant.
+
+        Parameters
+        ----------
+        control : Denotes the variant to treat as the control.
+        rope : Region of Practical Equivalence. Should be passed in absolute terms: 0.1% = 0.001.
+        precision : Controls experiment stopping. HDI is compared to (rope * precision). Defaults to 0.8.
+        interval : The percentage width of the HDI. Defaults to 95%. Defaults to 95%. Must be in (0, 1).
+
+        Returns
+        -------
+        confidence : Whether the recommendation is made with high or low confidence, based on width of bound.
+        decision : The recommendation of what to do given the test data.
+        lower_bound : The lower bound of the HDI given by <interval>.
+        upper_bound : The upper bound of the HDI given by <interval>.
+        """
+        if len(self.totals) == 2:
+            var_names = self.variant_names.copy()
+            var_names.remove(control)
+            diff_distribution = self.data[var_names[0]]['samples'] - self.data[control]['samples']
+            lower_bound = np.percentile(diff_distribution, 100*(1 - interval)/2)
+            upper_bound = np.percentile(diff_distribution, 100*(1 - interval)/2 + 100*interval)
+
+            if upper_bound - lower_bound < rope * precision:
+                confidence = 'High'
+            else:
+                confidence = 'Low'
+
+            if rope < lower_bound or -rope > upper_bound:
+                decision = 'Stop and select better variant.'
+            elif -rope > lower_bound and rope < upper_bound:
+                decision = 'Stop and implement either variant.'
+            else:
+                decision = 'Continue collecting data.'
+
+            print(f'Decision: {decision} Confidence: {confidence}. '
+                  f'Bounds: [{lower_bound:.2%}, {upper_bound:.2%}].', '\n')
+
     def evaluate(
             self,
             closed_form: bool = False,
             sim_count: int = 200000,
             seed: int = None,
-            verbose: bool = True
+            verbose: bool = True,
+            control: str = None,
+            rope: float = 0.001,
+            precision: float = 0.8,
+            interval: float = 0.95
     ) -> List[dict]:
         """
         Evaluation of experiment.
@@ -167,6 +232,10 @@ class BinaryDataTest(BaseDataTest):
         sim_count : Number of simulations to be used for probability estimation.
         seed : Random seed.
         verbose : If True, output prints to console.
+        control : Denotes the variant to treat as the control. If not None, used in generating a stopping decision.
+        rope : Region of Practical Equivalence. Should be passed in absolute terms: 0.1% = 0.001. Defaults to 0.001.
+        precision : Controls experiment stopping. HDI is compared to (rope * precision). Defaults to 0.8.
+        interval : The percentage width of the HDI. Defaults to 95%. Must be in (0, 1).
 
         Returns
         -------
@@ -179,7 +248,8 @@ class BinaryDataTest(BaseDataTest):
             "positive_rate",
             "prob_being_best",
             "expected_loss",
-            "uplift_vs_a"
+            "uplift_vs_a",
+            "bounds"
         ]
 
         eval_pbbs, eval_loss = self._eval_simulation(sim_count, seed)
@@ -194,11 +264,14 @@ class BinaryDataTest(BaseDataTest):
         for i in self.means[1:]:
             uplift.append(round((i - self.means[0]) / self.means[0], 5))
 
-        data = [self.variant_names, self.totals, self.positives, self.means, pbbs, loss, uplift]
+        data = [self.variant_names, self.totals, self.positives, self.means, pbbs, loss, uplift, self.bounds]
         res = [dict(zip(keys, item)) for item in zip(*data)]
 
         if verbose:
             print_bernoulli_evaluation(res)
+
+        if control:
+            self._decision_rule(control, rope, precision, interval)
 
         return res
 
@@ -264,9 +337,10 @@ class BinaryDataTest(BaseDataTest):
                 "mean": round((a_prior + positives) / (a_prior + positives + b_prior + total - positives), 5),
                 "stdev": round(np.sqrt((a_prior + positives) * (b_prior + total - positives) /
                                        ((a_prior + positives + b_prior + total - positives) ** 2 *
-                                        (a_prior + positives + b_prior + total - positives + 1))), 5)
+                                        (a_prior + positives + b_prior + total - positives + 1))), 5),
+                "bounds": [round(stats.beta.ppf(1 - 0.95, a_prior + positives, b_prior + total - positives), 5),
+                           round(stats.beta.ppf(0.95, a_prior + positives, b_prior + total - positives), 5)]
             }
-
         elif name in self.variant_names and replace:
             msg = (
                 f"Variant {name} already exists - new data is replacing it. "
@@ -281,7 +355,9 @@ class BinaryDataTest(BaseDataTest):
                 "mean": round((a_prior + positives) / (a_prior + b_prior + total), 5),
                 "stdev": round(np.sqrt((a_prior + positives) * (b_prior + total - positives) /
                                        ((a_prior + b_prior + total) ** 2 *
-                                        (a_prior + b_prior + total + 1))), 5)
+                                        (a_prior + b_prior + total + 1))), 5),
+                "bounds": [round(stats.beta.ppf(1 - 0.95, a_prior + positives, b_prior + total - positives), 5),
+                           round(stats.beta.ppf(0.95, a_prior + positives, b_prior + total - positives), 5)]
             }
         elif name in self.variant_names and not replace:
             msg = (
@@ -301,6 +377,10 @@ class BinaryDataTest(BaseDataTest):
             self.data[name]['stdev'] = round(np.sqrt((a_prior + positives) * (b_prior + total - positives) /
                                                      ((a_prior + positives + b_prior + total - positives) ** 2 *
                                                       (a_prior + positives + b_prior + total - positives + 1))), 5)
+            self.data[name]['bounds'] = [round(stats.beta.ppf(1 - 0.95,
+                                                              a_prior + positives, b_prior + total - positives), 5),
+                                         round(stats.beta.ppf(0.95,
+                                                              a_prior + positives, b_prior + total - positives), 5)]
 
     def add_variant_data(
             self,

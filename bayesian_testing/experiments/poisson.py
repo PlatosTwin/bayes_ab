@@ -54,6 +54,10 @@ class PoissonDataTest(BaseDataTest):
     def stdevs(self):
         return [self.data[k]["stdev"] for k in self.data]
 
+    @property
+    def bounds(self):
+        return [self.data[k]["bounds"] for k in self.data]
+
     def _eval_simulation(self, sim_count: int = 20000, seed: int = None) -> Tuple[dict, dict]:
         """
         Calculate probabilities of being best and expected loss for a current class state.
@@ -151,6 +155,12 @@ class PoissonDataTest(BaseDataTest):
 
         return dict(zip(self.variant_names, pbbs))
 
+    def _decision_rule(self, control):
+        """
+
+        """
+        pass
+
     def evaluate(
             self,
             closed_form: bool = False,
@@ -177,7 +187,8 @@ class PoissonDataTest(BaseDataTest):
             "total",
             "mean",
             "prob_being_best",
-            "expected_loss"
+            "expected_loss",
+            "bounds"
         ]
 
         eval_pbbs, eval_loss = self._eval_simulation(sim_count, seed)
@@ -188,8 +199,7 @@ class PoissonDataTest(BaseDataTest):
             cf_pbbs = list(self._closed_form_poisson().values())
             print_closed_form_comparison(self.variant_names, pbbs, cf_pbbs)
 
-        data = [self.variant_names, self.totals, self.means, pbbs, loss, ]
-
+        data = [self.variant_names, self.totals, self.means, pbbs, loss, self.bounds]
         res = [dict(zip(keys, item)) for item in zip(*data)]
 
         if verbose:
@@ -240,7 +250,11 @@ class PoissonDataTest(BaseDataTest):
                 "a_prior": a_prior,
                 "b_prior": b_prior,
                 "mean": round((a_prior + total * obs_mean) / (b_prior + total), 5),
-                "stdev": round(np.sqrt((a_prior + total * obs_mean)) / (b_prior + total), 5)
+                "stdev": round(np.sqrt((a_prior + total * obs_mean)) / (b_prior + total), 5),
+                "bounds": [round(stats.gamma.ppf(1 - 0.95, a=a_prior + total * obs_mean,
+                                                 scale=1 / (b_prior + total)), 5),
+                           round(stats.gamma.ppf(0.95, a=a_prior + total * obs_mean,
+                                                 scale=1 / (b_prior + total)), 5)]
             }
         elif name in self.variant_names and replace:
             msg = (
@@ -255,7 +269,11 @@ class PoissonDataTest(BaseDataTest):
                 "a_prior": a_prior,
                 "b_prior": b_prior,
                 "mean": round((a_prior + total * obs_mean) / (b_prior + total), 5),
-                "stdev": round(np.sqrt((a_prior + total * obs_mean)) / (b_prior + total), 5)
+                "stdev": round(np.sqrt((a_prior + total * obs_mean)) / (b_prior + total), 5),
+                "bounds": [round(stats.gamma.ppf(1 - 0.95, a=a_prior + total * obs_mean,
+                                                 scale=1 / (b_prior + total)), 5),
+                           round(stats.gamma.ppf(0.95, a=a_prior + total * obs_mean,
+                                                 scale=1 / (b_prior + total)), 5)]
             }
         elif name in self.variant_names and not replace:
             msg = (
@@ -274,6 +292,10 @@ class PoissonDataTest(BaseDataTest):
             total = self.data[name]["total"]
             self.data[name]["mean"] = round((a_prior + total * obs_mean) / (b_prior + total), 5),
             self.data[name]["stdev"] = round(np.sqrt((a_prior + total * obs_mean)) / (b_prior + total), 5)
+            self.data[name]["bounds"] = [round(stats.gamma.ppf(1 - 0.95, a=a_prior + total * obs_mean,
+                                                               scale=1 / (b_prior + total)), 5),
+                                         round(stats.gamma.ppf(0.95, a=a_prior + total * obs_mean,
+                                                               scale=1 / (b_prior + total)), 5)]
 
     def add_variant_data(
             self,
@@ -335,7 +357,7 @@ class PoissonDataTest(BaseDataTest):
             mu = (a + totals * obs_mean) / (b + totals)
 
             x = np.linspace(0, max(self.means) * 5, 10000)
-            y = stats.gamma.pdf(x, a=a + totals * obs_mean, scale=1 / (b + totals), )
+            y = stats.gamma.pdf(x, a=a + totals * obs_mean, scale=1 / (b + totals))
             ax.plot(x, y, label=f'{var}: $\mu={mu:.2f}$')
             ax.fill_between(x, y, alpha=0.35)
 

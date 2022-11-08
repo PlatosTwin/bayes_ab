@@ -40,6 +40,10 @@ def test_stdevs(conv_test):
     assert conv_test.stdevs == [0.56773, 0.58916, 0.52172]
 
 
+def test_bounds(conv_test):
+    assert conv_test.bounds == [[2.66609, 4.52804], [2.90347, 4.83613], [2.72621, 4.43807]]
+
+
 def test_a_priors(conv_test):
     assert conv_test.a_priors == [1, 1, 2]
 
@@ -61,6 +65,9 @@ def test_expected_loss(conv_test):
 def test_evaluate(conv_test):
     eval_report = conv_test.evaluate(sim_count=2000000, seed=314)
     assert eval_report == [
-        {'variant': 'A', 'total': 10, 'mean': 3.54545, 'prob_being_best': 0.266836, 'expected_loss': 0.5896207},
-        {'variant': 'B', 'total': 10, 'mean': 3.81818, 'prob_being_best': 0.480775, 'expected_loss': 0.3169076},
-        {'variant': 'C', 'total': 11, 'mean': 3.53846, 'prob_being_best': 0.252389, 'expected_loss': 0.5965555}]
+        {'variant': 'A', 'total': 10, 'mean': 3.54545, 'prob_being_best': 0.266836, 'expected_loss': 0.5896207,
+         'bounds': [2.66609, 4.52804]},
+        {'variant': 'B', 'total': 10, 'mean': 3.81818, 'prob_being_best': 0.480775, 'expected_loss': 0.3169076,
+         'bounds': [2.90347, 4.83613]},
+        {'variant': 'C', 'total': 11, 'mean': 3.53846, 'prob_being_best': 0.252389, 'expected_loss': 0.5965555,
+         'bounds': [2.72621, 4.43807]}]
