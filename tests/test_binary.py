@@ -59,7 +59,7 @@ def test_expected_loss(conv_test):
 
 
 def test_evaluate(conv_test):
-    eval_report = conv_test.evaluate(sim_count=2000000, seed=314)
+    eval_report, _ = conv_test.evaluate(sim_count=2000000, seed=314)
     assert eval_report == [
         {'variant': 'A', 'total': 10, 'positives': 3, 'positive_rate': 0.33333, 'prob_being_best': 0.58086,
          'expected_loss': 0.0509394, 'uplift_vs_a': 0, 'bounds': [0.13508, 0.56437]},

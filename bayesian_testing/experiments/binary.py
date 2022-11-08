@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Union
 import warnings
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
@@ -6,9 +6,9 @@ import numpy as np
 import scipy.stats as stats
 
 from bayesian_testing.experiments.base import BaseDataTest
-from bayesian_testing.metrics import eval_bernoulli_agg, print_bernoulli_evaluation, print_closed_form_comparison
+from bayesian_testing.metrics import eval_bernoulli_agg
 from bayesian_testing.metrics import eval_closed_form_bernoulli_two, eval_closed_form_bernoulli_three
-from bayesian_testing.utilities import get_logger
+from bayesian_testing.utilities import get_logger, print_bernoulli_evaluation, print_closed_form_comparison
 
 logger = get_logger("bayesian_testing")
 
@@ -149,19 +149,14 @@ class BinaryDataTest(BaseDataTest):
 
         return dict(zip(self.variant_names, pbbs))
 
-    def _confident_interval(self):
-        """
-        Foo
-        """
-        pass
-
     def _decision_rule(
             self,
             control: str,
             rope: float,
             precision: float,
-            interval: float
-    ) -> None:
+            interval: float,
+            verbose: bool
+    ) -> Union[Dict, None]:
         """
         This method implements a basic experimentation decision rule, based largely on the decision rules
         outlined by Yanir Seroussi (https://yanirseroussi.com/2016/06/19/making-bayesian-ab-testing-more-accessible/),
@@ -190,6 +185,9 @@ class BinaryDataTest(BaseDataTest):
         lower_bound : The lower bound of the HDI given by <interval>.
         upper_bound : The upper bound of the HDI given by <interval>.
         """
+        if not control or len(self.totals) != 2:
+            return None
+
         if len(self.totals) == 2:
             var_names = self.variant_names.copy()
             var_names.remove(control)
@@ -209,8 +207,14 @@ class BinaryDataTest(BaseDataTest):
             else:
                 decision = 'Continue collecting data.'
 
-            print(f'Decision: {decision} Confidence: {confidence}. '
-                  f'Bounds: [{lower_bound:.2%}, {upper_bound:.2%}].', '\n')
+            if verbose:
+                print(f'Decision: {decision} Confidence: {confidence}. '
+                      f'Bounds: [{lower_bound:.2%}, {upper_bound:.2%}].', '\n')
+
+            assessment = {'decision': decision, 'confidence': confidence,
+                          'lower_bound': lower_bound, 'upper_bound': upper_bound}
+
+            return assessment
 
     def evaluate(
             self,
@@ -221,7 +225,7 @@ class BinaryDataTest(BaseDataTest):
             control: str = None,
             rope: float = 0.001,
             precision: float = 0.8,
-            interval: float = 0.95
+            interval: float = 0.95,
     ) -> List[dict]:
         """
         Evaluation of experiment.
@@ -270,10 +274,9 @@ class BinaryDataTest(BaseDataTest):
         if verbose:
             print_bernoulli_evaluation(res)
 
-        if control:
-            self._decision_rule(control, rope, precision, interval)
+        assessment = self._decision_rule(control, rope, precision, interval, verbose)
 
-        return res
+        return res, assessment
 
     def add_variant_data_agg(
             self,

@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Union, Dict
 import numpy as np
 import warnings
 import matplotlib.pyplot as plt
@@ -6,8 +6,7 @@ import scipy.stats as stats
 
 from bayesian_testing.experiments.base import BaseDataTest
 from bayesian_testing.metrics import eval_poisson_agg, eval_closed_form_poisson_two, eval_closed_form_poisson_three
-from bayesian_testing.metrics import print_poisson_evaluation, print_closed_form_comparison
-from bayesian_testing.utilities import get_logger
+from bayesian_testing.utilities import get_logger, print_poisson_evaluation, print_closed_form_comparison
 
 logger = get_logger("bayesian_testing")
 
@@ -155,19 +154,94 @@ class PoissonDataTest(BaseDataTest):
 
         return dict(zip(self.variant_names, pbbs))
 
-    def _decision_rule(self, control):
+    def _decision_rule(
+            self,
+            control: str,
+            rope: float,
+            precision: float,
+            interval: float,
+            verbose: bool
+    ) -> Union[Dict, None]:
         """
+        This method implements a basic experimentation decision rule, based largely on the decision rules
+        outlined by Yanir Seroussi (https://yanirseroussi.com/2016/06/19/making-bayesian-ab-testing-more-accessible/),
+        themselves based on decision rules outlined by John K. Kruschke
+        (http://doingbayesiandataanalysis.blogspot.com/2013/11/optional-stopping-in-data-collection-p.html). The
+        motivation for both authors is outlined by David Robinson (http://varianceexplained.org/r/bayesian-ab-testing/).
 
+        If the width of the high-density interval (HDI) is less than <precision>*<rope>, the decision is made with
+        high confidence; otherwise, the decision is made with low confidence.
+
+        If the HDI fully excludes the Region of Practical Equivalence (ROPE), the recommendation is to stop and
+        select the better variant. If the HDI partially contains the ROPE, the recommendation is to continue
+        gathering data. If the HDI fully contains the ROPE, the decision is to select either variant.
+
+        Parameters
+        ----------
+        control : Denotes the variant to treat as the control.
+        rope : Region of Practical Equivalence. Should be passed in absolute terms: 0.1% = 0.001.
+        precision : Controls experiment stopping. HDI is compared to (rope * precision). Defaults to 0.8.
+        interval : The percentage width of the HDI. Defaults to 95%. Defaults to 95%. Must be in (0, 1).
+
+        Returns
+        -------
+        confidence : Whether the recommendation is made with high or low confidence, based on width of bound.
+        decision : The recommendation of what to do given the test data.
+        lower_bound : The lower bound of the HDI given by <interval>.
+        upper_bound : The upper bound of the HDI given by <interval>.
         """
-        pass
+        if not control and not rope:
+            return None
+
+        if (control or rope) and len(self.totals) != 2:
+            msg = f"Decision assessments are implemented for two-variant models only."
+            logger.error(msg)
+            raise NotImplementedError(msg)
+
+        if (control and not rope) or (rope and not control):
+            msg = f"In order to return an assessment, you need to specify both <control> and <rope>."
+            logger.error(msg)
+            raise ValueError(msg)
+
+        if len(self.totals) == 2:
+            var_names = self.variant_names.copy()
+            var_names.remove(control)
+            diff_distribution = self.data[var_names[0]]['samples'] - self.data[control]['samples']
+            lower_bound = np.percentile(diff_distribution, 100*(1 - interval) / 2)
+            upper_bound = np.percentile(diff_distribution, 100*(1 - interval) / 2 + 100*interval)
+
+            if upper_bound - lower_bound < rope * precision:
+                confidence = 'High'
+            else:
+                confidence = 'Low'
+
+            if rope < lower_bound or -rope > upper_bound:
+                decision = 'Stop and select better variant.'
+            elif -rope > lower_bound and rope < upper_bound:
+                decision = 'Stop and implement either variant.'
+            else:
+                decision = 'Continue collecting data.'
+
+            if verbose:
+                print(f'Decision: {decision} Confidence: {confidence}. '
+                      f'Bounds: [{lower_bound:.1f}, {upper_bound:.1f}].', '\n')
+
+            assessment = {'decision': decision, 'confidence': confidence,
+                          'lower_bound': lower_bound, 'upper_bound': upper_bound}
+
+            return assessment
 
     def evaluate(
             self,
             closed_form: bool = False,
             sim_count: int = 200000,
             seed: int = None,
-            verbose: bool = True
-    ) -> List[dict]:
+            verbose: bool = True,
+            control: str = None,
+            rope: float = None,
+            precision: float = 0.8,
+            interval: float = 0.95
+    ) -> Tuple[List[dict], Union[Dict, None]]:
         """
         Evaluation of experiment.
 
@@ -177,6 +251,10 @@ class PoissonDataTest(BaseDataTest):
         sim_count : Number of simulations to be used for probability estimation.
         seed : Random seed.
         verbose : If True, output prints to console.
+        control : Denotes the variant to treat as the control. If not None, used in generating a stopping decision.
+        rope : Region of Practical Equivalence. Should be passed in absolute terms: 0.1% = 0.001. Defaults to 0.001.
+        precision : Controls experiment stopping. HDI is compared to (rope * precision). Defaults to 0.8.
+        interval : The percentage width of the HDI. Defaults to 95%. Must be in (0, 1).
 
         Returns
         -------
@@ -205,7 +283,9 @@ class PoissonDataTest(BaseDataTest):
         if verbose:
             print_poisson_evaluation(res)
 
-        return res
+        assessment = self._decision_rule(control, rope, precision, interval, verbose)
+
+        return res, assessment
 
     def add_variant_data_agg(
             self,
