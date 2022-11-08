@@ -1,10 +1,10 @@
-[![Tests](https://github.com/PlatosTwin/bayes-ab/workflows/Tests/badge.svg)](https://github.com/PlatosTwin/bayes-ab/actions?workflow=Tests)
-[![Codecov](https://codecov.io/gh/PlatosTwin/bayes-ab/branch/main/graph/badge.svg)](https://codecov.io/gh/PlatosTwin/bayes-ab)
-[![PyPI](https://img.shields.io/pypi/v/bayes-ab.svg)](https://pypi.org/project/bayes-ab/)
+[![Tests](https://github.com/PlatosTwin/bayes_ab/workflows/Tests/badge.svg)](https://github.com/PlatosTwin/bayes_ab/actions?workflow=Tests)
+[![Codecov](https://codecov.io/gh/PlatosTwin/bayes_ab/branch/main/graph/badge.svg)](https://codecov.io/gh/PlatosTwin/bayes_ab)
+[![PyPI](https://img.shields.io/pypi/v/bayes_ab.svg)](https://pypi.org/project/bayes_ab/)
 
 # Bayesian A/B testing
 
-`bayes_ab` is a small package for runnin Bayesian A/B(/C/D/...) tests.
+`bayes_ab` is a small package for running Bayesian A/B(/C/D/...) tests.
 
 **Implemented tests:**
 
@@ -32,12 +32,11 @@
     - Risk associated with choosing a given variant over other variants
     - Measured in the same units as the tested measure (e.g. positive rate or average value)
 - `Uplift vs. 'A'`
-    - Uplift of a given variant compared to the first variant added.
+    - Uplift of a given variant compared to the first variant added
 - `95% HDI`
-    - 95% confidence interval. The Bayesian approach allows us to say with confidence that, 95% of the time, the given
-      interval will contain the true value.
+    - 95% confidence interval. The Bayesian approach allows us to say that, 95% of the time, the 95% HDI will contain the true value
 
-Evaluation metrics are calculated using Monte Carlo simulations from posterior distributions.
+Evaluation metrics are calculated using Monte Carlo simulations from posterior distributions
 
 **Closed form solutions:**
 
@@ -97,7 +96,7 @@ to a higher value (default value is 200K); to fix values, set the `seed` paramet
 
 Class for Bayesian A/B test for binary-like data (e.g. conversions, successes, etc.).
 
-**Example with three variants:**
+**Example:**
 
 ```python
 import numpy as np
@@ -140,6 +139,9 @@ test.plot_differences(control='A', fname='binary_differences_example.png')
 
 Removing variant 'C' and passing `control='A'` and `rope=0.5` additionally returns a test-continuation recommendation:
 
+```python
+test.delete_variant("C")
+```
     Decision: Stop and implement either variant. Confidence: Low. Bounds: [-0.46%, 3.18%].
 
 Finally, we can plot the posterior distributions as well as the distribution of differences.
@@ -193,6 +195,10 @@ test.plot_differences(control='A', fname='poisson_differences_example.png')
     +---------+--------------+------+--------------------+---------------+--------------+
 
 Removing variant 'C' and passing `control='A'` and `rope=0.5` additionally returns a test-continuation recommendation:
+
+```python
+test.delete_variant("C")
+```
 
     Decision: Stop and implement either variant. Confidence: Low. Bounds: [-6.6, 0.7].
 
@@ -278,7 +284,7 @@ test.add_variant_data("A", data_a)
 # (looks more complicated but for large data it can be quite handy to move around only these sums)
 test.add_variant_data_agg(
     name="B",
-    totals=len(data_b),
+    total=len(data_b),
     positives=sum(x > 0 for x in data_b),
     sum_values=sum(data_b),
     sum_logs=sum([np.log(x) for x in data_b if x > 0]),
@@ -367,10 +373,18 @@ poetry run pre-commit install
 
 ## Roadmap
 
-Test classes to be added:
+Test classes to add:
 
 - `ExponentialDataTest`
 
-Metrics to be added:
+Other improvements:
 
-- `Potential Value Remaining`
+- Updated Jupyter examples folder
+- Validate `NormalDataTest`, `DeltaLognormalDataTest`, and `DiscreteDataTest`
+- Updates to `NormalDataTest`, `DeltaLognormalDataTest`, and `DiscreteDataTest`
+  - Add test continuation assessment
+  - Created formatted output
+  - Add plotting for posteriors and differences from control
+- Plot evolutions of posteriors with time
+
+## References
