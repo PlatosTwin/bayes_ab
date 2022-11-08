@@ -252,7 +252,7 @@ class PoissonDataTest(BaseDataTest):
         seed : Random seed.
         verbose : If True, output prints to console.
         control : Denotes the variant to treat as the control. If not None, used in generating a stopping decision.
-        rope : Region of Practical Equivalence. Should be passed in absolute terms: 0.1% = 0.001. Defaults to 0.001.
+        rope : Region of Practical Equivalence. Variants with a difference less than ROPE are practically equivalent.
         precision : Controls experiment stopping. HDI is compared to (rope * precision). Defaults to 0.8.
         interval : The percentage width of the HDI. Defaults to 95%. Must be in (0, 1).
 
