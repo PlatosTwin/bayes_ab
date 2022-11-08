@@ -1,7 +1,8 @@
-from numbers import Number
 from typing import List, Tuple
 import numpy as np
 import warnings
+import matplotlib.pyplot as plt
+import scipy.stats as stats
 
 from bayesian_testing.experiments.base import BaseDataTest
 from bayesian_testing.metrics import eval_poisson_agg, eval_closed_form_poisson_two, eval_closed_form_poisson_three
@@ -27,11 +28,11 @@ class PoissonDataTest(BaseDataTest):
 
     @property
     def totals(self):
-        return [self.data[k]["totals"] for k in self.data]
+        return [self.data[k]["total"] for k in self.data]
 
     @property
-    def mean(self):
-        return [self.data[k]["mean"] for k in self.data]
+    def obs_means(self):
+        return [self.data[k]["obs_mean"] for k in self.data]
 
     @property
     def sums(self):
@@ -44,6 +45,14 @@ class PoissonDataTest(BaseDataTest):
     @property
     def b_priors(self):
         return [self.data[k]["b_prior"] for k in self.data]
+
+    @property
+    def means(self):
+        return [self.data[k]["mean"] for k in self.data]
+
+    @property
+    def stdevs(self):
+        return [self.data[k]["stdev"] for k in self.data]
 
     def _eval_simulation(self, sim_count: int = 20000, seed: int = None) -> Tuple[dict, dict]:
         """
@@ -61,7 +70,7 @@ class PoissonDataTest(BaseDataTest):
         """
         pbbs, loss, samples = eval_poisson_agg(
             self.totals,
-            self.mean,
+            self.obs_means,
             self.a_priors,
             self.b_priors,
             sim_count=sim_count,
@@ -165,7 +174,7 @@ class PoissonDataTest(BaseDataTest):
         """
         keys = [
             "variant",
-            "totals",
+            "total",
             "mean",
             "prob_being_best",
             "expected_loss"
@@ -179,13 +188,8 @@ class PoissonDataTest(BaseDataTest):
             cf_pbbs = list(self._closed_form_poisson().values())
             print_closed_form_comparison(self.variant_names, pbbs, cf_pbbs)
 
-        data = [
-            self.variant_names,
-            self.totals,
-            self.mean,
-            pbbs,
-            loss,
-        ]
+        data = [self.variant_names, self.totals, self.means, pbbs, loss, ]
+
         res = [dict(zip(keys, item)) for item in zip(*data)]
 
         if verbose:
@@ -196,11 +200,11 @@ class PoissonDataTest(BaseDataTest):
     def add_variant_data_agg(
             self,
             name: str,
-            totals: int,
-            mean: Number,
-            obs_sum: Number,
-            a_prior: Number = 1,
-            b_prior: Number = 1,
+            total: int,
+            obs_mean: float,
+            obs_sum: int,
+            a_prior: float = 1,
+            b_prior: float = 1,
             replace: bool = True,
     ) -> None:
         """
@@ -213,8 +217,8 @@ class PoissonDataTest(BaseDataTest):
         Parameters
         ----------
         name : Variant name.
-        totals : Total number of experiment observations.
-        mean : Mean value of observations.
+        total : Total number of experiment observations.
+        obs_mean : Mean value of observations.
         obs_sum : Sum of counts from all observations.
         a_prior : Prior alpha parameter for Gamma distributions. Default value is 1.
         b_prior : Prior beta parameter for Gamma distributions. Default value is 1.
@@ -225,16 +229,18 @@ class PoissonDataTest(BaseDataTest):
             raise ValueError("Variant name has to be a string.")
         if a_prior <= 0 or b_prior <= 0:
             raise ValueError("Both [a_prior, b_prior] have to be positive numbers.")
-        if totals <= 0:
-            raise ValueError("Input variable 'totals' is expected to be positive integer.")
+        if total <= 0:
+            raise ValueError("Input variable 'total' is expected to be positive integer.")
 
         if name not in self.variant_names:
             self.data[name] = {
-                "totals": totals,
-                "mean": mean,
+                "total": total,
+                "obs_mean": obs_mean,
                 "sum": obs_sum,
                 "a_prior": a_prior,
-                "b_prior": b_prior
+                "b_prior": b_prior,
+                "mean": round((a_prior + total * obs_mean) / (b_prior + total), 5),
+                "stdev": round(np.sqrt((a_prior + total * obs_mean)) / (b_prior + total), 5)
             }
         elif name in self.variant_names and replace:
             msg = (
@@ -243,11 +249,13 @@ class PoissonDataTest(BaseDataTest):
             )
             logger.info(msg)
             self.data[name] = {
-                "totals": totals,
-                "mean": mean,
+                "total": total,
+                "obs_mean": obs_mean,
                 "sum": obs_sum,
                 "a_prior": a_prior,
-                "b_prior": b_prior
+                "b_prior": b_prior,
+                "mean": round((a_prior + total * obs_mean) / (b_prior + total), 5),
+                "stdev": round(np.sqrt((a_prior + total * obs_mean)) / (b_prior + total), 5)
             }
         elif name in self.variant_names and not replace:
             msg = (
@@ -256,17 +264,23 @@ class PoissonDataTest(BaseDataTest):
                 "If you wish to replace data instead, use replace=True."
             )
             logger.info(msg)
-            self.data[name]["mean"] = (self.data[name]["mean"] * self.data[name]["totals"] + mean * totals) / \
-                                      (totals + self.data[name]["totals"])
-            self.data[name]["totals"] += totals
+            self.data[name]["obs_mean"] = (self.data[name]["obs_mean"] * self.data[name]["total"] +
+                                           obs_mean * total) / \
+                                          (total + self.data[name]["total"])
+            self.data[name]["total"] += total
             self.data[name]["sum"] += obs_sum
+
+            obs_mean = self.data[name]["obs_mean"]
+            total = self.data[name]["total"]
+            self.data[name]["mean"] = round((a_prior + total * obs_mean) / (b_prior + total), 5),
+            self.data[name]["stdev"] = round(np.sqrt((a_prior + total * obs_mean)) / (b_prior + total), 5)
 
     def add_variant_data(
             self,
             name: str,
-            data: List[Number],
-            a_prior: Number = 1,
-            b_prior: Number = 1,
+            data: List[int],
+            a_prior: float = 1,
+            b_prior: float = 1,
             replace: bool = True,
     ) -> None:
         """
@@ -286,16 +300,90 @@ class PoissonDataTest(BaseDataTest):
         if len(data) == 0:
             raise ValueError("Data of added variant needs to have some observations.")
 
-        totals = len(data)
-        mean = np.mean(data)
+        total = len(data)
+        obs_mean = np.mean(data)
         obs_sum = np.sum(data)
 
         self.add_variant_data_agg(
             name,
-            totals,
-            mean,
+            total,
+            obs_mean,
             obs_sum,
             a_prior,
             b_prior,
             replace,
         )
+
+    def plot_posteriors(self, fname: str = None, dpi: int = 300) -> None:
+        """
+        For each variant, plot its posterior distribution.
+
+        Parameters
+        ----------
+        fname : Filename to which to save the resultant image; if None, the image is not saved.
+        dpi : DPI setting for saved image; used only when fname is not None.
+        """
+        fig, ax = plt.subplots(figsize=(10, 8), )
+
+        xmin = max(self.means) * 5
+        xmax = 0
+        for var in self.data:
+            a = self.data[var]['a_prior']
+            totals = self.data[var]["total"]
+            obs_mean = self.data[var]['obs_mean']
+            b = self.data[var]['b_prior']
+            mu = (a + totals * obs_mean) / (b + totals)
+
+            x = np.linspace(0, max(self.means) * 5, 10000)
+            y = stats.gamma.pdf(x, a=a + totals * obs_mean, scale=1 / (b + totals), )
+            ax.plot(x, y, label=f'{var}: $\mu={mu:.2f}$')
+            ax.fill_between(x, y, alpha=0.35)
+
+            if x[np.where(y >= 0.0001)[0][0]] < xmin:
+                xmin = x[np.where(y >= 0.0001)[0][0]]
+            if x[np.where(y >= 0.0001)[0][-1]] > xmax:
+                xmax = x[np.where(y >= 0.0001)[0][-1]]
+
+        ax.set_ylabel('Probability density')
+        ax.set_xlabel('Count value')
+        ax.legend()
+
+        plt.xlim([xmin * 0.9, xmax * 1.10])
+
+        fig.tight_layout()
+
+        if fname:
+            plt.savefig(fname, dpi=dpi)
+
+        plt.show()
+
+    def plot_differences(self, control: str, fname: str = None, dpi: int = 300) -> None:
+        """
+        For each variant, plot the difference between its posterior and the posterior for <control>.
+
+        Parameters
+        ----------
+        control : The variant to treat as control; this variant will be subtracted from each other variant.
+        fname : Filename to which to save the resultant image; if None, the image is not saved.
+        dpi : DPI setting for saved image; used only when fname is not None.
+        """
+        num_bins = 250
+        fig, ax = plt.subplots(figsize=(10, 8), )
+
+        for var in [i for i in self.variant_names if i != control]:
+            temp_sample = self.data[var]['samples'] - self.data[control]['samples']
+            temp_mu = self.data[var]['mean'] - self.data[control]['mean']
+
+            ax.hist(temp_sample, num_bins, label=f'{var}: $\mu={temp_mu:.2f}$', alpha=0.65)
+            ax.set_xlabel('Value')
+            ax.set_ylabel('Unnormalized probability density')
+
+        ax.legend()
+
+        plt.title(f'Difference from {control}')
+        fig.tight_layout()
+
+        if fname:
+            plt.savefig(fname, dpi=dpi)
+
+        plt.show()

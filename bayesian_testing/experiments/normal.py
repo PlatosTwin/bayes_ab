@@ -26,7 +26,7 @@ class NormalDataTest(BaseDataTest):
 
     @property
     def totals(self):
-        return [self.data[k]["totals"] for k in self.data]
+        return [self.data[k]["total"] for k in self.data]
 
     @property
     def sum_values(self):
@@ -100,7 +100,7 @@ class NormalDataTest(BaseDataTest):
         """
         keys = [
             "variant",
-            "totals",
+            "total",
             "sum_values",
             "avg_values",
             "prob_being_best",
@@ -125,7 +125,7 @@ class NormalDataTest(BaseDataTest):
     def add_variant_data_agg(
         self,
         name: str,
-        totals: int,
+        total: int,
         sum_values: float,
         sum_values_2: float,
         m_prior: Number = 1,
@@ -144,7 +144,7 @@ class NormalDataTest(BaseDataTest):
         Parameters
         ----------
         name : Variant name.
-        totals : Total number of experiment observations (e.g. number of sessions).
+        total : Total number of experiment observations (e.g. number of sessions).
         sum_values : Sum of values for a given variant.
         sum_values_2 : Sum of values squared for a given variant.
         m_prior : Prior normal mean.
@@ -160,12 +160,12 @@ class NormalDataTest(BaseDataTest):
             raise ValueError("Variant name has to be a string.")
         if m_prior < 0 or a_prior_ig < 0 or b_prior_ig < 0 or w_prior < 0:
             raise ValueError("All priors of [m, a_ig, b_ig, w] have to be non-negative numbers.")
-        if totals <= 0:
-            raise ValueError("Input variable 'totals' is expected to be positive integer.")
+        if total <= 0:
+            raise ValueError("Input variable 'total' is expected to be positive integer.")
 
         if name not in self.variant_names:
             self.data[name] = {
-                "totals": totals,
+                "total": total,
                 "sum_values": sum_values,
                 "sum_values_2": sum_values_2,
                 "m_prior": m_prior,
@@ -180,7 +180,7 @@ class NormalDataTest(BaseDataTest):
             )
             logger.info(msg)
             self.data[name] = {
-                "totals": totals,
+                "total": total,
                 "sum_values": sum_values,
                 "sum_values_2": sum_values_2,
                 "m_prior": m_prior,
@@ -195,7 +195,7 @@ class NormalDataTest(BaseDataTest):
                 "If you wish to replace data instead, use replace=True."
             )
             logger.info(msg)
-            self.data[name]["totals"] += totals
+            self.data[name]["total"] += total
             self.data[name]["sum_values"] += sum_values
             self.data[name]["sum_values_2"] += sum_values_2
 
@@ -230,13 +230,13 @@ class NormalDataTest(BaseDataTest):
         if len(data) == 0:
             raise ValueError("Data of added variant needs to have some observations.")
 
-        totals = len(data)
+        total = len(data)
         sum_values = sum(data)
         sum_values_2 = sum(np.square(data))
 
         self.add_variant_data_agg(
             name,
-            totals,
+            total,
             sum_values,
             sum_values_2,
             m_prior,

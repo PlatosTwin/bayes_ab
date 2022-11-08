@@ -36,6 +36,14 @@ def test_b_priors(conv_test):
     assert conv_test.b_priors == [1, 1, 2]
 
 
+def test_means(conv_test):
+    assert conv_test.means == [0.33333, 0.25, 0.21429]
+
+
+def test_stdevs(conv_test):
+    assert conv_test.stdevs == [0.13074, 0.1201, 0.10595]
+
+
 def test_probabs_of_being_best(conv_test):
     pbbs = conv_test._probabs_of_being_best(sim_count=2000000, seed=314)
     assert pbbs == {"A": 0.58086, "B": 0.259051, "C": 0.160089}
@@ -49,31 +57,25 @@ def test_expected_loss(conv_test):
 def test_evaluate(conv_test):
     eval_report = conv_test.evaluate(sim_count=2000000, seed=314)
     assert eval_report == [
-        {
-            "variant": "A",
-            "totals": 10,
-            "positives": 3,
-            "positive_rate": 0.3,
-            "prob_being_best": 0.58086,
-            "expected_loss": 0.0509394,
-            "uplift_vs_a": 0
-        },
-        {
-            "variant": "B",
-            "totals": 10,
-            "positives": 2,
-            "positive_rate": 0.2,
-            "prob_being_best": 0.259051,
-            "expected_loss": 0.1340909,
-            "uplift_vs_a": -0.33333
-        },
-        {
-            "variant": "C",
-            "totals": 11,
-            "positives": 2,
-            "positive_rate": 0.18182,
-            "prob_being_best": 0.160089,
-            "expected_loss": 0.1701915,
-            "uplift_vs_a": -0.39393
-        },
+        {'variant': 'A',
+         'total': 10,
+         'positives': 3,
+         'positive_rate': 0.33333,
+         'prob_being_best': 0.58086,
+         'expected_loss': 0.0509394,
+         'uplift_vs_a': 0},
+        {'variant': 'B',
+         'total': 10,
+         'positives': 2,
+         'positive_rate': 0.25,
+         'prob_being_best': 0.259051,
+         'expected_loss': 0.1340909,
+         'uplift_vs_a': -0.24999},
+        {'variant': 'C',
+         'total': 11,
+         'positives': 2,
+         'positive_rate': 0.21429,
+         'prob_being_best': 0.160089,
+         'expected_loss': 0.1701915,
+         'uplift_vs_a': -0.35712}
     ]

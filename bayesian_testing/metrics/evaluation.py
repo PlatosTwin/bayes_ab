@@ -58,6 +58,22 @@ def estimate_expected_loss(data: Union[List[List[Number]], np.ndarray]) -> List[
     return res
 
 
+def confidence_interval(data: Union[List[List[Number]], np.ndarray], interval: Number = 0.95) -> List[float]:
+    """
+    Return the lower- and upper-bound for the <interval>% confidence interval.
+
+    Parameters
+    ----------
+    data : List of simulated data for each variant.
+    interval : The width of the interval to be calculated; the default is 95%.
+
+    Returns
+    -------
+    interval : List of [lower-bound, upper-bound] for the <interval>% confidence interval.
+    """
+    pass
+
+
 def print_closed_form_comparison(variants: list, pbbs: list, cf_pbbs: list) -> None:
     """
     Pretty-print output comparing the estimate to the exact chance to beat all.
@@ -85,7 +101,7 @@ def print_bernoulli_evaluation(res: list) -> None:
         for i in ['positive_rate', 'prob_being_best', 'expected_loss', 'uplift_vs_a']:
             temp_row[i] = f'{temp_row[i]:.2%}'
         temp_row = [temp_row['variant'],
-                    temp_row['totals'],
+                    temp_row['total'],
                     temp_row['positives'],
                     temp_row['positive_rate'],
                     temp_row['prob_being_best'],
@@ -112,7 +128,7 @@ def print_poisson_evaluation(res: list) -> None:
         temp_row['expected_loss'] = round(temp_row['expected_loss'], 2)
         temp_row['mean'] = round(temp_row['mean'], 1)
         temp_row = [temp_row['variant'],
-                    temp_row['totals'],
+                    temp_row["total"],
                     temp_row['mean'],
                     temp_row['prob_being_best'],
                     temp_row['expected_loss']]
@@ -229,10 +245,10 @@ def eval_closed_form_bernoulli_two(a: Dict, b: Dict) -> float:
     total = 0
     for k in range(b['positives'] + 1):
         total += np.exp(scipy.special.betaln(a['positives'] + 1 + k,
-                                             2 + b['totals'] - b['positives'] + a['totals'] - a['positives']) -
-                        np.log(b['totals'] - b['positives'] + 1 + k) -
-                        scipy.special.betaln(1 + k, b['totals'] - b['positives'] + 1) -
-                        scipy.special.betaln(a['positives'] + 1, 1 + a['totals'] - a['positives']))
+                                             2 + b["total"] - b['positives'] + a["total"] - a['positives']) -
+                        np.log(b["total"] - b['positives'] + 1 + k) -
+                        scipy.special.betaln(1 + k, b["total"] - b['positives'] + 1) -
+                        scipy.special.betaln(a['positives'] + 1, 1 + a["total"] - a['positives']))
 
     return total
 
@@ -254,9 +270,9 @@ def eval_closed_form_bernoulli_three(a: Dict, b: Dict, c: Dict) -> float:
     total = 0.0
     for i in range(a['positives'] + 1):
         for j in range(b['positives'] + 1):
-            beta_A = a['totals'] - a['positives'] + 1
-            beta_B = b['totals'] - b['positives'] + 1
-            beta_C = c['totals'] - c['positives'] + 1
+            beta_A = a["total"] - a['positives'] + 1
+            beta_B = b["total"] - b['positives'] + 1
+            beta_C = c["total"] - c['positives'] + 1
 
             total += np.exp(scipy.special.betaln(c['positives'] + 1 + i + j, beta_A + beta_B + beta_C)
                             - np.log(beta_A + i) - np.log(beta_B + j)

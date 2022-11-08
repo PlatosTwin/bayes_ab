@@ -1,6 +1,9 @@
-from numbers import Number
 from typing import List, Tuple
 import warnings
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
+import numpy as np
+import scipy.stats as stats
 
 from bayesian_testing.experiments.base import BaseDataTest
 from bayesian_testing.metrics import eval_bernoulli_agg, print_bernoulli_evaluation, print_closed_form_comparison
@@ -26,7 +29,7 @@ class BinaryDataTest(BaseDataTest):
 
     @property
     def totals(self):
-        return [self.data[k]["totals"] for k in self.data]
+        return [self.data[k]["total"] for k in self.data]
 
     @property
     def positives(self):
@@ -39,6 +42,14 @@ class BinaryDataTest(BaseDataTest):
     @property
     def b_priors(self):
         return [self.data[k]["b_prior"] for k in self.data]
+
+    @property
+    def means(self):
+        return [self.data[k]["mean"] for k in self.data]
+
+    @property
+    def stdevs(self):
+        return [self.data[k]["stdev"] for k in self.data]
 
     def _eval_simulation(self, sim_count: int = 200000, seed: int = None) -> Tuple[dict, dict]:
         """
@@ -134,6 +145,12 @@ class BinaryDataTest(BaseDataTest):
 
         return dict(zip(self.variant_names, pbbs))
 
+    def _confident_interval(self):
+        """
+        Foo
+        """
+        pass
+
     def evaluate(
             self,
             closed_form: bool = False,
@@ -157,7 +174,7 @@ class BinaryDataTest(BaseDataTest):
         """
         keys = [
             "variant",
-            "totals",
+            "total",
             "positives",
             "positive_rate",
             "prob_being_best",
@@ -173,12 +190,11 @@ class BinaryDataTest(BaseDataTest):
             cf_pbbs = list(self._closed_form_bernoulli().values())
             print_closed_form_comparison(self.variant_names, pbbs, cf_pbbs)
 
-        positive_rate = [round(i[0] / i[1], 5) for i in zip(self.positives, self.totals)]
         uplift = [0]
-        for i in positive_rate[1:]:
-            uplift.append(round((i - positive_rate[0]) / positive_rate[0], 5))
+        for i in self.means[1:]:
+            uplift.append(round((i - self.means[0]) / self.means[0], 5))
 
-        data = [self.variant_names, self.totals, self.positives, positive_rate, pbbs, loss, uplift]
+        data = [self.variant_names, self.totals, self.positives, self.means, pbbs, loss, uplift]
         res = [dict(zip(keys, item)) for item in zip(*data)]
 
         if verbose:
@@ -189,10 +205,10 @@ class BinaryDataTest(BaseDataTest):
     def add_variant_data_agg(
             self,
             name: str,
-            totals: int,
+            total: int,
             positives: int,
-            a_prior: Number = 1,
-            b_prior: Number = 1,
+            a_prior: float = 1,
+            b_prior: float = 1,
             replace: bool = True,
     ) -> None:
         """
@@ -219,7 +235,7 @@ class BinaryDataTest(BaseDataTest):
         Parameters
         ----------
         name : Variant name.
-        totals : Total number of experiment observations (e.g. number of sessions).
+        total : Total number of experiment observations (e.g. number of sessions).
         positives : Total number of ones for a given variant (e.g. number of conversions).
         a_prior : Prior alpha parameter for Beta distributions.
             Default value 1 is based on the Bayes-Laplace non-informative prior Beta(1, 1).
@@ -232,20 +248,25 @@ class BinaryDataTest(BaseDataTest):
             raise ValueError("Variant name has to be a string.")
         if a_prior <= 0 or b_prior <= 0:
             raise ValueError("Both [a_prior, b_prior] have to be positive numbers.")
-        if totals <= 0:
-            raise ValueError("Input variable 'totals' is expected to be positive integer.")
+        if total <= 0:
+            raise ValueError("Input variable 'total' is expected to be positive integer.")
         if positives < 0:
             raise ValueError("Input variable 'positives' is expected to be non-negative integer.")
-        if totals < positives:
-            raise ValueError("Not possible to have more positives that totals!")
+        if total < positives:
+            raise ValueError("Not possible to have more positives that the total!")
 
         if name not in self.variant_names:
             self.data[name] = {
-                "totals": totals,
+                "total": total,
                 "positives": positives,
                 "a_prior": a_prior,
                 "b_prior": b_prior,
+                "mean": round((a_prior + positives) / (a_prior + positives + b_prior + total - positives), 5),
+                "stdev": round(np.sqrt((a_prior + positives) * (b_prior + total - positives) /
+                                       ((a_prior + positives + b_prior + total - positives) ** 2 *
+                                        (a_prior + positives + b_prior + total - positives + 1))), 5)
             }
+
         elif name in self.variant_names and replace:
             msg = (
                 f"Variant {name} already exists - new data is replacing it. "
@@ -253,10 +274,14 @@ class BinaryDataTest(BaseDataTest):
             )
             logger.info(msg)
             self.data[name] = {
-                "totals": totals,
+                "total": total,
                 "positives": positives,
                 "a_prior": a_prior,
                 "b_prior": b_prior,
+                "mean": round((a_prior + positives) / (a_prior + b_prior + total), 5),
+                "stdev": round(np.sqrt((a_prior + positives) * (b_prior + total - positives) /
+                                       ((a_prior + b_prior + total) ** 2 *
+                                        (a_prior + b_prior + total + 1))), 5)
             }
         elif name in self.variant_names and not replace:
             msg = (
@@ -265,15 +290,24 @@ class BinaryDataTest(BaseDataTest):
                 "If you wish to replace data instead, use replace=True."
             )
             logger.info(msg)
-            self.data[name]["totals"] += totals
+            self.data[name]["total"] += total
             self.data[name]["positives"] += positives
+
+            positives = self.data[name]["positives"]
+            total = self.data[name]["total"]
+
+            self.data[name]['mean'] = round((a_prior + positives) /
+                                            (a_prior + b_prior + total), 5),
+            self.data[name]['stdev'] = round(np.sqrt((a_prior + positives) * (b_prior + total - positives) /
+                                                     ((a_prior + positives + b_prior + total - positives) ** 2 *
+                                                      (a_prior + positives + b_prior + total - positives + 1))), 5)
 
     def add_variant_data(
             self,
             name: str,
             data: List[int],
-            a_prior: Number = 1,
-            b_prior: Number = 1,
+            a_prior: float = 1,
+            b_prior: float = 1,
             replace: bool = True,
     ) -> None:
         """
@@ -312,7 +346,82 @@ class BinaryDataTest(BaseDataTest):
         if not min([i in [0, 1] for i in data]):
             raise ValueError("Input data needs to be a list of zeros and ones.")
 
-        totals = len(data)
+        total = len(data)
         positives = sum(data)
 
-        self.add_variant_data_agg(name, totals, positives, a_prior, b_prior, replace)
+        self.add_variant_data_agg(name, total, positives, a_prior, b_prior, replace)
+
+    def plot_posteriors(self, fname: str = None, dpi: int = 300) -> None:
+        """
+        For each variant, plot its posterior distribution.
+
+        Parameters
+        ----------
+        fname : Filename to which to save the resultant image; if None, the image is not saved.
+        dpi : DPI setting for saved image; used only when fname is not None.
+        """
+        fig, ax = plt.subplots(figsize=(10, 8), )
+
+        xmin = 1
+        xmax = 0
+        for var in self.data:
+            a = self.data[var]['a_prior']
+            c = self.data[var]['positives']
+            b = self.data[var]['b_prior']
+            n = self.data[var]["total"]
+            mu = self.data[var]['mean']
+
+            x = np.linspace(0, 1, 10000)
+            y = stats.beta.pdf(x, a + c, b + n - c)
+            ax.plot(x * 100, y, label=f'{var}: $\mu={mu:.2%}$%')
+            ax.fill_between(x * 100, y, alpha=0.35)
+            ax.xaxis.set_major_formatter(mtick.PercentFormatter())
+
+            if x[np.where(y >= 0.0001)[0][0]] < xmin:
+                xmin = x[np.where(y >= 0.0001)[0][0]]
+            if x[np.where(y >= 0.0001)[0][-1]] > xmax:
+                xmax = x[np.where(y >= 0.0001)[0][-1]]
+
+        ax.set_ylabel('Probability density')
+        ax.legend()
+
+        plt.xlim(xmin * 80, xmax * 120)
+
+        fig.tight_layout()
+
+        if fname:
+            plt.savefig(fname, dpi=dpi)
+
+        plt.show()
+
+    def plot_differences(self, control: str, fname: str = None, dpi: int = 300) -> None:
+        """
+        For each variant, plot the difference between its posterior and the posterior for <control>.
+
+        Parameters
+        ----------
+        control : The variant to treat as control; this variant will be subtracted from each other variant.
+        fname : Filename to which to save the resultant image; if None, the image is not saved.
+        dpi : DPI setting for saved image; used only when fname is not None.
+        """
+        num_bins = 250
+        fig, ax = plt.subplots(figsize=(10, 8), )
+
+        for var in [i for i in self.variant_names if i != control]:
+            temp_sample = self.data[var]['samples'] - self.data[control]['samples']
+            temp_mu = self.data[var]['mean'] - self.data[control]['mean']
+
+            ax.hist(temp_sample, num_bins, label=f'{var}: $\mu={temp_mu:.2%}$%', alpha=0.65)
+            ax.xaxis.set_major_formatter(mtick.PercentFormatter())
+            ax.set_xlabel('Probability')
+            ax.set_ylabel('Probability density')
+
+        ax.legend()
+
+        plt.title(f'Difference from {control}')
+        fig.tight_layout()
+
+        if fname:
+            plt.savefig(fname, dpi=dpi)
+
+        plt.show()

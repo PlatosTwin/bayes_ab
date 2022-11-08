@@ -28,8 +28,16 @@ def test_sums(conv_test):
     assert conv_test.sums == [38, 41, 39]
 
 
+def test_obs_means(conv_test):
+    assert conv_test.obs_means == [3.8, 4.1, 4]
+
+
 def test_means(conv_test):
-    assert conv_test.mean == [3.8, 4.1, 4]
+    assert conv_test.means == [3.54545, 3.81818, 3.53846]
+
+
+def test_stdevs(conv_test):
+    assert conv_test.stdevs == [0.56773, 0.58916, 0.52172]
 
 
 def test_a_priors(conv_test):
@@ -53,25 +61,6 @@ def test_expected_loss(conv_test):
 def test_evaluate(conv_test):
     eval_report = conv_test.evaluate(sim_count=2000000, seed=314)
     assert eval_report == [
-        {
-            "variant": "A",
-            "totals": 10,
-            "mean": 3.8,
-            "prob_being_best": 0.266836,
-            "expected_loss": 0.5896207,
-        },
-        {
-            "variant": "B",
-            "totals": 10,
-            "mean": 4.1,
-            "prob_being_best": 0.480775,
-            "expected_loss": 0.3169076,
-        },
-        {
-            "variant": "C",
-            "totals": 11,
-            "mean": 4,
-            "prob_being_best": 0.252389,
-            "expected_loss": 0.5965555,
-        },
-    ]
+        {'variant': 'A', 'total': 10, 'mean': 3.54545, 'prob_being_best': 0.266836, 'expected_loss': 0.5896207},
+        {'variant': 'B', 'total': 10, 'mean': 3.81818, 'prob_being_best': 0.480775, 'expected_loss': 0.3169076},
+        {'variant': 'C', 'total': 11, 'mean': 3.53846, 'prob_being_best': 0.252389, 'expected_loss': 0.5965555}]
