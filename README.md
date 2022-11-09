@@ -388,3 +388,24 @@ Other improvements:
 - Plot evolutions of posteriors with time
 
 ## References
+
+This package leans heavily on the resources outlined below:
+- [Bayesian A/B Testing at VWO](https://vwo.com/downloads/VWO_SmartStats_technical_whitepaper.pdf)
+(Chris Stucchio, 2015)
+- [Optional stopping in data collection: p values, Bayes factors, credible intervals, precision](
+http://doingbayesiandataanalysis.blogspot.com/2013/11/optional-stopping-in-data-collection-p.html) (John Kruschke, 2013)
+- [Is Bayesian A/B Testing Immune to Peeking? Not Exactly](http://varianceexplained.org/r/bayesian-ab-testing/)
+(David Robinson, 2015)
+- [Formulas for Bayesian A/B Testing](https://www.evanmiller.org/bayesian-ab-testing.html) (Evan Miller, 2015)
+- [Easy Evaluation of Decision Rules in Bayesian A/B testing](
+https://www.chrisstucchio.com/blog/2014/bayesian_ab_decision_rule.html) (Chris Stucchio, 2014)
+- [Bayesian Inference 2019](https://vioshyvo.github.io/Bayesian_inference/index.html) (Hyvönen & Tolonen, 2019)
+- [Continuous Monitoring of A/B Tests without Pain: Optional
+Stopping in Bayesian Testing](https://arxiv.org/pdf/1602.05549.pdf) (Deng, Lu, & Chen, 2016)
+- [Bayesian Data Analysis, Third Edition](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf) (Gelman et al., 2021)
+
+## Online calculators
+- [Yanir Seroussi's calculator](https://yanirs.github.io/tools/split-test-calculator/) |
+[project description](https://yanirseroussi.com/2016/06/19/making-bayesian-ab-testing-more-accessible/)
+- [Lyst's calculator](https://making.lyst.com/bayesian-calculator/) | [project descrption](https://making.lyst.com/2014/05/10/bayesian-ab-testing/)
+- [Dynamic Yield's calculator](https://marketing.dynamicyield.com/bayesian-calculator/)
