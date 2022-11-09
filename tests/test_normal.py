@@ -139,7 +139,7 @@ def test_evaluate(norm_test):
     assert eval_report == [
         {
             "variant": "A",
-            "totals": 40,
+            "total": 40,
             "sum_values": 386.6,
             "avg_values": 9.665,
             "prob_being_best": 0.05105,
@@ -147,7 +147,7 @@ def test_evaluate(norm_test):
         },
         {
             "variant": "B",
-            "totals": 18,
+            "total": 18,
             "sum_values": 189.0,
             "avg_values": 10.5,
             "prob_being_best": 0.27935,
@@ -155,7 +155,7 @@ def test_evaluate(norm_test):
         },
         {
             "variant": "C",
-            "totals": 22,
+            "total": 22,
             "sum_values": 252.7,
             "avg_values": 11.48636,
             "prob_being_best": 0.6696,
