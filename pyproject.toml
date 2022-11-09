@@ -17,7 +17,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7.1"
+python = ">=3.8,<4.0"
 numpy = "^1.19.0"
 prettytable = "^3.5.0"
 scipy="^1.9.3"

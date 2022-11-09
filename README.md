@@ -146,9 +146,9 @@ test.delete_variant("C")
 
 Finally, we can plot the posterior distributions as well as the distribution of differences.
 
-![](https://raw.githubusercontent.com/PlatosTwin/bayes-ab/main/examples/plots/binary_posteriors_example.png)
+![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/binary_posteriors_example.png)
 
-![](https://raw.githubusercontent.com/PlatosTwin/bayes-ab/main/examples/plots/binary_differences_example.png)
+![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/binary_differences_example.png)
 
 ### PoissonDataTest
 
@@ -204,9 +204,9 @@ test.delete_variant("C")
 
 Finally, we can plot the posterior distributions as well as the distribution of differences.
 
-![](https://raw.githubusercontent.com/PlatosTwin/bayes-ab/main/examples/plots/poisson_posteriors_example.png)
+![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/poisson_posteriors_example.png)
 
-![](https://raw.githubusercontent.com/PlatosTwin/bayes-ab/main/examples/plots/poisson_differences_example.png)
+![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/poisson_differences_example.png)
 
 ### NormalDataTest
 
