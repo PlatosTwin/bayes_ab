@@ -437,8 +437,8 @@ particular derivation, the doc string contains the exact reference.
 - [Easy Evaluation of Decision Rules in Bayesian A/B testing](
   https://www.chrisstucchio.com/blog/2014/bayesian_ab_decision_rule.html) (Chris Stucchio, 2014)
 - [Bayesian Inference 2019](https://vioshyvo.github.io/Bayesian_inference/index.html) (Hyvönen & Tolonen, 2019)
-- [Continuous Monitoring of A/B Tests without Pain: Optional Stopping in Bayesian Testing](https://arxiv.org/pdf/1602.05549.pdf) (
-  Deng, Lu, & Chen, 2016)
+- [Continuous Monitoring of A/B Tests without Pain: Optional Stopping in Bayesian Testing](https://arxiv.org/pdf/1602.05549.pdf) 
+(Deng, Lu, & Chen, 2016)
 - [Bayesian Data Analysis, Third Edition](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf) (Gelman et al., 2021)
 
 ## Online calculators
