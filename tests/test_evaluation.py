@@ -17,7 +17,7 @@ PBB_BERNOULLI_AGG_INPUTS = [
             "sim_count": 20000,
             "seed": 52,
         },
-        "expected_output": ([0.04185, 0.92235, 0.0358], [0.0030138, 6.06e-05, 0.0031649]),
+        "expected_output": ([0.04195, 0.92215, 0.0359], [0.0030135, 6.07e-05, 0.0031644]),
     },
     {
         "input": {
@@ -26,7 +26,7 @@ PBB_BERNOULLI_AGG_INPUTS = [
             "sim_count": 10000,
             "seed": 52,
         },
-        "expected_output": ([0.4899, 0.5101], [0.0204051, 0.0182965]),
+        "expected_output": ([0.4775, 0.5225], [0.0212003, 0.0175862]),
     },
     {
         "input": {
@@ -35,7 +35,7 @@ PBB_BERNOULLI_AGG_INPUTS = [
             "sim_count": 20000,
             "seed": 52,
         },
-        "expected_output": ([0.5008, 0.4992], [0.0030829, 0.0031614]),
+        "expected_output": ([0.4935, 0.5065], [0.0049983, 0.0048362]),
     },
     {
         "input": {
@@ -44,7 +44,7 @@ PBB_BERNOULLI_AGG_INPUTS = [
             "sim_count": 20000,
             "seed": 52,
         },
-        "expected_output": ([1], [0]),
+        "expected_output": ([1.0], [0.0]),
     },
     {
         "input": {
@@ -133,7 +133,7 @@ PBB_DELTA_LOGNORMAL_AGG_INPUTS = [
             "sim_count": 20000,
             "seed": 52,
         },
-        "expected_output": ([0.00015, 0.03345, 0.9664], [0.2209593, 0.1205541, 0.0008458]),
+        "expected_output": ([0.00015, 0.03345, 0.9664], [0.2210276, 0.1206176, 0.0008447]),
     },
     {
         "input": {
@@ -144,7 +144,7 @@ PBB_DELTA_LOGNORMAL_AGG_INPUTS = [
             "sim_count": 10000,
             "seed": 52,
         },
-        "expected_output": ([0.5013, 0.4987], [0.028189, 0.0287233]),
+        "expected_output": ([0.5014, 0.4986], [0.0281956, 0.0287299]),
     },
     {
         "input": {
@@ -218,49 +218,61 @@ PBB_NUMERICAL_DIRICHLET_AGG_INPUTS = [
 PBB_POISSON_AGG_INPUTS = [
     {
         "input": {
-            "totals": [31500, 32000, 31000],
-            "mean": [1580, 1700, 1550],
+            "totals": [1400, 1000, 2000],
+            "mean": [41.99857142857143, 40.034, 42.9405],
+            "obs_sum": [58798, 40034, 85881],
+            "a_prior": [1, 1, 1],
+            "b_prior": [1, 1, 1],
+            "sim_count": 20000,
+            "seed": 314,
+        },
+        "expected_output": ([0.0, 0.0, 1.0], [0.9492442, 2.9237474, 0.0]),
+    },
+    {
+        "input": {
+            "totals": [200, 350],
+            "mean": [98.26, 99.70285714285714],
+            "obs_sum": [19652, 34896],
+            "a_prior": [1, 1],
+            "b_prior": [1, 1],
+            "sim_count": 20000,
+            "seed": 314,
+        },
+        "expected_output": ([0.02855, 0.97145], [1.6558778, 0.0095961]),
+    },
+    {
+        "input": {
+            "totals": [250, 270, 100],
+            "mean": [0, 0, 0],
+            "obs_sum": [0, 0, 0],
+            "a_prior": [1, 1, 1],
+            "b_prior": [1, 1, 1],
+            "sim_count": 20000,
+            "seed": 314,
+        },
+        "expected_output": ([0.2132, 0.1919, 0.5949], [0.0077535, 0.0080318, 0.0018684]),
+    },
+    {
+        "input": {
+            "totals": [25],
+            "mean": [4.64],
+            "obs_sum": [116],
+            "a_prior": [1],
+            "b_prior": [1],
+            "sim_count": 20000,
+            "seed": 314,
+        },
+        "expected_output": ([1.0], [0.0]),
+    },
+    {
+        "input": {
+            "totals": [],
+            "mean": [],
             "obs_sum": [],
             "a_prior": [],
             "b_prior": [],
             "sim_count": 20000,
             "seed": 314,
-        },
-        "expected_output": ([0.04185, 0.92235, 0.0358], [0.0030138, 6.06e-05, 0.0031649]),
-    },
-    {
-        "input": {
-            "totals": [100, 200],
-            "successes": [80, 160],
-            "sim_count": 10000,
-            "seed": 52,
-        },
-        "expected_output": ([0.4899, 0.5101], [0.0204051, 0.0182965]),
-    },
-    {
-        "input": {
-            "totals": [100, 100],
-            "successes": [0, 0],
-            "sim_count": 20000,
-            "seed": 52,
-        },
-        "expected_output": ([0.5008, 0.4992], [0.0030829, 0.0031614]),
-    },
-    {
-        "input": {
-            "totals": [100],
-            "successes": [77],
-            "sim_count": 20000,
-            "seed": 52,
-        },
-        "expected_output": ([1], [0]),
-    },
-    {
-        "input": {
-            "totals": [],
-            "successes": [],
-            "sim_count": 20000,
-            "seed": 52,
         },
         "expected_output": ([], []),
     },
@@ -270,21 +282,21 @@ PBB_POISSON_AGG_INPUTS = [
 @pytest.mark.parametrize("inp", PBB_BERNOULLI_AGG_INPUTS)
 def test_eval_bernoulli_agg(inp):
     i = inp["input"]
-    res = eval_bernoulli_agg(i["totals"], i["successes"], sim_count=i["sim_count"], seed=i["seed"])
-    assert res == inp["expected_output"]
+    res_a, res_b, _ = eval_bernoulli_agg(i["totals"], i["successes"], sim_count=i["sim_count"], seed=i["seed"])
+    assert res_a == inp["expected_output"][0] and res_b == inp["expected_output"][1]
 
 
 @pytest.mark.parametrize("inp", PBB_NORMAL_AGG_INPUTS)
 def test_eval_normal_agg(inp):
     i = inp["input"]
-    res = eval_normal_agg(
+    res_a, res_b, _ = eval_normal_agg(
         i["totals"],
         i["sums"],
         i["sums_2"],
         sim_count=i["sim_count"],
         seed=i["seed"],
     )
-    assert res == inp["expected_output"]
+    assert res_a == inp["expected_output"][0] and res_b == inp["expected_output"][1]
 
 
 def test_eval_normal_agg_different_runs():
@@ -297,7 +309,7 @@ def test_eval_normal_agg_different_runs():
 @pytest.mark.parametrize("inp", PBB_DELTA_LOGNORMAL_AGG_INPUTS)
 def test_eval_delta_lognormal_agg(inp):
     i = inp["input"]
-    res = eval_delta_lognormal_agg(
+    res_a, res_b, _ = eval_delta_lognormal_agg(
         i["totals"],
         i["successes"],
         i["sum_logs"],
@@ -305,7 +317,7 @@ def test_eval_delta_lognormal_agg(inp):
         sim_count=i["sim_count"],
         seed=i["seed"],
     )
-    assert res == inp["expected_output"]
+    assert res_a == inp["expected_output"][0] and res_b == inp["expected_output"][1]
 
 
 def test_eval_delta_lognormal_agg_different_runs():
@@ -318,8 +330,10 @@ def test_eval_delta_lognormal_agg_different_runs():
 @pytest.mark.parametrize("inp", PBB_NUMERICAL_DIRICHLET_AGG_INPUTS)
 def test_eval_numerical_dirichlet_agg(inp):
     i = inp["input"]
-    res = eval_numerical_dirichlet_agg(i["states"], i["concentrations"], sim_count=i["sim_count"], seed=i["seed"])
-    assert res == inp["expected_output"]
+    res_a, res_b, _ = eval_numerical_dirichlet_agg(
+        i["states"], i["concentrations"], sim_count=i["sim_count"], seed=i["seed"]
+    )
+    assert res_a == inp["expected_output"][0] and res_b == inp["expected_output"][1]
 
 
 def test_eval_numerical_dirichlet_agg_different_runs():
@@ -332,14 +346,10 @@ def test_eval_numerical_dirichlet_agg_different_runs():
 @pytest.mark.parametrize("inp", PBB_POISSON_AGG_INPUTS)
 def test_eval_poisson_agg(inp):
     i = inp["input"]
-    res = eval_normal_agg(
-        i["totals"],
-        i["sums"],
-        i["sums_2"],
-        sim_count=i["sim_count"],
-        seed=i["seed"],
+    res_a, res_b, _ = eval_poisson_agg(
+        i["totals"], i["mean"], i["a_prior"], i["b_prior"], sim_count=i["sim_count"], seed=i["seed"]
     )
-    assert res == inp["expected_output"]
+    assert res_a == inp["expected_output"][0] and res_b == inp["expected_output"][1]
 
 
 def test_eval_poisson_agg_different_runs():

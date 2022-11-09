@@ -281,7 +281,7 @@ def eval_bernoulli_agg(
     validate_bernoulli_input(totals, positives)
 
     if len(totals) == 0:
-        return [], []
+        return [], [], []
 
     # Default prior for all variants is Beta(0.5, 0.5) which is non-information prior.
     if not a_priors_beta:
@@ -332,7 +332,7 @@ def eval_normal_agg(
     res_loss : List of expected loss for each variant.
     """
     if len(totals) == 0:
-        return [], []
+        return [], [], []
 
     # Same default priors for all variants if they are not provided.
     if not m_priors:
@@ -411,7 +411,8 @@ def eval_delta_lognormal_agg(
     res_loss : List of expected loss for each variant.
     """
     if len(totals) == 0:
-        return [], []
+        return [], [], []
+
     # Same default priors for all variants if they are not provided.
     if not a_priors_beta:
         a_priors_beta = [1] * len(totals)
@@ -430,7 +431,7 @@ def eval_delta_lognormal_agg(
         # if only zeros in all variants
         res_pbbs = list(np.full(len(totals), round(1 / len(totals), 7)))
         res_loss = [np.nan] * len(totals)
-        return res_pbbs, res_loss
+        return res_pbbs, res_loss, []
     else:
         # we will need different generators for each call of lognormal_posteriors
         ss = np.random.SeedSequence(seed)
@@ -489,7 +490,7 @@ def eval_numerical_dirichlet_agg(
     res_loss : List of expected loss for each variant.
     """
     if len(concentrations) == 0:
-        return [], []
+        return [], [], []
 
     # default prior will be expecting 1 observation in all states for all variants
     if not prior_alphas:
@@ -513,7 +514,7 @@ def eval_numerical_dirichlet_agg(
 
 def eval_poisson_agg(
     totals: List[int],
-    mean: List[Number],
+    means: List[Number],
     a_priors_gamma: List[Number] = None,
     b_priors_gamma: List[Number] = None,
     sim_count: int = 200000,
@@ -526,7 +527,7 @@ def eval_poisson_agg(
     Parameters
     ----------
     totals : List of numbers of experiment observations (e.g. number of sessions) for each variant.
-    mean : Mean of the observations for each variant.
+    means : Mean of the observations for each variant.
     a_priors_gamma : List of prior alpha parameters for Gamma distributions for each variant.
     b_priors_gamma : List of prior beta parameters for Gamma distributions for each variant.
     sim_count : Number of simulations to be used for probability estimation.
@@ -540,7 +541,7 @@ def eval_poisson_agg(
     # validate_poisson_input(totals, positives)
 
     if len(totals) == 0:
-        return [], []
+        return [], [], []
 
     # Default prior for all variants is Beta(0.5, 0.5) which is non-information prior.
     if not a_priors_gamma:
@@ -548,7 +549,7 @@ def eval_poisson_agg(
     if not b_priors_gamma:
         b_priors_gamma = [1] * len(totals)
 
-    gamma_samples = gamma_posteriors(totals, mean, a_priors_gamma, b_priors_gamma, sim_count, seed)
+    gamma_samples = gamma_posteriors(totals, means, a_priors_gamma, b_priors_gamma, sim_count, seed)
 
     res_pbbs = estimate_chance_to_beat(gamma_samples)
     res_loss = estimate_expected_loss(gamma_samples)
