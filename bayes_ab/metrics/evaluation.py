@@ -73,8 +73,8 @@ def eval_closed_form_poisson_two(
 
     Parameters
     ----------
-    alpha_a : List containing observation counts for variant A.
-    alpha_b : List containing observation counts for variant B.
+    alpha_a : Observation counts for variant A.
+    alpha_b : Observation counts for variant B.
     beta_a : Exposure value for variant A.
     beta_b : Exposure value for variant B.
 
@@ -109,9 +109,9 @@ def eval_closed_form_poisson_three(
 
     Parameters
     ----------
-    alpha_a : List containing observation counts for variant A.
-    alpha_b : List containing observation counts for variant B.
-    alpha_c : List containing observation counts for variant C.
+    alpha_a : Observation counts for variant A.
+    alpha_b : Observation counts for variant B.
+    alpha_c : Observation counts for variant C.
     beta_a : Exposure value for variant A.
     beta_b : Exposure value for variant B.
     beta_c : Exposure value for variant C.

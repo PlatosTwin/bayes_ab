@@ -285,7 +285,7 @@ class PoissonDataTest(BaseDataTest):
 
         cf_pbbs = None
         if closed_form:
-            cf_pbbs = list(self._closed_form_bernoulli().values())
+            cf_pbbs = list(self._closed_form_poisson().values())
             if verbose:
                 print_closed_form_comparison(self.variant_names, pbbs, cf_pbbs)
 

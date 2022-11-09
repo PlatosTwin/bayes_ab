@@ -34,7 +34,8 @@
 - `Uplift vs. 'A'`
     - Uplift of a given variant compared to the first variant added
 - `95% HDI`
-    - 95% confidence interval. The Bayesian approach allows us to say that, 95% of the time, the 95% HDI will contain the true value
+    - 95% confidence interval. The Bayesian approach allows us to say that, 95% of the time, the 95% HDI will contain
+      the true value
 
 Evaluation metrics are calculated using Monte Carlo simulations from posterior distributions
 
@@ -82,9 +83,9 @@ In all cases, there are two methods for inserting data:
 - `add_variant_data_agg` - add aggregated variant data (this can be practical for a larger data set, as the aggregation
   can be done outside of the package)
 
-Both methods for adding data allow the user to specify a prior distribution (see details in respective docstrings).
-The default priors are non-informative priors and should be sufficient for most use cases, and in particular when
-the number of samples or observations is large.
+Both methods for adding data allow the user to specify a prior distribution (see details in respective docstrings). The
+default priors are non-informative priors and should be sufficient for most use cases, and in particular when the number
+of samples or observations is large.
 
 To get the results of the test, simply call method `evaluate`.
 
@@ -142,7 +143,23 @@ Removing variant 'C' and passing `control='A'` and `rope=0.5` additionally retur
 ```python
 test.delete_variant("C")
 ```
+
     Decision: Stop and implement either variant. Confidence: Low. Bounds: [-0.46%, 3.18%].
+
+For smaller samples, such as the above, it it also possible to check the modeled chance to beat all against the
+closed-form equivalent by passing `closed_form=True`:
+
+```python
+test.evaluate(closed_form=True)
+```
+
+    +---------+-------------------------+--------------------------+--------+
+    | Variant | Est. chance to beat all | Exact chance to beat all | Delta  |
+    +---------+-------------------------+--------------------------+--------+
+    |    B    |          89.30%         |          89.27%          | 0.03%  |
+    |    A    |          6.45%          |          6.47%           | -0.39% |
+    |    C    |          4.25%          |          4.25%           | -0.14% |
+    +---------+-------------------------+--------------------------+--------+
 
 Finally, we can plot the posterior distributions as well as the distribution of differences.
 
@@ -186,6 +203,7 @@ test.evaluate(sim_count=20000, seed=52)
 test.plot_posteriors(fname='poisson_posteriors_example.png')
 test.plot_differences(control='A', fname='poisson_differences_example.png')
 ```
+
     +---------+--------------+------+--------------------+---------------+--------------+
     | Variant | Observations | Mean | Chance to beat all | Expected loss |   95% HDI    |
     +---------+--------------+------+--------------------+---------------+--------------+
@@ -202,7 +220,23 @@ test.delete_variant("C")
 
     Decision: Stop and implement either variant. Confidence: Low. Bounds: [-6.6, 0.7].
 
-Finally, we can plot the posterior distributions as well as the distribution of differences.
+For samples smaller than the above, it is also possible to check the modeled chance to beat all against the closed-form
+equivalent by passing `closed_form=True` (this output is for 15 observations of `A`, `B`, and `C` each, with the means
+unchanged from above):
+
+```python
+test.evaluate(closed_form=True)
+```
+
+    | Variant | Est. chance to beat all | Exact chance to beat all | Delta |
+    +---------+-------------------------+--------------------------+-------+
+    |    C    |          50.60%         |          49.88%          | 1.44% |
+    |    A    |          45.31%         |          43.48%          | 4.20% |
+    |    B    |          4.09%          |          4.08%           | 0.21% |
+    +---------+-------------------------+--------------------------+-------+
+
+Finally, we can plot the posterior distributions as well as the distribution of differences (returning now to the
+original number of observations rather than the smaller sample used to show the closed-form validation).
 
 ![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/poisson_posteriors_example.png)
 
@@ -382,30 +416,43 @@ Other improvements:
 - Updated Jupyter examples folder
 - Validate `NormalDataTest`, `DeltaLognormalDataTest`, and `DiscreteDataTest`
 - Updates to `NormalDataTest`, `DeltaLognormalDataTest`, and `DiscreteDataTest`
-  - Add test continuation assessment
-  - Created formatted output
-  - Add plotting for posteriors and differences from control
+    - Add test continuation assessment
+    - Created formatted output
+    - Add plotting for posteriors and differences from control
 - Plot evolutions of posteriors with time
 
 ## References
 
-This package leans heavily on the resources outlined below:
+This package leans heavily on the resources outlined below. In cases where a function or method draws directly on a
+particular derivation, the doc string contains the exact reference.
+
 - [Bayesian A/B Testing at VWO](https://vwo.com/downloads/VWO_SmartStats_technical_whitepaper.pdf)
-(Chris Stucchio, 2015)
+  (Chris Stucchio, 2015)
 - [Optional stopping in data collection: p values, Bayes factors, credible intervals, precision](
-http://doingbayesiandataanalysis.blogspot.com/2013/11/optional-stopping-in-data-collection-p.html) (John Kruschke, 2013)
+  http://doingbayesiandataanalysis.blogspot.com/2013/11/optional-stopping-in-data-collection-p.html)
+  (John Kruschke, 2013)
 - [Is Bayesian A/B Testing Immune to Peeking? Not Exactly](http://varianceexplained.org/r/bayesian-ab-testing/)
-(David Robinson, 2015)
+  (David Robinson, 2015)
 - [Formulas for Bayesian A/B Testing](https://www.evanmiller.org/bayesian-ab-testing.html) (Evan Miller, 2015)
 - [Easy Evaluation of Decision Rules in Bayesian A/B testing](
-https://www.chrisstucchio.com/blog/2014/bayesian_ab_decision_rule.html) (Chris Stucchio, 2014)
+  https://www.chrisstucchio.com/blog/2014/bayesian_ab_decision_rule.html) (Chris Stucchio, 2014)
 - [Bayesian Inference 2019](https://vioshyvo.github.io/Bayesian_inference/index.html) (Hyvönen & Tolonen, 2019)
-- [Continuous Monitoring of A/B Tests without Pain: Optional
-Stopping in Bayesian Testing](https://arxiv.org/pdf/1602.05549.pdf) (Deng, Lu, & Chen, 2016)
+- [Continuous Monitoring of A/B Tests without Pain: Optional Stopping in Bayesian Testing](https://arxiv.org/pdf/1602.05549.pdf) (
+  Deng, Lu, & Chen, 2016)
 - [Bayesian Data Analysis, Third Edition](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf) (Gelman et al., 2021)
 
 ## Online calculators
+
 - [Yanir Seroussi's calculator](https://yanirs.github.io/tools/split-test-calculator/) |
-[project description](https://yanirseroussi.com/2016/06/19/making-bayesian-ab-testing-more-accessible/)
-- [Lyst's calculator](https://making.lyst.com/bayesian-calculator/) | [project descrption](https://making.lyst.com/2014/05/10/bayesian-ab-testing/)
+  [project description](https://yanirseroussi.com/2016/06/19/making-bayesian-ab-testing-more-accessible/)
+- [Lyst's calculator](https://making.lyst.com/bayesian-calculator/)
+  | [project descrption](https://making.lyst.com/2014/05/10/bayesian-ab-testing/)
 - [Dynamic Yield's calculator](https://marketing.dynamicyield.com/bayesian-calculator/)
+
+## A note on forking
+
+This package was forked from Matus Baniar's [`bayesian_testing`](https://github.com/Matt52/bayesian-testing). Upon
+deciding to take package development in a different direction, I detached the fork from the original repository. The
+original author's central contributions are to the core infrastructure of the project; this being the first package I
+have worked on, the original author's work to prepare this code for packaging has also been instrumental to package
+publication, not to mention educative. significant.
