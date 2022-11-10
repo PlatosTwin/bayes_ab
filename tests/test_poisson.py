@@ -71,6 +71,7 @@ def test_evaluate(conv_test):
             "mean": 3.54545,
             "prob_being_best": 0.266836,
             "expected_loss": 0.5896207,
+            "uplift_vs_a": 0,
             "bounds": [2.66609, 4.52804],
         },
         {
@@ -79,6 +80,7 @@ def test_evaluate(conv_test):
             "mean": 3.81818,
             "prob_being_best": 0.480775,
             "expected_loss": 0.3169076,
+            "uplift_vs_a": 0.07692,
             "bounds": [2.90347, 4.83613],
         },
         {
@@ -87,6 +89,7 @@ def test_evaluate(conv_test):
             "mean": 3.53846,
             "prob_being_best": 0.252389,
             "expected_loss": 0.5965555,
+            "uplift_vs_a": -0.00197,
             "bounds": [2.72621, 4.43807],
         },
     ]
