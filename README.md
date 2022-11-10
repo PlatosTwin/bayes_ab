@@ -9,19 +9,19 @@
 **Implemented tests:**
 
 - [BinaryDataTest](bayes_ab/experiments/binary.py)
-    - **_Input data_** - binary (`[0, 1, 0, ...]`)
+    - **_Input data_** — binary (`[0, 1, 0, ...]`)
     - Designed for binary data, such as conversions
 - [PoissonDataTest](bayes_ab/experiments/poisson.py)
-    - **_Input data_** - integer counts
+    - **_Input data_** — integer counts
     - Designed for count data (e.g., number of sales per salesman, deaths per zip code)
 - [NormalDataTest](bayes_ab/experiments/normal.py)
-    - **_Input data_** - normal data with unknown variance
+    - **_Input data_** — normal data with unknown variance
     - Designed for normal data
 - [DeltaLognormalDataTest](bayes_ab/experiments/delta_lognormal.py)
-    - **_Input data_** - lognormal data with zeros
+    - **_Input data_** — lognormal data with zeros
     - Designed for lognormal data, such as revenue per conversions
 - [DiscreteDataTest](bayes_ab/experiments/discrete.py)
-    - **_Input data_** - categorical data with numerical categories
+    - **_Input data_** — categorical data with numerical categories
     - Designed for discrete data (e.g. dice rolls, star ratings, 1-10 ratings)
 
 **Implemented evaluation metrics:**
@@ -38,6 +38,31 @@
       the true value
 
 Evaluation metrics are calculated using Monte Carlo simulations from posterior distributions
+
+**Decision rules for test continuation:**
+
+For tests between two variants, `bayes_ab` can additionally provide a continuation recommendation—that is, a
+recommendation as to the variant to select, or to continue testing. See the docstrings and examples for usage guidelines.
+
+The decision method relies on the following concepts:
+
+- **_Region of Practical Equivalence (ROPE)_** — a region `[-t, t]` of the distribution of differences `B - A` which
+  is practically equivalent to no uplift. E.g., you may be indifferent between an uplift of +/- 0.1% and no change, in
+  which case the ROPE would be `[-0.1, 0.1`.
+- **_95% HDI_** — the symmetrical region containing 95% of the probability for the distribution of differences
+`B - A`.
+
+The recommendation output has three elements:
+
+1. **Decision**
+    - _Stop and select either variant_ if the ROPE is fully contained within the 95% HDI.
+    - _Continue testing_ if the ROPE partially overlaps the 95% HDI.
+    - _Stop testing and select the better variant_ if the ROPE and the 95% HDI do not overlap.
+2. **Confidence**
+    - _High_ if the width of the 95% HDI is less than or equal to `0.8*rope`.
+    - _Low_ if the width of the 95% HDI is greater than `0.8*rope`.
+3. **Bounds**
+    - The 95% HDI.
 
 **Closed form solutions:**
 
@@ -145,10 +170,11 @@ test.plot_differences(control='A', fname='binary_differences_example.png')
     |    C    |  1000  |     50    |     5.09%     |       4.29%        |     1.69%     |     -5.62%     | [4.00%, 6.28%] |
     +---------+--------+-----------+---------------+--------------------+---------------+----------------+----------------+
 
-Removing variant 'C' and passing `control='A'` and `rope=0.5` additionally returns a test-continuation recommendation:
+Removing variant 'C' and passing a value to `control` additionally returns a test-continuation recommendation:
 
 ```python
 test.delete_variant("C")
+test.evaluate(control='A')
 ```
 
     Decision: Stop and implement either variant. Confidence: Low. Bounds: [-0.46%, 3.18%].
@@ -222,10 +248,11 @@ test.plot_differences(control='A', fname='poisson_differences_example.png')
     |    B    |      25      | 39.2 |       1.05%        |      3.97     |     -6.80%     | [37.2, 41.3] |
     +---------+--------------+------+--------------------+---------------+----------------+--------------+
 
-Removing variant 'C' and passing `control='A'` and `rope=0.5` additionally returns a test-continuation recommendation:
+Removing variant 'C' and passing `control` and `rope` additionally returns a test-continuation recommendation:
 
 ```python
 test.delete_variant("C")
+test.evaluate(control='A', rope=0.5)
 ```
 
     Decision: Stop and implement either variant. Confidence: Low. Bounds: [-6.6, 0.7].
