@@ -416,8 +416,8 @@ Other improvements:
 - Updated Jupyter examples folder
 - Validate `NormalDataTest`, `DeltaLognormalDataTest`, and `DiscreteDataTest`
 - Updates to `NormalDataTest`, `DeltaLognormalDataTest`, and `DiscreteDataTest`
-    - Add test continuation assessment
-    - Created formatted output
+    - Add test continuation assessment (decision, confidence, bounds)
+    - Create formatted output
     - Add plotting for posteriors and differences from control
 - Plot evolutions of posteriors with time
 
