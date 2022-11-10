@@ -43,12 +43,15 @@ Evaluation metrics are calculated using Monte Carlo simulations from posterior d
 
 For smaller Binary and Poisson samples, metrics calculated from Monte Carlo simulation can be checked against the
 closed-form solutions by passing `closed_form=True` to the `evaluate()` method. Larger samples generate warnings;
-samples that are too large will raise an error.
+samples that are larger than a predetermined threshold will raise an error. The larger the sample, however, the closer
+the simulated value will be to the true value, so closed-form comparisons are recommended to validate metrics for
+smaller samples only.
 
 **Error tolerance:**
 
 Binary tests with small sample sizes will raise a warning when the error for the expected loss estimate surpasses a set
-tolerance. To reduce error, increase the simulation count.
+tolerance. To reduce error, increase the simulation count. For more detail, see the docstring
+for `expected_loss_accuracy_bernoulli` in [`evaluation.py`](bayes_ab/metrics/evaluation.py)
 
 ## Installation
 
@@ -69,7 +72,7 @@ poetry shell
 
 ## Basic Usage
 
-The primary features are classes:
+There are five primary classes:
 
 - `BinaryDataTest`
 - `PoissonDataTest`
@@ -77,7 +80,7 @@ The primary features are classes:
 - `DeltaLognormalDataTest`
 - `DiscreteDataTest`
 
-In all cases, there are two methods for inserting data:
+For each class, there are two methods for inserting data:
 
 - `add_variant_data` - add raw data for a variant as a list of observations (or numpy 1-D array)
 - `add_variant_data_agg` - add aggregated variant data (this can be practical for a larger data set, as the aggregation
@@ -87,11 +90,12 @@ Both methods for adding data allow the user to specify a prior distribution (see
 default priors are non-informative priors and should be sufficient for most use cases, and in particular when the number
 of samples or observations is large.
 
-To get the results of the test, simply call method `evaluate`.
+To get the results of the test, simply call method `evaluate`; to access evaluation metrics as well as the simulated
+random samples, call the `data` instance variable.
 
 Chance to beat all and expected loss are approximated using Monte Carlo simulation, so `evaluate` may return slightly
 different values for different runs. To decrease variation, you can set the `sim_count` parameter of `evaluate`
-to a higher value (default value is 200K); to fix values, set the `seed` parameter.
+to a higher value (the default is 200K); to fix values, set the `seed` parameter.
 
 ### BinaryDataTest
 
@@ -124,6 +128,9 @@ test.add_variant_data_agg("C", total=1000, positives=50)
 
 # evaluate test:
 test.evaluate()
+
+# access simulation samples and evaluation metrics
+data = test.data
 
 # generate plots
 test.plot_posteriors(fname='binary_posteriors_example.png')
@@ -199,6 +206,9 @@ test.add_variant_data_agg("C", total=len(data_c), obs_mean=np.mean(data_c), obs_
 # evaluate test:
 test.evaluate(sim_count=20000, seed=52)
 
+# access simulation samples and evaluation metrics
+data = test.data
+
 # generate plots
 test.plot_posteriors(fname='poisson_posteriors_example.png')
 test.plot_differences(control='A', fname='poisson_differences_example.png')
@@ -271,6 +281,9 @@ test.add_variant_data_agg("C", len(data_c), sum(data_c), sum(np.square(data_c)))
 
 # evaluate test:
 test.evaluate(sim_count=20000, seed=52)
+
+# access simulation samples and evaluation metrics
+data = test.data
 ```
 
     [{'variant': 'A',
@@ -327,6 +340,9 @@ test.add_variant_data_agg(
 
 # evaluate test:
 test.evaluate(seed=21)
+
+# access simulation samples and evaluation metrics
+data = test.data
 ```
 
     [{'variant': 'A',
@@ -377,6 +393,9 @@ test.add_variant_data("C", data_c)
 
 # evaluate test:
 test.evaluate(sim_count=20000, seed=52)
+
+# access simulation samples and evaluation metrics
+data = test.data
 ```
 
     [{'variant': 'A',
@@ -425,7 +444,7 @@ Other improvements:
 ## References
 
 This package leans heavily on the resources outlined below. In cases where a function or method draws directly on a
-particular derivation, the doc string contains the exact reference.
+particular derivation, the docstring contains the exact reference.
 
 - [Bayesian A/B Testing at VWO](https://vwo.com/downloads/VWO_SmartStats_technical_whitepaper.pdf)
   (Chris Stucchio, 2015)
@@ -439,12 +458,14 @@ particular derivation, the doc string contains the exact reference.
   https://www.chrisstucchio.com/blog/2014/bayesian_ab_decision_rule.html) (Chris Stucchio, 2014)
 - [Bayesian Inference 2019](https://vioshyvo.github.io/Bayesian_inference/index.html) (Hyvönen & Tolonen, 2019)
 - [Continuous Monitoring of A/B Tests without Pain: Optional Stopping in Bayesian Testing](https://arxiv.org/pdf/1602.05549.pdf)
-(Deng, Lu, & Chen, 2016)
+  (Deng, Lu, & Chen, 2016)
 - [Bayesian Data Analysis, Third Edition](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf) (Gelman et al., 2021)
-- [Probabalistic programming and Bayesian methods for hackers](https://nbviewer.org/github/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers/tree/master/) (Cameron Davidson-Pilon, 2022)
+- [Probabalistic programming and Bayesian methods for hackers](https://nbviewer.org/github/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers/tree/master/) (
+  Cameron Davidson-Pilon, 2022)
 
 This project was inspired by Aubrey Clayton's (2022) _[Bernoulli's Fallacy:
 Statistical Illogic and the Crisis of Modern Science](http://cup.columbia.edu/book/bernoullis-fallacy/9780231199940)_.
+
 ## Select online calculators
 
 - [Yanir Seroussi's calculator](https://yanirs.github.io/tools/split-test-calculator/) |
@@ -457,6 +478,6 @@ Statistical Illogic and the Crisis of Modern Science](http://cup.columbia.edu/bo
 
 This package was forked from Matus Baniar's [`bayesian_testing`](https://github.com/Matt52/bayesian-testing). Upon
 deciding to take package development in a different direction, I detached the fork from the original repository. The
-original author's contributions are large, however, with his central contributions being to the development of the
-core infrastructure of the project. This being the first package I have worked on, the original author's work to
-prepare this code for packaging has also been instrumental to package publication, not to mention educative.
+original author's contributions are large, however, with his central contributions being to the development of the core
+infrastructure of the project. This being the first package I have worked on, the original author's work to prepare this
+code for packaging has also been instrumental to package publication, not to mention educative.
