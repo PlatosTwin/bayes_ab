@@ -57,6 +57,30 @@ class BinaryDataTest(BaseDataTest):
     def bounds(self):
         return [self.data[k]["bounds"] for k in self.data]
 
+    @property
+    def chance_to_beat(self):
+        try:
+            return [self.data[k]["chance_to_beat"] for k in self.data]
+        except KeyError:
+            msg = "You must run the evaluate method before attempting to access this property."
+            raise NotImplementedError(msg)
+
+    @property
+    def exp_loss(self):
+        try:
+            return [self.data[k]["exp_loss"] for k in self.data]
+        except KeyError:
+            msg = "You must run the evaluate method before attempting to access this property."
+            raise NotImplementedError(msg)
+
+    @property
+    def uplift_vs_a(self):
+        try:
+            return [self.data[k]["uplift_vs_a"] for k in self.data]
+        except KeyError:
+            msg = "You must run the evaluate method before attempting to access this property."
+            raise NotImplementedError(msg)
+
     def _eval_simulation(self, sim_count: int = 200000, seed: int = None) -> Tuple[dict, dict]:
         """
         Calculate probabilities of being best and expected loss for a current class state.
@@ -291,6 +315,11 @@ class BinaryDataTest(BaseDataTest):
         uplift = [0]
         for i in self.means[1:]:
             uplift.append(round((i - self.means[0]) / self.means[0], 5))
+
+        for i, var in enumerate(self.variant_names):
+            self.data[var]["chance_to_beat"] = pbbs[i]
+            self.data[var]["exp_loss"] = loss[i]
+            self.data[var]["uplift_vs_a"] = uplift[i]
 
         data = [
             self.variant_names,

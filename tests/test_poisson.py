@@ -62,6 +62,24 @@ def test_expected_loss(conv_test):
     assert loss == {"A": 0.5896207, "B": 0.3169076, "C": 0.5965555}
 
 
+def test_expected_loss_prop(conv_test):
+    conv_test.evaluate(sim_count=2000000, seed=314)
+    loss = conv_test.exp_loss
+    assert loss == [0.5896207, 0.3169076, 0.5965555]
+
+
+def test_probabs_of_being_best_prop(conv_test):
+    conv_test.evaluate(sim_count=2000000, seed=314)
+    pbbs = conv_test.chance_to_beat
+    assert pbbs == [0.266836, 0.480775, 0.252389]
+
+
+def test_uplift(conv_test):
+    conv_test.evaluate(sim_count=2000000, seed=314)
+    uplift = conv_test.uplift_vs_a
+    assert uplift == [0, 0.07692, -0.00197]
+
+
 def test_evaluate(conv_test):
     eval_report, _, _ = conv_test.evaluate(sim_count=2000000, seed=314)
     assert eval_report == [
