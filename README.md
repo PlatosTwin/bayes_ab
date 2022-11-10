@@ -419,6 +419,7 @@ Other improvements:
     - Add test continuation assessment (decision, confidence, bounds)
     - Create formatted output
     - Add plotting for posteriors and differences from control
+- Implement Markov Chain Monte Carlo in place of Monte Carlo
 - Plot evolutions of posteriors with time
 
 ## References
