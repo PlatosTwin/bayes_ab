@@ -12,11 +12,13 @@ def print_poisson_evaluation(res: list) -> None:
         "Mean",
         "Chance to beat all",
         "Expected loss",
+        'Uplift vs. "A"',
         "95% HDI",
     ]
     for r in res:
         temp_row = r.copy()
         temp_row["prob_being_best"] = f"{temp_row['prob_being_best']:.2%}"
+        temp_row["uplift_vs_a"] = f"{temp_row['uplift_vs_a']:.2%}"
         temp_row["expected_loss"] = round(temp_row["expected_loss"], 2)
         temp_row["mean"] = round(temp_row["mean"], 1)
         temp_row = [
@@ -25,6 +27,7 @@ def print_poisson_evaluation(res: list) -> None:
             temp_row["mean"],
             temp_row["prob_being_best"],
             temp_row["expected_loss"],
+            temp_row["uplift_vs_a"],
             f'[{temp_row["bounds"][0]:.1f}, {temp_row["bounds"][1]:.1f}]',
         ]
 

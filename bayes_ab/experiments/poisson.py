@@ -3,6 +3,9 @@ import numpy as np
 import warnings
 import matplotlib.pyplot as plt
 import scipy.stats as stats
+import matplotlib.colors as mcolors
+from matplotlib.patches import Rectangle
+import matplotlib.ticker as mtick
 
 from bayes_ab.experiments.base import BaseDataTest
 from bayes_ab.metrics import (
@@ -277,7 +280,7 @@ class PoissonDataTest(BaseDataTest):
         -------
         res : List of dictionaries with results per variant.
         """
-        keys = ["variant", "total", "mean", "prob_being_best", "expected_loss", "bounds"]
+        keys = ["variant", "total", "mean", "prob_being_best", "expected_loss", "uplift_vs_a", "bounds"]
 
         eval_pbbs, eval_loss = self._eval_simulation(sim_count, seed)
         pbbs = list(eval_pbbs.values())
@@ -289,7 +292,11 @@ class PoissonDataTest(BaseDataTest):
             if verbose:
                 print_closed_form_comparison(self.variant_names, pbbs, cf_pbbs)
 
-        data = [self.variant_names, self.totals, self.means, pbbs, loss, self.bounds]
+        uplift = [0]
+        for i in self.means[1:]:
+            uplift.append(round((i - self.means[0]) / self.means[0], 5))
+
+        data = [self.variant_names, self.totals, self.means, pbbs, loss, uplift, self.bounds]
         res = [dict(zip(keys, item)) for item in zip(*data)]
 
         if verbose:
@@ -461,17 +468,36 @@ class PoissonDataTest(BaseDataTest):
 
         xmin = max(self.means) * 5
         xmax = 0
-        for var in self.data:
+        colors = list(mcolors.TABLEAU_COLORS.values())
+        dist_names = []
+        for var, color in zip(self.data, colors):
             a = self.data[var]["a_prior"]
             totals = self.data[var]["total"]
             obs_mean = self.data[var]["obs_mean"]
             b = self.data[var]["b_prior"]
             mu = (a + totals * obs_mean) / (b + totals)
 
+            label = f"{var}: $\mu={mu:.1f}$"
+            dist_names.append(label)
             x = np.linspace(0, max(self.means) * 5, 10000)
             y = stats.gamma.pdf(x, a=a + totals * obs_mean, scale=1 / (b + totals))
-            ax.plot(x, y, label=f"{var}: $\mu={mu:.2f}$")
-            ax.fill_between(x, y, alpha=0.35)
+            ax.plot(x, y, label=label)
+
+            x_bound = x[
+                np.intersect1d(np.where(x > self.data[var]["bounds"][0])[0], np.where(x < self.data[var]["bounds"][1]))
+            ]
+            y_bound = y[
+                np.intersect1d(np.where(x > self.data[var]["bounds"][0])[0], np.where(x < self.data[var]["bounds"][1]))
+            ]
+            ax.fill_between(x_bound, y_bound, color=color, alpha=0.55)
+
+            x_bound = x[np.where(x < self.data[var]["bounds"][0])[0]]
+            y_bound = y[np.where(x < self.data[var]["bounds"][0])[0]]
+            ax.fill_between(x_bound, y_bound, color=color, alpha=0.10)
+
+            x_bound = x[np.where(x > self.data[var]["bounds"][1])[0]]
+            y_bound = y[np.where(x > self.data[var]["bounds"][1])[0]]
+            ax.fill_between(x_bound, y_bound, color=color, alpha=0.10)
 
             if x[np.where(y >= 0.0001)[0][0]] < xmin:
                 xmin = x[np.where(y >= 0.0001)[0][0]]
@@ -480,7 +506,9 @@ class PoissonDataTest(BaseDataTest):
 
         ax.set_ylabel("Probability density")
         ax.set_xlabel("Count value")
-        ax.legend()
+
+        handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(self.data))]
+        ax.legend(handles, dist_names)
 
         plt.xlim([xmin * 0.9, xmax * 1.10])
 
@@ -507,15 +535,26 @@ class PoissonDataTest(BaseDataTest):
             figsize=(10, 8),
         )
 
+        hist_names = []
         for var in [i for i in self.variant_names if i != control]:
-            temp_sample = self.data[var]["samples"] - self.data[control]["samples"]
-            temp_mu = self.data[var]["mean"] - self.data[control]["mean"]
+            temp_sample = (self.data[var]["samples"] - self.data[control]["samples"]) / self.data[control]["mean"] * 100
+            temp_mu = (self.data[var]["mean"] - self.data[control]["mean"]) / self.data[control]["mean"]
 
-            ax.hist(temp_sample, num_bins, label=f"{var}: $\mu={temp_mu:.2f}$", alpha=0.65)
-            ax.set_xlabel("Value")
+            label = f"{var}: $\mu={temp_mu:.2%}$%"
+            hist_names.append(label)
+            n, bins, patches = ax.hist(temp_sample, num_bins, label=label, alpha=0.65)
+
+            for b, p in zip(bins, patches):
+                if b <= 0:
+                    p.set_facecolor("r")
+
+            ax.xaxis.set_major_formatter(mtick.PercentFormatter())
+            ax.set_xlabel("Relative uplift")
             ax.set_ylabel("Unnormalized probability density")
 
-        ax.legend()
+        colors = list(mcolors.TABLEAU_COLORS.values())
+        handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(hist_names))]
+        ax.legend(handles, hist_names)
 
         plt.title(f"Difference from {control}")
         fig.tight_layout()

@@ -204,13 +204,13 @@ test.plot_posteriors(fname='poisson_posteriors_example.png')
 test.plot_differences(control='A', fname='poisson_differences_example.png')
 ```
 
-    +---------+--------------+------+--------------------+---------------+--------------+
-    | Variant | Observations | Mean | Chance to beat all | Expected loss |   95% HDI    |
-    +---------+--------------+------+--------------------+---------------+--------------+
-    |    C    |      15      | 42.5 |       56.38%       |      0.69     | [39.9, 45.2] |
-    |    A    |      20      | 42.1 |       42.57%       |      1.08     | [39.8, 44.5] |
-    |    B    |      25      | 39.2 |       1.05%        |      3.97     | [37.2, 41.3] |
-    +---------+--------------+------+--------------------+---------------+--------------+
+    +---------+--------------+------+--------------------+---------------+----------------+--------------+
+    | Variant | Observations | Mean | Chance to beat all | Expected loss | Uplift vs. "A" |   95% HDI    |
+    +---------+--------------+------+--------------------+---------------+----------------+--------------+
+    |    C    |      15      | 42.5 |       56.38%       |      0.69     |     0.96%      | [39.9, 45.2] |
+    |    A    |      20      | 42.1 |       42.57%       |      1.08     |     0.00%      | [39.8, 44.5] |
+    |    B    |      25      | 39.2 |       1.05%        |      3.97     |     -6.80%     | [37.2, 41.3] |
+    +---------+--------------+------+--------------------+---------------+----------------+--------------+
 
 Removing variant 'C' and passing `control='A'` and `rope=0.5` additionally returns a test-continuation recommendation:
 
@@ -437,7 +437,7 @@ particular derivation, the doc string contains the exact reference.
 - [Easy Evaluation of Decision Rules in Bayesian A/B testing](
   https://www.chrisstucchio.com/blog/2014/bayesian_ab_decision_rule.html) (Chris Stucchio, 2014)
 - [Bayesian Inference 2019](https://vioshyvo.github.io/Bayesian_inference/index.html) (Hyvönen & Tolonen, 2019)
-- [Continuous Monitoring of A/B Tests without Pain: Optional Stopping in Bayesian Testing](https://arxiv.org/pdf/1602.05549.pdf) 
+- [Continuous Monitoring of A/B Tests without Pain: Optional Stopping in Bayesian Testing](https://arxiv.org/pdf/1602.05549.pdf)
 (Deng, Lu, & Chen, 2016)
 - [Bayesian Data Analysis, Third Edition](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf) (Gelman et al., 2021)
 
@@ -453,6 +453,6 @@ particular derivation, the doc string contains the exact reference.
 
 This package was forked from Matus Baniar's [`bayesian_testing`](https://github.com/Matt52/bayesian-testing). Upon
 deciding to take package development in a different direction, I detached the fork from the original repository. The
-original author's contributions are large, however, with his central contributions being to the development of the 
-core infrastructure of the project. This being the first package I have worked on, the original author's work to 
+original author's contributions are large, however, with his central contributions being to the development of the
+core infrastructure of the project. This being the first package I have worked on, the original author's work to
 prepare this code for packaging has also been instrumental to package publication, not to mention educative.

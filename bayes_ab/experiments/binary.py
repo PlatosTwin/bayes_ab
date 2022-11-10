@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy as np
 import scipy.stats as stats
+import matplotlib.colors as mcolors
+from matplotlib.patches import Rectangle
 
 from bayes_ab.experiments.base import BaseDataTest
 from bayes_ab.metrics import eval_bernoulli_agg
@@ -517,17 +519,37 @@ class BinaryDataTest(BaseDataTest):
 
         xmin = 1
         xmax = 0
-        for var in self.data:
+        colors = list(mcolors.TABLEAU_COLORS.values())
+        dist_names = []
+        for var, color in zip(self.data, colors):
             a = self.data[var]["a_prior"]
             c = self.data[var]["positives"]
             b = self.data[var]["b_prior"]
             n = self.data[var]["total"]
             mu = self.data[var]["mean"]
 
+            label = f"{var}: $\mu={mu:.2%}$%"
+            dist_names.append(label)
             x = np.linspace(0, 1, 10000)
             y = stats.beta.pdf(x, a + c, b + n - c)
-            ax.plot(x * 100, y, label=f"{var}: $\mu={mu:.2%}$%")
-            ax.fill_between(x * 100, y, alpha=0.35)
+            ax.plot(x * 100, y, label=label)
+
+            x_bound = x[
+                np.intersect1d(np.where(x > self.data[var]["bounds"][0])[0], np.where(x < self.data[var]["bounds"][1]))
+            ]
+            y_bound = y[
+                np.intersect1d(np.where(x > self.data[var]["bounds"][0])[0], np.where(x < self.data[var]["bounds"][1]))
+            ]
+            ax.fill_between(x_bound * 100, y_bound, color=color, alpha=0.55)
+
+            x_bound = x[np.where(x < self.data[var]["bounds"][0])[0]]
+            y_bound = y[np.where(x < self.data[var]["bounds"][0])[0]]
+            ax.fill_between(x_bound * 100, y_bound, color=color, alpha=0.10)
+
+            x_bound = x[np.where(x > self.data[var]["bounds"][1])[0]]
+            y_bound = y[np.where(x > self.data[var]["bounds"][1])[0]]
+            ax.fill_between(x_bound * 100, y_bound, color=color, alpha=0.10)
+
             ax.xaxis.set_major_formatter(mtick.PercentFormatter())
 
             if x[np.where(y >= 0.0001)[0][0]] < xmin:
@@ -536,7 +558,9 @@ class BinaryDataTest(BaseDataTest):
                 xmax = x[np.where(y >= 0.0001)[0][-1]]
 
         ax.set_ylabel("Probability density")
-        ax.legend()
+
+        handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(self.data))]
+        ax.legend(handles, dist_names)
 
         plt.xlim(xmin * 80, xmax * 120)
 
@@ -558,21 +582,31 @@ class BinaryDataTest(BaseDataTest):
         fname : Filename to which to save the resultant image; if None, the image is not saved.
         dpi : DPI setting for saved image; used only when fname is not None.
         """
-        num_bins = 250
+        num_bins = 300
         fig, ax = plt.subplots(
             figsize=(10, 8),
         )
 
+        hist_names = []
         for var in [i for i in self.variant_names if i != control]:
-            temp_sample = self.data[var]["samples"] - self.data[control]["samples"]
-            temp_mu = self.data[var]["mean"] - self.data[control]["mean"]
+            temp_sample = (self.data[var]["samples"] - self.data[control]["samples"]) / self.data[control]["mean"] * 100
+            temp_mu = (self.data[var]["mean"] - self.data[control]["mean"]) / self.data[control]["mean"]
 
-            ax.hist(temp_sample, num_bins, label=f"{var}: $\mu={temp_mu:.2%}$%", alpha=0.65)
+            label = f"{var}: $\mu={temp_mu:.2%}$%"
+            hist_names.append(label)
+            n, bins, patches = ax.hist(temp_sample, num_bins, label=label, alpha=0.65)
+
+            for b, p in zip(bins, patches):
+                if b <= 0:
+                    p.set_facecolor("r")
+
             ax.xaxis.set_major_formatter(mtick.PercentFormatter())
-            ax.set_xlabel("Probability")
+            ax.set_xlabel("Relative probability uplift")
             ax.set_ylabel("Probability density")
 
-        ax.legend()
+        colors = list(mcolors.TABLEAU_COLORS.values())
+        handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(hist_names))]
+        ax.legend(handles, hist_names)
 
         plt.title(f"Difference from {control}")
         fig.tight_layout()
