@@ -441,8 +441,11 @@ particular derivation, the doc string contains the exact reference.
 - [Continuous Monitoring of A/B Tests without Pain: Optional Stopping in Bayesian Testing](https://arxiv.org/pdf/1602.05549.pdf)
 (Deng, Lu, & Chen, 2016)
 - [Bayesian Data Analysis, Third Edition](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf) (Gelman et al., 2021)
+- [Probabalistic programming and Bayesian methods for hackers](https://nbviewer.org/github/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers/tree/master/) (Cameron Davidson-Pilon, 2022)
 
-## Online calculators
+This project was inspired by Aubrey Clayton's (2022) _[Bernoulli's Fallacy:
+Statistical Illogic and the Crisis of Modern Science](http://cup.columbia.edu/book/bernoullis-fallacy/9780231199940)_.
+## Select online calculators
 
 - [Yanir Seroussi's calculator](https://yanirs.github.io/tools/split-test-calculator/) |
   [project description](https://yanirseroussi.com/2016/06/19/making-bayesian-ab-testing-more-accessible/)
