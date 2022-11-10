@@ -32,7 +32,7 @@
     - Risk associated with choosing a given variant over other variants
     - Measured in the same units as the tested measure (e.g. positive rate or average value)
 - `Uplift vs. 'A'`
-    - Uplift of a given variant compared to the first variant added
+    - Relative uplift of a given variant compared to the first variant added
 - `95% HDI`
     - 95% confidence interval. The Bayesian approach allows us to say that, 95% of the time, the 95% HDI will contain
       the true value
