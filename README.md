@@ -6,7 +6,7 @@
 
 `bayes_ab` is a small package for running Bayesian A/B(/C/D/...) tests.
 
-**Implemented tests:**
+### Implemented tests
 
 - [BinaryDataTest](bayes_ab/experiments/binary.py)
     - **_Input data_** — binary (`[0, 1, 0, ...]`)
@@ -24,7 +24,7 @@
     - **_Input data_** — categorical data with numerical categories
     - Designed for discrete data (e.g. dice rolls, star ratings, 1-10 ratings)
 
-**Implemented evaluation metrics:**
+### Implemented evaluation metrics
 
 - `Chance to beat all`
     - Probability of beating all other variants
@@ -39,18 +39,19 @@
 
 Evaluation metrics are calculated using Monte Carlo simulations from posterior distributions
 
-**Decision rules for test continuation:**
+### Decision rules for test continuation
 
 For tests between two variants, `bayes_ab` can additionally provide a continuation recommendation—that is, a
-recommendation as to the variant to select, or to continue testing. See the docstrings and examples for usage guidelines.
+recommendation as to the variant to select, or to continue testing. See the docstrings and examples for usage
+guidelines.
 
-The decision method relies on the following concepts:
+The decision method makes use of the following concepts:
 
-- **_Region of Practical Equivalence (ROPE)_** — a region `[-t, t]` of the distribution of differences `B - A` which
-  is practically equivalent to no uplift. E.g., you may be indifferent between an uplift of +/- 0.1% and no change, in
+- **Region of Practical Equivalence (ROPE)** — a region `[-t, t]` of the distribution of differences `B - A` which is
+  practically equivalent to no uplift. E.g., you may be indifferent between an uplift of +/- 0.1% and no change, in
   which case the ROPE would be `[-0.1, 0.1`.
-- **_95% HDI_** — the symmetrical region containing 95% of the probability for the distribution of differences
-`B - A`.
+- **95% HDI** — the symmetrical region containing 95% of the probability for the distribution of differences
+  `B - A`.
 
 The recommendation output has three elements:
 
@@ -64,7 +65,7 @@ The recommendation output has three elements:
 3. **Bounds**
     - The 95% HDI.
 
-**Closed form solutions:**
+### Closed form solutions
 
 For smaller Binary and Poisson samples, metrics calculated from Monte Carlo simulation can be checked against the
 closed-form solutions by passing `closed_form=True` to the `evaluate()` method. Larger samples generate warnings;
@@ -72,7 +73,7 @@ samples that are larger than a predetermined threshold will raise an error. The 
 the simulated value will be to the true value, so closed-form comparisons are recommended to validate metrics for
 smaller samples only.
 
-**Error tolerance:**
+### Error tolerance
 
 Binary tests with small sample sizes will raise a warning when the error for the expected loss estimate surpasses a set
 tolerance. To reduce error, increase the simulation count. For more detail, see the docstring
@@ -109,7 +110,7 @@ For each class, there are two methods for inserting data:
 
 - `add_variant_data` - add raw data for a variant as a list of observations (or numpy 1-D array)
 - `add_variant_data_agg` - add aggregated variant data (this can be practical for a larger data set, as the aggregation
-  can be done outside of the package)
+  can be done outside the package)
 
 Both methods for adding data allow the user to specify a prior distribution (see details in respective docstrings). The
 default priors are non-informative priors and should be sufficient for most use cases, and in particular when the number
@@ -145,7 +146,7 @@ test = BinaryDataTest()
 # add variant using raw data (arrays of zeros and ones):
 test.add_variant_data("A", data_a)
 test.add_variant_data("B", data_b)
-# priors can be specified like this (default for this test is a=b=1/2):
+# priors can be specified like this (default for this test is a=b=1):
 # test.add_variant_data("B", data_b, a_prior=1, b_prior=20)
 
 # add variant using aggregated data (same as raw data with 950 zeros and 50 ones):
@@ -158,16 +159,15 @@ test.evaluate()
 data = test.data
 
 # generate plots
-test.plot_posteriors(fname='binary_posteriors_example.png')
-test.plot_differences(control='A', fname='binary_differences_example.png')
+test.plot_distributions(control='A', fname='binary_distributions_example.png')
 ```
 
     +---------+--------+-----------+---------------+--------------------+---------------+----------------+----------------+
     | Variant | Totals | Positives | Positive rate | Chance to beat all | Expected loss | Uplift vs. "A" |    95% HDI     |
     +---------+--------+-----------+---------------+--------------------+---------------+----------------+----------------+
-    |    B    |  1200  |     80    |     6.74%     |       89.27%       |     0.05%     |     24.96%     | [5.59%, 7.97%] |
-    |    A    |  1500  |     80    |     5.39%     |       6.44%        |     1.40%     |     0.00%      | [4.47%, 6.38%] |
-    |    C    |  1000  |     50    |     5.09%     |       4.29%        |     1.69%     |     -5.62%     | [4.00%, 6.28%] |
+    |    B    |  1200  |     80    |     6.88%     |       83.37%       |     0.08%     |     16.78%     | [5.74%, 8.11%] |
+    |    C    |  1000  |     50    |     5.09%     |       2.62%        |     1.87%     |    -13.64%     | [4.00%, 6.28%] |
+    |    A    |  1500  |     80    |     5.89%     |       14.02%       |     1.07%     |     0.00%      | [4.94%, 6.92%] |
     +---------+--------+-----------+---------------+--------------------+---------------+----------------+----------------+
 
 Removing variant 'C' and passing a value to `control` additionally returns a test-continuation recommendation:
@@ -177,28 +177,28 @@ test.delete_variant("C")
 test.evaluate(control='A')
 ```
 
-    Decision: Stop and implement either variant. Confidence: Low. Bounds: [-0.46%, 3.18%].
+    Decision: Stop and implement either variant. Confidence: Low. Bounds: [-0.84%, 2.84%].
 
 For smaller samples, such as the above, it it also possible to check the modeled chance to beat all against the
-closed-form equivalent by passing `closed_form=True`:
+closed-form equivalent by passing `closed_form=True`. The run below shows a substantial difference for some variants but
+leaves the overall assessment unchanged: variant B is the strongest. As discussed in the [roadmap](#Roadmap), switching
+from Monte Carlo to Markov Chain Monte Carlo should improve distribution estimates significantly.
 
 ```python
 test.evaluate(closed_form=True)
 ```
 
-    +---------+-------------------------+--------------------------+--------+
-    | Variant | Est. chance to beat all | Exact chance to beat all | Delta  |
-    +---------+-------------------------+--------------------------+--------+
-    |    B    |          89.30%         |          89.27%          | 0.03%  |
-    |    A    |          6.45%          |          6.47%           | -0.39% |
-    |    C    |          4.25%          |          4.25%           | -0.14% |
-    +---------+-------------------------+--------------------------+--------+
+    +---------+-------------------------+--------------------------+---------+
+    | Variant | Est. chance to beat all | Exact chance to beat all |  Delta  |
+    +---------+-------------------------+--------------------------+---------+
+    |    B    |          83.82%         |          89.27%          |  -6.11% |
+    |    C    |          2.52%          |          4.25%           | -40.75% |
+    |    A    |          13.66%         |          6.47%           | 110.99% |
+    +---------+-------------------------+--------------------------+---------+
 
-Finally, we can plot the posterior distributions as well as the distribution of differences.
+Finally, we can plot the prior and posterior distributions, as well as the distribution of differences.
 
-![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/binary_posteriors_example.png)
-
-![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/binary_differences_example.png)
+![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/binary_distributions_example.png)
 
 ### PoissonDataTest
 
@@ -399,7 +399,6 @@ data
 **Example:**
 
 ```python
-import numpy as np
 from bayes_ab.experiments import DiscreteDataTest
 
 # dice rolls data for 3 dice - A, B, C
@@ -451,7 +450,7 @@ poetry install
 poetry run pre-commit install
 ```
 
-## Roadmap
+##Roadmap
 
 Test classes to add:
 

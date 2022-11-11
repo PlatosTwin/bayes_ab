@@ -153,7 +153,7 @@ class DeltaLognormalDataTest(BaseDataTest):
     def add_variant_data_agg(
         self,
         name: str,
-        totals: int,
+        total: int,
         positives: int,
         sum_values: float,
         sum_logs: float,
@@ -176,7 +176,7 @@ class DeltaLognormalDataTest(BaseDataTest):
         Parameters
         ----------
         name : Variant name.
-        totals : Total number of experiment observations (e.g. number of sessions).
+        total : Total number of experiment observations (e.g. number of sessions).
         positives : Total number of non-zero values for a given variant.
         sum_values : Sum of non-zero values for a given variant.
         sum_logs : Sum of logarithms of non-zero data values for a given variant.
@@ -200,12 +200,12 @@ class DeltaLognormalDataTest(BaseDataTest):
             raise ValueError("All priors of [m, a_ig, b_ig, w] have to be non-negative numbers.")
         if positives < 0:
             raise ValueError("Input variable 'positives' is expected to be non-negative integer.")
-        if totals < positives:
+        if total < positives:
             raise ValueError("Not possible to have more positives that totals!")
 
         if name not in self.variant_names:
             self.data[name] = {
-                "totals": totals,
+                "totals": total,
                 "positives": positives,
                 "sum_values": sum_values,
                 "sum_logs": sum_logs,
@@ -224,7 +224,7 @@ class DeltaLognormalDataTest(BaseDataTest):
             )
             logger.info(msg)
             self.data[name] = {
-                "totals": totals,
+                "totals": total,
                 "positives": positives,
                 "sum_values": sum_values,
                 "sum_logs": sum_logs,
@@ -243,7 +243,7 @@ class DeltaLognormalDataTest(BaseDataTest):
                 "If you wish to replace data instead, use replace=True."
             )
             logger.info(msg)
-            self.data[name]["totals"] += totals
+            self.data[name]["totals"] += total
             self.data[name]["positives"] += positives
             self.data[name]["sum_values"] += sum_values
             self.data[name]["sum_logs"] += sum_logs

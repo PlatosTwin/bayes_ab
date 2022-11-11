@@ -533,19 +533,63 @@ class BinaryDataTest(BaseDataTest):
 
         self.add_variant_data_agg(name, total, positives, a_prior, b_prior, replace)
 
-    def plot_posteriors(self, fname: str = None, dpi: int = 300) -> None:
+    def plot_distributions(self, control: str, fname: str = None, dpi: int = 300) -> None:
         """
         For each variant, plot its posterior distribution.
 
         Parameters
         ----------
+        control : The variant to treat as control; this variant will be subtracted from each other variant.
         fname : Filename to which to save the resultant image; if None, the image is not saved.
         dpi : DPI setting for saved image; used only when fname is not None.
         """
-        fig, ax = plt.subplots(
+        fig, (ax1, ax2, ax3) = plt.subplots(
+            3,
+            1,
             figsize=(10, 8),
         )
 
+        ###
+        # subplot 1
+        ###
+        xmin = 1
+        xmax = 0
+        ymax = 0
+        colors = list(mcolors.TABLEAU_COLORS.values())
+        dist_names = []
+        for var, color in zip(self.data, colors):
+            a = self.data[var]["a_prior"]
+            b = self.data[var]["b_prior"]
+            mu = a / (a + b)
+
+            label = f"{var}: $\mu={mu:.2%}$%"
+            dist_names.append(label)
+            x = np.linspace(0, 1, 10000)
+            y = stats.beta.pdf(x, a, b)
+            ax1.plot(x * 100, y, label=label)
+
+            ax1.fill_between(x * 100, y, color=color, alpha=0.10)
+
+            ax1.xaxis.set_major_formatter(mtick.PercentFormatter())
+
+            if x[np.where(y >= 0.0001)[0][0]] < xmin:
+                xmin = x[np.where(y >= 0.0001)[0][0]]
+            if x[np.where(y >= 0.0001)[0][-1]] > xmax:
+                xmax = x[np.where(y >= 0.0001)[0][-1]]
+            if max(y) >= ymax:
+                ymax = max(y)
+
+        ax1.set_xlabel("Prior probability")
+
+        handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(self.data))]
+        ax1.legend(handles, dist_names)
+
+        ax1.set_xlim(xmin, xmax * 100)
+        ax1.set_ylim(0, ymax * 1.25)
+
+        ###
+        # subplot 2
+        ###
         xmin = 1
         xmax = 0
         colors = list(mcolors.TABLEAU_COLORS.values())
@@ -561,7 +605,7 @@ class BinaryDataTest(BaseDataTest):
             dist_names.append(label)
             x = np.linspace(0, 1, 10000)
             y = stats.beta.pdf(x, a + c, b + n - c)
-            ax.plot(x * 100, y, label=label)
+            ax2.plot(x * 100, y, label=label)
 
             x_bound = x[
                 np.intersect1d(np.where(x > self.data[var]["bounds"][0])[0], np.where(x < self.data[var]["bounds"][1]))
@@ -569,75 +613,58 @@ class BinaryDataTest(BaseDataTest):
             y_bound = y[
                 np.intersect1d(np.where(x > self.data[var]["bounds"][0])[0], np.where(x < self.data[var]["bounds"][1]))
             ]
-            ax.fill_between(x_bound * 100, y_bound, color=color, alpha=0.55)
+            ax2.fill_between(x_bound * 100, y_bound, color=color, alpha=0.55)
 
             x_bound = x[np.where(x < self.data[var]["bounds"][0])[0]]
             y_bound = y[np.where(x < self.data[var]["bounds"][0])[0]]
-            ax.fill_between(x_bound * 100, y_bound, color=color, alpha=0.10)
+            ax2.fill_between(x_bound * 100, y_bound, color=color, alpha=0.10)
 
             x_bound = x[np.where(x > self.data[var]["bounds"][1])[0]]
             y_bound = y[np.where(x > self.data[var]["bounds"][1])[0]]
-            ax.fill_between(x_bound * 100, y_bound, color=color, alpha=0.10)
+            ax2.fill_between(x_bound * 100, y_bound, color=color, alpha=0.10)
 
-            ax.xaxis.set_major_formatter(mtick.PercentFormatter())
+            ax2.xaxis.set_major_formatter(mtick.PercentFormatter())
 
             if x[np.where(y >= 0.0001)[0][0]] < xmin:
                 xmin = x[np.where(y >= 0.0001)[0][0]]
             if x[np.where(y >= 0.0001)[0][-1]] > xmax:
                 xmax = x[np.where(y >= 0.0001)[0][-1]]
 
-        ax.set_ylabel("Probability density")
+        ax2.set_xlabel("Posterior probability")
 
         handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(self.data))]
-        ax.legend(handles, dist_names)
+        ax2.legend(handles, dist_names)
 
-        plt.xlim(xmin * 80, xmax * 120)
+        ax2.set_xlim(xmin * 80, xmax * 120)
 
-        fig.tight_layout()
-
-        if fname:
-            plt.savefig(fname, dpi=dpi)
-
-        plt.show()
-
-    def plot_differences(self, control: str, fname: str = None, dpi: int = 300) -> None:
-        """
-        For each variant, plot the difference between its posterior and the posterior for <control>.
-
-        Parameters
-        ----------
-        control : The variant to treat as control; this variant will be subtracted from each other
-        variant.
-        fname : Filename to which to save the resultant image; if None, the image is not saved.
-        dpi : DPI setting for saved image; used only when fname is not None.
-        """
+        ###
+        # subplot 3
+        ###
         num_bins = 300
-        fig, ax = plt.subplots(
-            figsize=(10, 8),
-        )
-
         hist_names = []
-        for var in [i for i in self.variant_names if i != control]:
+        colors = list(mcolors.TABLEAU_COLORS.values())[1:]
+        for color, var in zip(colors, [i for i in self.variant_names if i != control]):
             temp_sample = (self.data[var]["samples"] - self.data[control]["samples"]) / self.data[control]["mean"] * 100
             temp_mu = (self.data[var]["mean"] - self.data[control]["mean"]) / self.data[control]["mean"]
 
             label = f"{var}: $\mu={temp_mu:.2%}$%"
             hist_names.append(label)
-            n, bins, patches = ax.hist(temp_sample, num_bins, label=label, alpha=0.65)
+            n, bins, patches = ax3.hist(temp_sample, num_bins, label=label, alpha=0.65)
 
             for b, p in zip(bins, patches):
                 if b <= 0:
                     p.set_facecolor("r")
+                else:
+                    p.set_facecolor(color)
 
-            ax.xaxis.set_major_formatter(mtick.PercentFormatter())
-            ax.set_xlabel("Relative probability uplift")
-            ax.set_ylabel("Probability density")
+            ax3.xaxis.set_major_formatter(mtick.PercentFormatter())
+            ax3.set_xlabel(f"Relative probability uplift vs. {control}")
 
-        colors = list(mcolors.TABLEAU_COLORS.values())
         handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(hist_names))]
-        ax.legend(handles, hist_names)
+        ax3.legend(handles, hist_names)
 
-        plt.title(f"Difference from {control}")
+        ###
+
         fig.tight_layout()
 
         if fname:
