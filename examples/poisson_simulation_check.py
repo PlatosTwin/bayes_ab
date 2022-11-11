@@ -68,7 +68,7 @@ xmin, xmax = min_max(xmin, xmax, x, y)
 x = np.linspace(0, 100, 10000)
 y = stats.gamma.pdf(x, a=10 + len(data_c) * np.mean(data_c), scale=1 / (10 + len(data_c)))
 ax.plot(x, y, "k--")
-ax.hist(data["C"]["samples"], bins=500, density=True, color=colors[2], label="C")
+ax.hist(data["C"]["samples"], bins=500, density=True, color=colors[2], label="C", alpha=0.65)
 
 xmin, xmax = min_max(xmin, xmax, x, y)
 
@@ -76,6 +76,9 @@ xmin, xmax = min_max(xmin, xmax, x, y)
 
 ax.set_xlim(xmin * 0.95, xmax * 1.05)
 ax.legend()
-plt.title("Sampled posterior distribution vs. analytical posterior distribution")
+plt.title("Poisson test: sampled posterior distribution vs. analytical posterior distribution")
+
+fig.tight_layout()
+
 plt.savefig("plots/poisson_simulation_check.png", dpi=300)
 plt.show()

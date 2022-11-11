@@ -71,7 +71,7 @@ xmin, xmax = min_max(xmin, xmax, x, y)
 x = np.linspace(0, 1, 10000)
 y = stats.beta.pdf(x, 1 + 50, 1 + 1000 - 50)
 ax.plot(x * 100, y / 100, "k--")
-ax.hist(data["C"]["samples"] * 100, bins=500, density=True, color=colors[2], label="C")
+ax.hist(data["C"]["samples"] * 100, bins=500, density=True, color=colors[2], label="C", alpha=0.65)
 
 xmin, xmax = min_max(xmin, xmax, x, y)
 
@@ -80,6 +80,9 @@ xmin, xmax = min_max(xmin, xmax, x, y)
 ax.xaxis.set_major_formatter(mtick.PercentFormatter())
 ax.set_xlim(xmin * 80, xmax * 120)
 ax.legend()
-plt.title("Sampled posterior distribution vs. analytical posterior distribution")
+plt.title("Binary test: sampled posterior distribution vs. analytical posterior distribution")
+
+fig.tight_layout()
+
 plt.savefig("plots/binary_simulation_check.png", dpi=300)
 plt.show()
