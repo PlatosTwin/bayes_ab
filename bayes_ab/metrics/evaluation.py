@@ -83,7 +83,7 @@ def eval_closed_form_poisson_two(
     total : Probability that A will beat B.
     """
     total = 0
-    for k in range(alpha_a + 1):
+    for k in range(alpha_a):
         total += np.exp(
             k * np.log(beta_a)
             + alpha_b * np.log(beta_b)
@@ -121,8 +121,8 @@ def eval_closed_form_poisson_three(
     total : Probability that A will beat B and C.
     """
     total = 0
-    for k in range(alpha_b + 1):
-        for j in range(alpha_c + 1):
+    for k in range(alpha_b):
+        for j in range(alpha_c):
             total += np.exp(
                 alpha_a * np.log(beta_a)
                 + k * np.log(beta_b)

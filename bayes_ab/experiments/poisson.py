@@ -157,34 +157,42 @@ class PoissonDataTest(BaseDataTest):
 
         pbbs = []
         if len(self.totals) == 2:
-            a = self.data[self.variant_names[0]]["sum"]
-            b = self.data[self.variant_names[1]]["sum"]
+            a = self.data[self.variant_names[0]]
+            b = self.data[self.variant_names[1]]
 
-            pbbs.append(eval_closed_form_poisson_two(a, b))  # chance of A to beat B
-            pbbs.append(eval_closed_form_poisson_two(b, a))  # chance of B to beat A
+            # chance of A to beat B
+            pbbs.append(eval_closed_form_poisson_two(a["sum"], b["sum"], a["total"], b["total"]))
+            # chance of B to beat A
+            pbbs.append(eval_closed_form_poisson_two(b["sum"], a["sum"], b["total"], a["total"]))
 
         elif len(self.totals) == 3:
-            a = self.data[self.variant_names[0]]["sum"]
-            b = self.data[self.variant_names[1]]["sum"]
-            c = self.data[self.variant_names[2]]["sum"]
+            a = self.data[self.variant_names[0]]
+            b = self.data[self.variant_names[1]]
+            c = self.data[self.variant_names[2]]
 
             # A beats all
-            b_beats_a = eval_closed_form_poisson_two(b, a)  # chance of B to beat A
-            c_beats_a = eval_closed_form_poisson_two(c, a)  # chance of C to beat A
-            correction = eval_closed_form_poisson_three(a, b, c)
-            pbbs.append(1 - b_beats_a - c_beats_a + correction)  # chance of A to beat all
+            # chance of B to beat A
+            b_beats_a = eval_closed_form_poisson_two(b["sum"], a["sum"], b["total"], a["total"])
+            # chance of C to beat A
+            c_beats_a = eval_closed_form_poisson_two(c["sum"], a["sum"], c["total"], a["total"])
+            corr = eval_closed_form_poisson_three(a["sum"], b["sum"], c["sum"], a["total"], b["total"], c["total"])
+            pbbs.append(1 - b_beats_a - c_beats_a + corr)  # chance of A to beat all
 
             # B beats all
-            a_beats_b = eval_closed_form_poisson_two(a, b)  # chance of A to beat B
-            c_beats_b = eval_closed_form_poisson_two(c, b)  # chance of C to beat B
-            correction = eval_closed_form_poisson_three(b, c, a)
-            pbbs.append(1 - a_beats_b - c_beats_b + correction)  # chance of B to beat all
+            # chance of A to beat B
+            a_beats_b = eval_closed_form_poisson_two(a["sum"], b["sum"], a["total"], b["total"])
+            # chance of C to beat B
+            c_beats_b = eval_closed_form_poisson_two(c["sum"], b["sum"], c["total"], b["total"])
+            corr = eval_closed_form_poisson_three(b["sum"], c["sum"], a["sum"], b["total"], c["total"], a["total"])
+            pbbs.append(1 - a_beats_b - c_beats_b + corr)  # chance of B to beat all
 
             # C beats all
-            a_beats_c = eval_closed_form_poisson_two(a, c)  # chance of A to beat C
-            b_beats_c = eval_closed_form_poisson_two(b, c)  # chance of B to beat C
-            correction = eval_closed_form_poisson_three(c, a, b)
-            pbbs.append(1 - a_beats_c - b_beats_c + correction)  # chance of C to beat all
+            # chance of A to beat C
+            a_beats_c = eval_closed_form_poisson_two(a["sum"], c["sum"], a["total"], c["total"])
+            # chance of B to beat C
+            b_beats_c = eval_closed_form_poisson_two(b["sum"], c["sum"], b["total"], c["total"])
+            corr = eval_closed_form_poisson_three(c["sum"], a["sum"], b["sum"], c["total"], a["total"], b["total"])
+            pbbs.append(1 - a_beats_c - b_beats_c + corr)  # chance of C to beat all
 
         return dict(zip(self.variant_names, pbbs))
 
@@ -482,19 +490,61 @@ class PoissonDataTest(BaseDataTest):
             replace,
         )
 
-    def plot_posteriors(self, fname: str = None, dpi: int = 300) -> None:
+    def plot_distributions(self, control: str, fname: str = None, dpi: int = 300) -> None:
         """
         For each variant, plot its posterior distribution.
 
         Parameters
         ----------
+        control : The variant to treat as control; this variant will be subtracted from each other variant.
         fname : Filename to which to save the resultant image; if None, the image is not saved.
         dpi : DPI setting for saved image; used only when fname is not None.
         """
-        fig, ax = plt.subplots(
+        fig, (ax1, ax2, ax3) = plt.subplots(
+            3,
+            1,
             figsize=(10, 8),
         )
 
+        ###
+        # subplot 1
+        ###
+        xmin = 1
+        xmax = 0
+        ymax = 0
+        colors = list(mcolors.TABLEAU_COLORS.values())
+        dist_names = []
+        for var, color in zip(self.data, colors):
+            a = self.data[var]["a_prior"]
+            b = self.data[var]["b_prior"]
+            mu = a / b
+
+            label = f"{var}: $\mu={mu:.1f}$"
+            dist_names.append(label)
+            x = np.linspace(0, mu * 100, 10000)
+            y = stats.gamma.pdf(x, a, b)
+            ax1.plot(x, y, label=label)
+
+            ax1.fill_between(x, y, color=color, alpha=0.10)
+
+            if x[np.where(y >= 0.0001)[0][0]] < xmin:
+                xmin = x[np.where(y >= 0.0001)[0][0]]
+            if x[np.where(y >= 0.0001)[0][-1]] > xmax:
+                xmax = x[np.where(y >= 0.0001)[0][-1]]
+            if max(y) >= ymax:
+                ymax = max(y)
+
+        ax1.set_xlabel("Prior count distribution")
+
+        handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(self.data))]
+        ax1.legend(handles, dist_names)
+
+        ax1.set_xlim(xmin, xmax * 1.15)
+        ax1.set_ylim(0, ymax * 1.25)
+
+        ###
+        # subplot 2
+        ###
         xmin = max(self.means) * 5
         xmax = 0
         colors = list(mcolors.TABLEAU_COLORS.values())
@@ -509,6 +559,103 @@ class PoissonDataTest(BaseDataTest):
             label = f"{var}: $\mu={mu:.1f}$"
             dist_names.append(label)
             x = np.linspace(0, max(self.means) * 5, 10000)
+            y = stats.gamma.pdf(x, a=a + totals * obs_mean, scale=1 / (b + totals))
+            ax2.plot(x, y, label=label)
+
+            x_bound = x[
+                np.intersect1d(np.where(x > self.data[var]["bounds"][0])[0], np.where(x < self.data[var]["bounds"][1]))
+            ]
+            y_bound = y[
+                np.intersect1d(np.where(x > self.data[var]["bounds"][0])[0], np.where(x < self.data[var]["bounds"][1]))
+            ]
+            ax2.fill_between(x_bound, y_bound, color=color, alpha=0.55)
+
+            x_bound = x[np.where(x < self.data[var]["bounds"][0])[0]]
+            y_bound = y[np.where(x < self.data[var]["bounds"][0])[0]]
+            ax2.fill_between(x_bound, y_bound, color=color, alpha=0.10)
+
+            x_bound = x[np.where(x > self.data[var]["bounds"][1])[0]]
+            y_bound = y[np.where(x > self.data[var]["bounds"][1])[0]]
+            ax2.fill_between(x_bound, y_bound, color=color, alpha=0.10)
+
+            if x[np.where(y >= 0.0001)[0][0]] < xmin:
+                xmin = x[np.where(y >= 0.0001)[0][0]]
+            if x[np.where(y >= 0.0001)[0][-1]] > xmax:
+                xmax = x[np.where(y >= 0.0001)[0][-1]]
+
+        ax2.set_xlabel("Posterior count distribution")
+
+        handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(self.data))]
+        ax2.legend(handles, dist_names)
+
+        ax2.set_xlim(xmin * 0.9, xmax * 1.10)
+
+        ###
+        # subplot 3
+        ###
+        num_bins = 300
+        hist_names = []
+        colors = list(mcolors.TABLEAU_COLORS.values())[1:]
+        for color, var in zip(colors, [i for i in self.variant_names if i != control]):
+            temp_sample = (self.data[var]["samples"] - self.data[control]["samples"]) / self.data[control]["mean"] * 100
+            temp_mu = (self.data[var]["mean"] - self.data[control]["mean"]) / self.data[control]["mean"]
+
+            label = f"{var}: $\mu={temp_mu:.2%}$%"
+            hist_names.append(label)
+            n, bins, patches = ax3.hist(temp_sample, num_bins, label=label, alpha=0.65)
+
+            for b, p in zip(bins, patches):
+                if b <= 0:
+                    p.set_facecolor("r")
+                else:
+                    p.set_facecolor(color)
+
+            ax3.xaxis.set_major_formatter(mtick.PercentFormatter())
+            ax3.set_xlabel(f"Relative count uplift vs. {control}")
+
+        handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(hist_names))]
+        ax3.legend(handles, hist_names)
+
+        ###
+
+        fig.tight_layout()
+
+        if fname:
+            plt.savefig(fname, dpi=dpi)
+
+        plt.show()
+
+    def plot_posteriors(self, fname: str = None, dpi: int = 300) -> None:
+        """
+        For each variant, plot its posterior distribution.
+
+        Parameters
+        ----------
+        fname : Filename to which to save the resultant image; if None, the image is not saved.
+        dpi : DPI setting for saved image; used only when fname is not None.
+        """
+        fig, ax = plt.subplots(
+            figsize=(10, 8),
+        )
+
+        xmin = 1e6
+        xmax = 0
+        colors = list(mcolors.TABLEAU_COLORS.values())
+        dist_names = []
+        for var, color in zip(self.data, colors):
+            a = self.data[var]["a_prior"]
+            totals = self.data[var]["total"]
+            obs_mean = self.data[var]["obs_mean"]
+            b = self.data[var]["b_prior"]
+            mu = (a + totals * obs_mean) / (b + totals)
+
+            label = f"{var}: $\mu={mu:.1f}$"
+            dist_names.append(label)
+            x = np.linspace(
+                stats.gamma.pdf(0.0001, a=a + totals * obs_mean, scale=1 / (b + totals)),
+                stats.gamma.pdf(0.9999, a=a + totals * obs_mean, scale=1 / (b + totals)),
+                10000,
+            )
             y = stats.gamma.pdf(x, a=a + totals * obs_mean, scale=1 / (b + totals))
             ax.plot(x, y, label=label)
 
@@ -541,51 +688,6 @@ class PoissonDataTest(BaseDataTest):
 
         plt.xlim([xmin * 0.9, xmax * 1.10])
 
-        fig.tight_layout()
-
-        if fname:
-            plt.savefig(fname, dpi=dpi)
-
-        plt.show()
-
-    def plot_differences(self, control: str, fname: str = None, dpi: int = 300) -> None:
-        """
-        For each variant, plot the difference between its posterior and the posterior for <control>.
-
-        Parameters
-        ----------
-        control : The variant to treat as control; this variant will be subtracted from each other
-        variant.
-        fname : Filename to which to save the resultant image; if None, the image is not saved.
-        dpi : DPI setting for saved image; used only when fname is not None.
-        """
-        num_bins = 250
-        fig, ax = plt.subplots(
-            figsize=(10, 8),
-        )
-
-        hist_names = []
-        for var in [i for i in self.variant_names if i != control]:
-            temp_sample = (self.data[var]["samples"] - self.data[control]["samples"]) / self.data[control]["mean"] * 100
-            temp_mu = (self.data[var]["mean"] - self.data[control]["mean"]) / self.data[control]["mean"]
-
-            label = f"{var}: $\mu={temp_mu:.2%}$%"
-            hist_names.append(label)
-            n, bins, patches = ax.hist(temp_sample, num_bins, label=label, alpha=0.65)
-
-            for b, p in zip(bins, patches):
-                if b <= 0:
-                    p.set_facecolor("r")
-
-            ax.xaxis.set_major_formatter(mtick.PercentFormatter())
-            ax.set_xlabel("Relative uplift")
-            ax.set_ylabel("Unnormalized probability density")
-
-        colors = list(mcolors.TABLEAU_COLORS.values())
-        handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(hist_names))]
-        ax.legend(handles, hist_names)
-
-        plt.title(f"Difference from {control}")
         fig.tight_layout()
 
         if fname:

@@ -34,8 +34,8 @@
 - `Uplift vs. 'A'`
     - Relative uplift of a given variant compared to the first variant added
 - `95% HDI`
-    - 95% confidence interval. The Bayesian approach allows us to say that, 95% of the time, the 95% HDI will contain
-      the true value
+    - The central interval containing 95% of the probability. The Bayesian approach allows us to say that, 95% of the
+      time, the 95% HDI will contain the true value
 
 Evaluation metrics are calculated using Monte Carlo simulations from posterior distributions
 
@@ -50,7 +50,7 @@ The decision method makes use of the following concepts:
 - **Region of Practical Equivalence (ROPE)** — a region `[-t, t]` of the distribution of differences `B - A` which is
   practically equivalent to no uplift. E.g., you may be indifferent between an uplift of +/- 0.1% and no change, in
   which case the ROPE would be `[-0.1, 0.1`.
-- **95% HDI** — the symmetrical region containing 95% of the probability for the distribution of differences
+- **95% HDI** — the central interval containing 95% of the probability for the distribution of differences
   `B - A`.
 
 The recommendation output has three elements:
@@ -144,8 +144,8 @@ data_b = rng.binomial(n=1, p=0.067, size=1200)
 test = BinaryDataTest()
 
 # add variant using raw data (arrays of zeros and ones):
-test.add_variant_data("A", data_a)
-test.add_variant_data("B", data_b)
+test.add_variant_data("A", data_a, a_prior=10, b_prior=17)
+test.add_variant_data("B", data_b, a_prior=5, b_prior=30)
 # priors can be specified like this (default for this test is a=b=1):
 # test.add_variant_data("B", data_b, a_prior=1, b_prior=20)
 
@@ -153,7 +153,7 @@ test.add_variant_data("B", data_b)
 test.add_variant_data_agg("C", total=1000, positives=50)
 
 # evaluate test:
-test.evaluate()
+test.evaluate(seed=314)
 
 # access simulation samples and evaluation metrics
 data = test.data
@@ -165,19 +165,10 @@ test.plot_distributions(control='A', fname='binary_distributions_example.png')
     +---------+--------+-----------+---------------+--------------------+---------------+----------------+----------------+
     | Variant | Totals | Positives | Positive rate | Chance to beat all | Expected loss | Uplift vs. "A" |    95% HDI     |
     +---------+--------+-----------+---------------+--------------------+---------------+----------------+----------------+
-    |    B    |  1200  |     80    |     6.88%     |       83.37%       |     0.08%     |     16.78%     | [5.74%, 8.11%] |
-    |    C    |  1000  |     50    |     5.09%     |       2.62%        |     1.87%     |    -13.64%     | [4.00%, 6.28%] |
-    |    A    |  1500  |     80    |     5.89%     |       14.02%       |     1.07%     |     0.00%      | [4.94%, 6.92%] |
+    |    B    |  1200  |     80    |     6.88%     |       83.82%       |     0.08%     |     16.78%     | [5.74%, 8.11%] |
+    |    C    |  1000  |     50    |     5.09%     |       2.54%        |     1.87%     |    -13.64%     | [4.00%, 6.28%] |
+    |    A    |  1500  |     80    |     5.89%     |       13.64%       |     1.07%     |     0.00%      | [4.94%, 6.92%] |
     +---------+--------+-----------+---------------+--------------------+---------------+----------------+----------------+
-
-Removing variant 'C' and passing a value to `control` additionally returns a test-continuation recommendation:
-
-```python
-test.delete_variant("C")
-test.evaluate(control='A')
-```
-
-    Decision: Stop and implement either variant. Confidence: Low. Bounds: [-0.84%, 2.84%].
 
 For smaller samples, such as the above, it it also possible to check the modeled chance to beat all against the
 closed-form equivalent by passing `closed_form=True`. The run below shows a substantial difference for some variants but
@@ -185,16 +176,26 @@ leaves the overall assessment unchanged: variant B is the strongest. As discusse
 from Monte Carlo to Markov Chain Monte Carlo should improve distribution estimates significantly.
 
 ```python
-test.evaluate(closed_form=True)
+test.evaluate(closed_form=True, seed=314)
 ```
 
     +---------+-------------------------+--------------------------+---------+
     | Variant | Est. chance to beat all | Exact chance to beat all |  Delta  |
     +---------+-------------------------+--------------------------+---------+
     |    B    |          83.82%         |          89.27%          |  -6.11% |
-    |    C    |          2.52%          |          4.25%           | -40.75% |
-    |    A    |          13.66%         |          6.47%           | 110.99% |
+    |    C    |          2.54%          |          4.25%           | -40.24% |
+    |    A    |          13.64%         |          6.47%           | 110.64% |
     +---------+-------------------------+--------------------------+---------+
+
+Removing variant 'C', as this feature is implemented for two variants only currently, and passing a value to `control`
+additionally returns a test-continuation recommendation:
+
+```python
+test.delete_variant("C")
+test.evaluate(control='A', seed=314)
+```
+
+    Decision: Stop and implement either variant. Confidence: Low. Bounds: [-0.84%, 2.85%].
 
 Finally, we can plot the prior and posterior distributions, as well as the distribution of differences.
 
@@ -214,55 +215,45 @@ from bayes_ab.experiments import PoissonDataTest
 
 # generating some random data
 rng = np.random.default_rng(21)
-data_a = rng.poisson(42, size=20)
-data_b = rng.poisson(40, size=25)
-data_c = rng.poisson(43, size=15)
+data_a = rng.poisson(43, size=20)
+data_b = rng.poisson(39, size=25)
+data_c = rng.poisson(37, size=15)
 
 # initialize a test:
 test = PoissonDataTest()
 
 # add variant using raw data:
-test.add_variant_data("A", data_a)
-test.add_variant_data("B", data_b)
+test.add_variant_data("A", data_a, a_prior=30, b_prior=7)
+test.add_variant_data("B", data_b, a_prior=5, b_prior=5)
 # test.add_variant_data("C", data_c)
 
 # add variant using aggregated data:
 test.add_variant_data_agg("C", total=len(data_c), obs_mean=np.mean(data_c), obs_sum=sum(data_c))
 
 # evaluate test:
-test.evaluate(sim_count=20000, seed=52)
+test.evaluate(seed=314)
 
 # access simulation samples and evaluation metrics
 data = test.data
 
 # generate plots
-test.plot_posteriors(fname='poisson_posteriors_example.png')
-test.plot_differences(control='A', fname='poisson_differences_example.png')
+test.plot_distributions(control='A', fname='poisson_distributions_example.png')
 ```
 
     +---------+--------------+------+--------------------+---------------+----------------+--------------+
     | Variant | Observations | Mean | Chance to beat all | Expected loss | Uplift vs. "A" |   95% HDI    |
     +---------+--------------+------+--------------------+---------------+----------------+--------------+
-    |    C    |      15      | 42.5 |       56.38%       |      0.69     |     0.96%      | [39.9, 45.2] |
-    |    A    |      20      | 42.1 |       42.57%       |      1.08     |     0.00%      | [39.8, 44.5] |
-    |    B    |      25      | 39.2 |       1.05%        |      3.97     |     -6.80%     | [37.2, 41.3] |
+    |    C    |      15      | 36.2 |       73.99%       |      0.28     |     4.01%      | [33.8, 38.8] |
+    |    B    |      25      | 33.9 |       5.03%        |      2.68     |     -2.83%     | [32.1, 35.6] |
+    |    A    |      20      | 34.9 |       20.98%       |      1.67     |     0.00%      | [33.0, 36.7] |
     +---------+--------------+------+--------------------+---------------+----------------+--------------+
-
-Removing variant 'C' and passing `control` and `rope` additionally returns a test-continuation recommendation:
-
-```python
-test.delete_variant("C")
-test.evaluate(control='A', rope=0.5)
-```
-
-    Decision: Stop and implement either variant. Confidence: Low. Bounds: [-6.6, 0.7].
 
 For samples smaller than the above, it is also possible to check the modeled chance to beat all against the closed-form
 equivalent by passing `closed_form=True` (this output is for 15 observations of `A`, `B`, and `C` each, with the means
 unchanged from above):
 
 ```python
-test.evaluate(closed_form=True)
+test.evaluate(closed_form=True, seed=314)
 ```
 
     | Variant | Est. chance to beat all | Exact chance to beat all | Delta |
@@ -272,12 +263,20 @@ test.evaluate(closed_form=True)
     |    B    |          4.09%          |          4.08%           | 0.21% |
     +---------+-------------------------+--------------------------+-------+
 
+Removing variant 'C', as this feature is implemented for two variants only currently, and passing `control` and `rope`
+additionally returns a test-continuation recommendation:
+
+```python
+test.delete_variant("C")
+test.evaluate(control='A', rope=0.5, seed=314)
+```
+
+    Decision: Stop and implement either variant. Confidence: Low. Bounds: [-4.0, 2.1].
+
 Finally, we can plot the posterior distributions as well as the distribution of differences (returning now to the
 original number of observations rather than the smaller sample used to show the closed-form validation).
 
-![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/poisson_posteriors_example.png)
-
-![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/poisson_differences_example.png)
+![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/poisson_distributions_example.png)
 
 ### NormalDataTest
 
@@ -450,7 +449,7 @@ poetry install
 poetry run pre-commit install
 ```
 
-##Roadmap
+## Roadmap
 
 Test classes to add:
 
@@ -467,9 +466,10 @@ Other improvements:
 - Implement Markov Chain Monte Carlo in place of Monte Carlo
 - Plot evolutions of posteriors with time
 
-## References
+## References and related works
 
-This package leans heavily on the resources outlined below. In cases where a function or method draws directly on a
+The development of this package has benefited from many of the resources outlined below, while other resources are
+listed simply to direct the user to related relevant material. In cases where a function or method draws directly on a
 particular derivation, the docstring contains the exact reference.
 
 - [Bayesian A/B Testing at VWO](https://vwo.com/downloads/VWO_SmartStats_technical_whitepaper.pdf)
@@ -488,6 +488,7 @@ particular derivation, the docstring contains the exact reference.
 - [Bayesian Data Analysis, Third Edition](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf) (Gelman et al., 2021)
 - [Probabalistic programming and Bayesian methods for hackers](https://nbviewer.org/github/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers/tree/master/) (
   Cameron Davidson-Pilon, 2022)
+- [Think Bayes 2](https://allendowney.github.io/ThinkBayes2/index.html) (Downey, 2021)
 
 This project was inspired by Aubrey Clayton's (2022) _[Bernoulli's Fallacy:
 Statistical Illogic and the Crisis of Modern Science](http://cup.columbia.edu/book/bernoullis-fallacy/9780231199940)_.
