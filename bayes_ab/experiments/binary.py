@@ -149,7 +149,7 @@ class BinaryDataTest(BaseDataTest):
 
         for d in self.data.values():
             if int(d["a_prior"]) != d["a_prior"] or int(d["b_prior"]) != d["b_prior"]:
-                msg = f"The closed-form solution requires integer values of a, b " f"for all beta(a, b) priors."
+                msg = f"The closed-form solution requires integer values of a, b for all beta(a, b) priors."
                 logger.error(msg)
                 raise ValueError(msg)
 

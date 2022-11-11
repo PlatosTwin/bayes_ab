@@ -143,13 +143,13 @@ data_b = rng.binomial(n=1, p=0.067, size=1200)
 # initialize a test:
 test = BinaryDataTest()
 
-# add variant using raw data (arrays of zeros and ones):
+# add variant using raw data (arrays of zeros and ones) and specifying priors:
 test.add_variant_data("A", data_a, a_prior=10, b_prior=17)
 test.add_variant_data("B", data_b, a_prior=5, b_prior=30)
-# priors can be specified like this (default for this test is a=b=1):
-# test.add_variant_data("B", data_b, a_prior=1, b_prior=20)
+# the default priors are a=b=1
+# test.add_variant_data("C", data_c)
 
-# add variant using aggregated data (same as raw data with 950 zeros and 50 ones):
+# add variant using aggregated data:
 test.add_variant_data_agg("C", total=1000, positives=50)
 
 # evaluate test:
@@ -170,22 +170,20 @@ test.plot_distributions(control='A', fname='binary_distributions_example.png')
     |    A    |  1500  |     80    |     5.89%     |       13.64%       |     1.07%     |     0.00%      | [4.94%, 6.92%] |
     +---------+--------+-----------+---------------+--------------------+---------------+----------------+----------------+
 
-For smaller samples, such as the above, it it also possible to check the modeled chance to beat all against the
-closed-form equivalent by passing `closed_form=True`. The run below shows a substantial difference for some variants but
-leaves the overall assessment unchanged: variant B is the strongest. As discussed in the [roadmap](#Roadmap), switching
-from Monte Carlo to Markov Chain Monte Carlo should improve distribution estimates significantly.
+For smaller samples, such as the above, it is also possible to check the modeled chance to beat all against the
+closed-form equivalent by passing `closed_form=True`.
 
 ```python
 test.evaluate(closed_form=True, seed=314)
 ```
 
-    +---------+-------------------------+--------------------------+---------+
-    | Variant | Est. chance to beat all | Exact chance to beat all |  Delta  |
-    +---------+-------------------------+--------------------------+---------+
-    |    B    |          83.82%         |          89.27%          |  -6.11% |
-    |    C    |          2.54%          |          4.25%           | -40.24% |
-    |    A    |          13.64%         |          6.47%           | 110.64% |
-    +---------+-------------------------+--------------------------+---------+
+    +---------+-------------------------+--------------------------+--------+
+    | Variant | Est. chance to beat all | Exact chance to beat all | Delta  |
+    +---------+-------------------------+--------------------------+--------+
+    |    B    |          83.82%         |          83.58%          | 0.28%  |
+    |    C    |          2.54%          |          2.56%           | -0.66% |
+    |    A    |          13.64%         |          13.86%          | -1.59% |
+    +---------+-------------------------+--------------------------+--------+
 
 Removing variant 'C', as this feature is implemented for two variants only currently, and passing a value to `control`
 additionally returns a test-continuation recommendation:
@@ -222,7 +220,7 @@ data_c = rng.poisson(37, size=15)
 # initialize a test:
 test = PoissonDataTest()
 
-# add variant using raw data:
+# add variant using raw data (arrays of zeros and ones) and specifying priors:
 test.add_variant_data("A", data_a, a_prior=30, b_prior=7)
 test.add_variant_data("B", data_b, a_prior=5, b_prior=5)
 # test.add_variant_data("C", data_c)
@@ -243,25 +241,25 @@ test.plot_distributions(control='A', fname='poisson_distributions_example.png')
     +---------+--------------+------+--------------------+---------------+----------------+--------------+
     | Variant | Observations | Mean | Chance to beat all | Expected loss | Uplift vs. "A" |   95% HDI    |
     +---------+--------------+------+--------------------+---------------+----------------+--------------+
-    |    C    |      15      | 36.2 |       73.99%       |      0.28     |     4.01%      | [33.8, 38.8] |
-    |    B    |      25      | 33.9 |       5.03%        |      2.68     |     -2.83%     | [32.1, 35.6] |
-    |    A    |      20      | 34.9 |       20.98%       |      1.67     |     0.00%      | [33.0, 36.7] |
-    +---------+--------------+------+--------------------+---------------+----------------+--------------+
+    |    C    |      15      | 36.2 |       74.06%       |      0.28     |     4.01%      | [33.8, 38.8] |
+    |    B    |      25      | 33.9 |       5.09%        |      2.66     |     -2.83%     | [32.1, 35.6] |
+    |    A    |      20      | 34.9 |       20.85%       |      1.68     |     0.00%      | [33.0, 36.7] |
++---------+--------------+------+--------------------+---------------+----------------+--------------+
 
 For samples smaller than the above, it is also possible to check the modeled chance to beat all against the closed-form
-equivalent by passing `closed_form=True` (this output is for 15 observations of `A`, `B`, and `C` each, with the means
-unchanged from above):
+equivalent by passing `closed_form=True`:
 
 ```python
 test.evaluate(closed_form=True, seed=314)
 ```
 
-    | Variant | Est. chance to beat all | Exact chance to beat all | Delta |
-    +---------+-------------------------+--------------------------+-------+
-    |    C    |          50.60%         |          49.88%          | 1.44% |
-    |    A    |          45.31%         |          43.48%          | 4.20% |
-    |    B    |          4.09%          |          4.08%           | 0.21% |
-    +---------+-------------------------+--------------------------+-------+
+    +---------+-------------------------+--------------------------+--------+
+    | Variant | Est. chance to beat all | Exact chance to beat all | Delta  |
+    +---------+-------------------------+--------------------------+--------+
+    |    C    |          74.06%         |          73.91%          | 0.20%  |
+    |    B    |          5.09%          |          5.24%           | -2.84% |
+    |    A    |          20.85%         |          20.85%          | -0.01% |
+    +---------+-------------------------+--------------------------+--------+
 
 Removing variant 'C', as this feature is implemented for two variants only currently, and passing `control` and `rope`
 additionally returns a test-continuation recommendation:

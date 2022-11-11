@@ -161,9 +161,23 @@ class PoissonDataTest(BaseDataTest):
             b = self.data[self.variant_names[1]]
 
             # chance of A to beat B
-            pbbs.append(eval_closed_form_poisson_two(a["sum"], b["sum"], a["total"], b["total"]))
+            pbbs.append(
+                eval_closed_form_poisson_two(
+                    a["a_prior"] + a["sum"],
+                    b["a_prior"] + b["sum"],
+                    a["b_prior"] + a["total"],
+                    b["b_prior"] + b["total"],
+                )
+            )
             # chance of B to beat A
-            pbbs.append(eval_closed_form_poisson_two(b["sum"], a["sum"], b["total"], a["total"]))
+            pbbs.append(
+                eval_closed_form_poisson_two(
+                    b["a_prior"] + b["sum"],
+                    a["a_prior"] + a["sum"],
+                    b["b_prior"] + b["total"],
+                    a["b_prior"] + a["total"],
+                )
+            )
 
         elif len(self.totals) == 3:
             a = self.data[self.variant_names[0]]
@@ -172,26 +186,59 @@ class PoissonDataTest(BaseDataTest):
 
             # A beats all
             # chance of B to beat A
-            b_beats_a = eval_closed_form_poisson_two(b["sum"], a["sum"], b["total"], a["total"])
+            b_beats_a = eval_closed_form_poisson_two(
+                b["sum"] + b["a_prior"], a["sum"] + a["a_prior"], b["total"] + b["b_prior"], a["total"] + a["b_prior"]
+            )
             # chance of C to beat A
-            c_beats_a = eval_closed_form_poisson_two(c["sum"], a["sum"], c["total"], a["total"])
-            corr = eval_closed_form_poisson_three(a["sum"], b["sum"], c["sum"], a["total"], b["total"], c["total"])
+            c_beats_a = eval_closed_form_poisson_two(
+                c["sum"] + c["a_prior"], a["sum"] + a["a_prior"], c["total"] + c["b_prior"], a["total"] + a["b_prior"]
+            )
+            corr = eval_closed_form_poisson_three(
+                a["sum"] + a["a_prior"],
+                b["sum"] + b["a_prior"],
+                c["sum"] + c["a_prior"],
+                a["total"] + a["b_prior"],
+                b["total"] + b["b_prior"],
+                c["total"] + c["b_prior"],
+            )
             pbbs.append(1 - b_beats_a - c_beats_a + corr)  # chance of A to beat all
 
             # B beats all
             # chance of A to beat B
-            a_beats_b = eval_closed_form_poisson_two(a["sum"], b["sum"], a["total"], b["total"])
+            a_beats_b = eval_closed_form_poisson_two(
+                a["sum"] + a["a_prior"], b["sum"] + b["a_prior"], a["total"] + a["b_prior"], b["total"] + b["b_prior"]
+            )
             # chance of C to beat B
-            c_beats_b = eval_closed_form_poisson_two(c["sum"], b["sum"], c["total"], b["total"])
-            corr = eval_closed_form_poisson_three(b["sum"], c["sum"], a["sum"], b["total"], c["total"], a["total"])
+            c_beats_b = eval_closed_form_poisson_two(
+                c["sum"] + c["a_prior"], b["sum"] + b["a_prior"], c["total"] + c["b_prior"], b["total"] + b["b_prior"]
+            )
+            corr = eval_closed_form_poisson_three(
+                b["sum"] + b["a_prior"],
+                c["sum"] + c["a_prior"],
+                a["sum"] + a["a_prior"],
+                b["total"] + b["b_prior"],
+                c["total"] + c["b_prior"],
+                a["total"] + a["b_prior"],
+            )
             pbbs.append(1 - a_beats_b - c_beats_b + corr)  # chance of B to beat all
 
             # C beats all
             # chance of A to beat C
-            a_beats_c = eval_closed_form_poisson_two(a["sum"], c["sum"], a["total"], c["total"])
+            a_beats_c = eval_closed_form_poisson_two(
+                a["sum"] + a["a_prior"], c["sum"] + c["a_prior"], a["total"] + a["b_prior"], c["total"] + c["b_prior"]
+            )
             # chance of B to beat C
-            b_beats_c = eval_closed_form_poisson_two(b["sum"], c["sum"], b["total"], c["total"])
-            corr = eval_closed_form_poisson_three(c["sum"], a["sum"], b["sum"], c["total"], a["total"], b["total"])
+            b_beats_c = eval_closed_form_poisson_two(
+                b["sum"] + b["a_prior"], c["sum"] + c["a_prior"], b["total"] + b["b_prior"], c["total"] + c["b_prior"]
+            )
+            corr = eval_closed_form_poisson_three(
+                c["sum"] + c["a_prior"],
+                a["sum"] + a["a_prior"],
+                b["sum"] + b["a_prior"],
+                c["total"] + c["b_prior"],
+                a["total"] + a["b_prior"],
+                b["total"] + b["b_prior"],
+            )
             pbbs.append(1 - a_beats_c - b_beats_c + corr)  # chance of C to beat all
 
         return dict(zip(self.variant_names, pbbs))

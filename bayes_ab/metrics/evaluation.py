@@ -161,24 +161,26 @@ def eval_closed_form_bernoulli_two(a: Dict, b: Dict) -> float:
     Parameters
     ----------
     a : Dictionary containing summary statistics for variant A; must contain total observations,
-    positives.
+    positives, and priors.
     b : Dictionary containing summary statistics for variant B; must contain total observations,
-    positives.
+    positives, and priors.
 
     Returns
     -------
     total : Probability that B will beat A.
     """
+    alpha_a = a["positives"] + a["a_prior"]
+    beta_a = a["total"] - a["positives"] + a["b_prior"]
+    alpha_b = b["positives"] + b["a_prior"]
+    beta_b = b["total"] - b["positives"] + b["b_prior"]
+
     total = 0
-    for k in range(b["positives"] + 1):
+    for k in range(alpha_b):
         total += np.exp(
-            scipy.special.betaln(
-                a["positives"] + 1 + k,
-                2 + b["total"] - b["positives"] + a["total"] - a["positives"],
-            )
-            - np.log(b["total"] - b["positives"] + 1 + k)
-            - scipy.special.betaln(1 + k, b["total"] - b["positives"] + 1)
-            - scipy.special.betaln(a["positives"] + 1, 1 + a["total"] - a["positives"])
+            scipy.special.betaln(alpha_a + k, beta_b + beta_a)
+            - np.log(beta_b + k)
+            - scipy.special.betaln(1 + k, beta_b)
+            - scipy.special.betaln(alpha_a, beta_a)
         )
 
     return total
@@ -192,30 +194,33 @@ def eval_closed_form_bernoulli_three(a: Dict, b: Dict, c: Dict) -> float:
     Parameters
     ----------
     a : Dictionary containing summary statistics for variant A; must contain total observations,
-    positives.
+    positives, and priors.
     b : Dictionary containing summary statistics for variant B; must contain total observations,
-    positives.
+    positives, and priors.
     c : Dictionary containing summary statistics for variant C; must contain total observations,
-    positives.
+    positives, and priors.
 
     Returns
     -------
     total : Probability that C will beat both B and A.
     """
-    total = 0.0
-    for i in range(a["positives"] + 1):
-        for j in range(b["positives"] + 1):
-            beta_A = a["total"] - a["positives"] + 1
-            beta_B = b["total"] - b["positives"] + 1
-            beta_C = c["total"] - c["positives"] + 1
+    alpha_a = a["positives"] + a["a_prior"]
+    beta_a = a["total"] - a["positives"] + a["b_prior"]
+    alpha_b = b["positives"] + b["a_prior"]
+    beta_b = b["total"] - b["positives"] + b["b_prior"]
+    alpha_c = c["positives"] + c["a_prior"]
+    beta_c = c["total"] - c["positives"] + c["b_prior"]
 
+    total = 0.0
+    for i in range(alpha_a):
+        for j in range(alpha_b):
             total += np.exp(
-                scipy.special.betaln(c["positives"] + 1 + i + j, beta_A + beta_B + beta_C)
-                - np.log(beta_A + i)
-                - np.log(beta_B + j)
-                - scipy.special.betaln(1 + i, beta_A)
-                - scipy.special.betaln(1 + j, beta_B)
-                - scipy.special.betaln(c["positives"] + 1, beta_C)
+                scipy.special.betaln(alpha_c + i + j, beta_a + beta_b + beta_c)
+                - np.log(beta_a + i)
+                - np.log(beta_b + j)
+                - scipy.special.betaln(1 + i, beta_a)
+                - scipy.special.betaln(1 + j, beta_b)
+                - scipy.special.betaln(alpha_c, beta_c)
             )
 
     return total
