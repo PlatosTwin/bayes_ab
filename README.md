@@ -244,7 +244,7 @@ test.plot_distributions(control='A', fname='poisson_distributions_example.png')
     |    C    |      15      | 36.2 |       74.06%       |      0.28     |     4.01%      | [33.8, 38.8] |
     |    B    |      25      | 33.9 |       5.09%        |      2.66     |     -2.83%     | [32.1, 35.6] |
     |    A    |      20      | 34.9 |       20.85%       |      1.68     |     0.00%      | [33.0, 36.7] |
-+---------+--------------+------+--------------------+---------------+----------------+--------------+
+    +---------+--------------+------+--------------------+---------------+----------------+--------------+
 
 For samples smaller than the above, it is also possible to check the modeled chance to beat all against the closed-form
 equivalent by passing `closed_form=True`:
@@ -449,20 +449,17 @@ poetry run pre-commit install
 
 ## Roadmap
 
-Test classes to add:
+Improvements in the pipeline:
 
-- `ExponentialDataTest`
-
-Other improvements:
-
-- Updated Jupyter examples folder
+- Implement "sample size"/reverse posterior calculation
+- Update Jupyter examples folder
 - Validate `NormalDataTest`, `DeltaLognormalDataTest`, and `DiscreteDataTest`
-- Updates to `NormalDataTest`, `DeltaLognormalDataTest`, and `DiscreteDataTest`
+- Improve `NormalDataTest`, `DeltaLognormalDataTest`, and `DiscreteDataTest`
     - Add test continuation assessment (decision, confidence, bounds)
     - Create formatted output
     - Add plotting for posteriors and differences from control
 - Implement Markov Chain Monte Carlo in place of Monte Carlo
-- Plot evolutions of posteriors with time
+- Create a method to easily plot evolutions of posteriors and evaluation metrics with time
 
 ## References and related works
 

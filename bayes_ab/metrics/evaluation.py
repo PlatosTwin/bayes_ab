@@ -65,23 +65,26 @@ def eval_closed_form_poisson_loss() -> None:
     raise NotImplementedError
 
 
-def eval_closed_form_poisson_two(
-    alpha_a: List[Number], alpha_b: List[Number], beta_a: List[Number] = 1, beta_b: List[Number] = 1
-) -> float:
+def eval_closed_form_poisson_two(a: Dict, b: Dict) -> float:
     """
     Given two variants A and B, calculate the probability that B will beat A (closed-form).
 
     Parameters
     ----------
-    alpha_a : Observation counts for variant A.
-    alpha_b : Observation counts for variant B.
-    beta_a : Exposure value for variant A.
-    beta_b : Exposure value for variant B.
+    a : Dictionary containing summary statistics for variant A; must contain total observations,
+    sums, and priors.
+    b : Dictionary containing summary statistics for variant B; must contain total observations,
+    sums, and priors.
 
     Returns
     -------
     total : Probability that A will beat B.
     """
+    alpha_a = a["a_prior"] + a["sum"]
+    alpha_b = b["a_prior"] + b["sum"]
+    beta_a = a["b_prior"] + a["total"]
+    beta_b = b["b_prior"] + b["total"]
+
     total = 0
     for k in range(alpha_a):
         total += np.exp(
@@ -95,31 +98,31 @@ def eval_closed_form_poisson_two(
     return total
 
 
-def eval_closed_form_poisson_three(
-    alpha_a: List[Number],
-    alpha_b: List[Number],
-    alpha_c: List[Number],
-    beta_a: List[Number] = 1,
-    beta_b: List[Number] = 1,
-    beta_c: List[Number] = 1,
-) -> float:
+def eval_closed_form_poisson_three(a: Dict, b: Dict, c: Dict) -> float:
     """
-    Given three variants A, B, and C, calculate the probability that A will beat both B and C
+    Given three variants A, B, and C, calculate the probability that C will beat both B and A
     (closed-form).
 
     Parameters
     ----------
-    alpha_a : Observation counts for variant A.
-    alpha_b : Observation counts for variant B.
-    alpha_c : Observation counts for variant C.
-    beta_a : Exposure value for variant A.
-    beta_b : Exposure value for variant B.
-    beta_c : Exposure value for variant C.
+    a : Dictionary containing summary statistics for variant A; must contain total observations,
+    sums, and priors.
+    b : Dictionary containing summary statistics for variant B; must contain total observations,
+    sums, and priors.
+    c : Dictionary containing summary statistics for variant C; must contain total observations,
+    sums, and priors.
 
     Returns
     -------
     total : Probability that A will beat B and C.
     """
+    alpha_a = a["a_prior"] + a["sum"]
+    alpha_b = b["a_prior"] + b["sum"]
+    alpha_c = c["a_prior"] + c["sum"]
+    beta_a = a["b_prior"] + a["total"]
+    beta_b = b["b_prior"] + b["total"]
+    beta_c = c["b_prior"] + c["total"]
+
     total = 0
     for k in range(alpha_b):
         for j in range(alpha_c):

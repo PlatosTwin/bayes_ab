@@ -11,8 +11,8 @@ In short, very well. [binary_simulation_check.py](binary_simulation_check.py)
 and [poisson_simulation_check.py](poisson_simulation_check.py)
 give a visual answer to this question for one configuration each of the binary and Poisson tests.
 
-**Binary test**
+##### Binary test
 ![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/binary_simulation_check.png)
 
-**Poisson test**
+##### Poisson test
 ![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/poisson_simulation_check.png)
