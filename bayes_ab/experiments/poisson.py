@@ -624,3 +624,5 @@ class PoissonDataTest(BaseDataTest):
             plt.savefig(fname, dpi=dpi)
 
         plt.show()
+
+        return fig

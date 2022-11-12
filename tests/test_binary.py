@@ -77,7 +77,7 @@ def test_uplift(conv_test):
 
 
 def test_evaluate(conv_test):
-    eval_report, _, _ = conv_test.evaluate(sim_count=2000000, seed=314)
+    eval_report, cf_pbbs, _ = conv_test.evaluate(closed_form=True, sim_count=2000000, seed=314)
     assert eval_report == [
         {
             "variant": "A",
@@ -109,4 +109,4 @@ def test_evaluate(conv_test):
             "uplift_vs_a": -0.35712,
             "bounds": [0.06605, 0.4101],
         },
-    ]
+    ] and cf_pbbs == [0.5805620983575924, 0.2589057910195435, 0.16053211062286366]

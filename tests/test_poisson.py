@@ -80,8 +80,15 @@ def test_uplift(conv_test):
     assert uplift == [0, 0.07692, -0.00197]
 
 
+@pytest.mark.mpl_image_compare
+def test_plot(conv_test):
+    conv_test.evaluate(sim_count=2000000, seed=314)
+    fig = conv_test.plot_distributions(control="A")
+    return fig
+
+
 def test_evaluate(conv_test):
-    eval_report, _, _ = conv_test.evaluate(sim_count=2000000, seed=314)
+    eval_report, cf_pbbs, _ = conv_test.evaluate(closed_form=True, sim_count=2000000, seed=314)
     assert eval_report == [
         {
             "variant": "A",
@@ -110,4 +117,4 @@ def test_evaluate(conv_test):
             "uplift_vs_a": -0.00197,
             "bounds": [2.72621, 4.43807],
         },
-    ]
+    ] and cf_pbbs == [0.3241100611778596, 0.567206937551566, 0.1086830012706057]
