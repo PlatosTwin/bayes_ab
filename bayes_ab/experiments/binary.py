@@ -269,7 +269,7 @@ class BinaryDataTest(BaseDataTest):
         rope: float = 0.001,
         precision: float = 0.8,
         interval: float = 0.95,
-    ) -> List[dict]:
+    ) -> Tuple[List[dict], Union[Dict, None], Union[Dict, None]]:
         """
         Evaluation of experiment.
 

@@ -92,14 +92,43 @@ def test_binary_plot(conv_test):
 
 
 def test_evaluate_assessment(conv_test_assessment):
-    _, _, assessment = conv_test_assessment.evaluate(control="A", sim_count=2000000, seed=314)
+    eval_report, cf_pbbs, assessment = conv_test_assessment.evaluate(
+        control="A", closed_form=True, sim_count=2000000, seed=314
+    )
 
-    assert assessment == {
-        "decision": "Stop and implement either variant.",
-        "confidence": "Low",
-        "lower_bound": -0.42908,
-        "upper_bound": 0.26873,
-    }
+    assert (
+        eval_report
+        == [
+            {
+                "variant": "A",
+                "total": 10,
+                "positives": 3,
+                "positive_rate": 0.33333,
+                "prob_being_best": 0.682058,
+                "expected_loss": 0.037059,
+                "uplift_vs_a": 0,
+                "bounds": [0.13508, 0.56437],
+            },
+            {
+                "variant": "B",
+                "total": 10,
+                "positives": 2,
+                "positive_rate": 0.25,
+                "prob_being_best": 0.317942,
+                "expected_loss": 0.1202106,
+                "uplift_vs_a": -0.24999,
+                "bounds": [0.07882, 0.47009],
+            },
+        ]
+        and cf_pbbs == [0.68244, 0.31756]
+        and assessment
+        == {
+            "decision": "Stop and implement either variant.",
+            "confidence": "Low",
+            "lower_bound": -0.42908,
+            "upper_bound": 0.26873,
+        }
+    )
 
 
 def test_evaluate(conv_test):

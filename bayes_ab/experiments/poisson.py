@@ -290,7 +290,7 @@ class PoissonDataTest(BaseDataTest):
         rope: float = None,
         precision: float = 0.8,
         interval: float = 0.95,
-    ) -> Tuple[List[dict], Union[Dict, None]]:
+    ) -> Tuple[List[dict], Union[Dict, None], Union[Dict, None]]:
         """
         Evaluation of experiment.
 

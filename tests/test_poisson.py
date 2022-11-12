@@ -96,14 +96,41 @@ def test_poisson_plot(conv_test):
 
 
 def test_evaluate_assessment(conv_test_assessment):
-    _, _, assessment = conv_test_assessment.evaluate(control="A", rope=0.5, sim_count=2000000, seed=314)
+    eval_report, cf_pbbs, assessment = conv_test_assessment.evaluate(
+        control="A", rope=0.5, closed_form=True, sim_count=2000000, seed=314
+    )
 
-    assert assessment == {
-        "decision": "Stop and implement either variant.",
-        "confidence": "Low",
-        "lower_bound": -1.33075,
-        "upper_bound": 1.88510,
-    }
+    assert (
+        eval_report
+        == [
+            {
+                "variant": "A",
+                "total": 10,
+                "mean": 3.54545,
+                "prob_being_best": 0.3683965,
+                "expected_loss": 0.4793632,
+                "uplift_vs_a": 0,
+                "bounds": [2.66609, 4.52804],
+            },
+            {
+                "variant": "B",
+                "total": 10,
+                "mean": 3.81818,
+                "prob_being_best": 0.6316035,
+                "expected_loss": 0.2066501,
+                "uplift_vs_a": 0.07692,
+                "bounds": [2.90347, 4.83613],
+            },
+        ]
+        and cf_pbbs == [0.36878, 0.63122]
+        and assessment
+        == {
+            "decision": "Stop and implement either variant.",
+            "confidence": "Low",
+            "lower_bound": -1.33075,
+            "upper_bound": 1.8851,
+        }
+    )
 
 
 def test_evaluate(conv_test):
