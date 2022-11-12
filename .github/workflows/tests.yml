@@ -3,7 +3,6 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
   tests:
@@ -20,8 +19,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install poetry==1.*
           poetry install
-          pip install pytest-mpl
       - name: Test with pytest
         run: |
-          poetry run coverage run -m pytest --mpl
+          poetry run coverage run -m pytest
           poetry run coverage report -i

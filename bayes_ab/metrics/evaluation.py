@@ -256,7 +256,7 @@ def expected_loss_accuracy_bernoulli(data: Union[List[List[Number]], np.ndarray]
             f"There is at least a 1% probability that the estimated expected loss is "
             f"not within {epsilon} tolerance."
         )
-        logger.warn(msg)
+        logger.warning(msg)
         warnings.warn(msg)
 
 
