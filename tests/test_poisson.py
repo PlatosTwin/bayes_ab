@@ -81,7 +81,7 @@ def test_uplift(conv_test):
 
 
 @pytest.mark.mpl_image_compare
-def test_plot(conv_test):
+def test_poisson_plot(conv_test):
     conv_test.evaluate(sim_count=2000000, seed=314)
     fig = conv_test.plot_distributions(control="A")
     return fig

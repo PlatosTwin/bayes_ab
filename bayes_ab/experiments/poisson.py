@@ -490,7 +490,7 @@ class PoissonDataTest(BaseDataTest):
             replace,
         )
 
-    def plot_distributions(self, control: str, fname: str = None, dpi: int = 300) -> None:
+    def plot_distributions(self, control: str, fname: str = None, dpi: int = 300) -> plt.figure:
         """
         For each variant, plot its posterior distribution.
 

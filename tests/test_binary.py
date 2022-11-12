@@ -76,6 +76,13 @@ def test_uplift(conv_test):
     assert uplift == [0, -0.24999, -0.35712]
 
 
+@pytest.mark.mpl_image_compare
+def test_binary_plot(conv_test):
+    conv_test.evaluate(sim_count=2000000, seed=314)
+    fig = conv_test.plot_distributions(control="A")
+    return fig
+
+
 def test_evaluate(conv_test):
     eval_report, cf_pbbs, _ = conv_test.evaluate(closed_form=True, sim_count=2000000, seed=314)
     assert eval_report == [

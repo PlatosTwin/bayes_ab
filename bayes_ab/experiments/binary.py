@@ -533,7 +533,7 @@ class BinaryDataTest(BaseDataTest):
 
         self.add_variant_data_agg(name, total, positives, a_prior, b_prior, replace)
 
-    def plot_distributions(self, control: str, fname: str = None, dpi: int = 300) -> None:
+    def plot_distributions(self, control: str, fname: str = None, dpi: int = 300) -> plt.figure:
         """
         For each variant, plot its posterior distribution.
 
@@ -671,3 +671,5 @@ class BinaryDataTest(BaseDataTest):
             plt.savefig(fname, dpi=dpi)
 
         plt.show()
+
+        return fig
