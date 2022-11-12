@@ -249,8 +249,8 @@ class PoissonDataTest(BaseDataTest):
             var_names = self.variant_names.copy()
             var_names.remove(control)
             diff_distribution = self.data[var_names[0]]["samples"] - self.data[control]["samples"]
-            lower_bound = np.percentile(diff_distribution, 100 * (1 - interval) / 2)
-            upper_bound = np.percentile(diff_distribution, 100 * (1 - interval) / 2 + 100 * interval)
+            lower_bound = round(np.percentile(diff_distribution, 100 * (1 - interval) / 2), 5)
+            upper_bound = round(np.percentile(diff_distribution, 100 * (1 - interval) / 2 + 100 * interval), 5)
 
             if upper_bound - lower_bound < rope * precision:
                 confidence = "High"

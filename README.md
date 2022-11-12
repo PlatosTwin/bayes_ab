@@ -451,13 +451,14 @@ poetry run pre-commit install
 
 Improvements in the pipeline:
 
-- Implement "sample size"/reverse posterior calculation
+- Implement sample size/reverse posterior calculation
 - Update Jupyter examples folder
 - Validate `NormalDataTest`, `DeltaLognormalDataTest`, and `DiscreteDataTest`
 - Improve `NormalDataTest`, `DeltaLognormalDataTest`, and `DiscreteDataTest`
     - Add test continuation assessment (decision, confidence, bounds)
     - Create formatted output
     - Add plotting for posteriors and differences from control
+- Refine decision rule (test continuation assessment) to include more nuance
 - Implement Markov Chain Monte Carlo in place of Monte Carlo
 - Create a method to easily plot evolutions of posteriors and evaluation metrics with time
 

@@ -16,6 +16,14 @@ def conv_test():
     return cv
 
 
+@pytest.fixture
+def conv_test_assessment():
+    cv = BinaryDataTest()
+    cv.add_variant_data("A", [0, 1, 0, 1, 0, 0, 0, 0, 0, 1])
+    cv.add_variant_data("B", [0, 0, 0, 1, 0, 0, 0, 0, 0, 1])
+    return cv
+
+
 def test_variants(conv_test):
     assert conv_test.variant_names == ["A", "B", "C"]
 
@@ -81,6 +89,17 @@ def test_binary_plot(conv_test):
     conv_test.evaluate(sim_count=2000000, seed=314)
     fig = conv_test.plot_distributions(control="A")
     return fig
+
+
+def test_evaluate_assessment(conv_test_assessment):
+    _, _, assessment = conv_test_assessment.evaluate(control="A", sim_count=2000000, seed=314)
+
+    assert assessment == {
+        "decision": "Stop and implement either variant.",
+        "confidence": "Low",
+        "lower_bound": -0.42908,
+        "upper_bound": 0.26873,
+    }
 
 
 def test_evaluate(conv_test):
