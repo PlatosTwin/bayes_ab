@@ -169,19 +169,19 @@ class BinaryDataTest(BaseDataTest):
             b_beats_a = eval_closed_form_bernoulli_two(a, b)  # chance of B to beat A
             c_beats_a = eval_closed_form_bernoulli_two(a, c)  # chance of C to beat A
             correction = eval_closed_form_bernoulli_three(b, c, a)
-            pbbs.append(1 - b_beats_a - c_beats_a + correction)  # chance of A to beat all
+            pbbs.append(round(1 - b_beats_a - c_beats_a + correction, 5))  # chance of A to beat all
 
             # b beats all
             a_beats_b = eval_closed_form_bernoulli_two(b, a)  # chance of A to beat B
             c_beats_b = eval_closed_form_bernoulli_two(b, c)  # chance of C to beat B
             correction = eval_closed_form_bernoulli_three(c, a, b)
-            pbbs.append(1 - a_beats_b - c_beats_b + correction)  # chance of B to beat all
+            pbbs.append(round(1 - a_beats_b - c_beats_b + correction, 5))  # chance of B to beat all
 
             # c beats all
             a_beats_c = eval_closed_form_bernoulli_two(c, a)  # chance of A to beat C
             b_beats_c = eval_closed_form_bernoulli_two(c, b)  # chance of B to beat C
             correction = eval_closed_form_bernoulli_three(a, b, c)
-            pbbs.append(1 - a_beats_c - b_beats_c + correction)  # chance of A to beat all
+            pbbs.append(round(1 - a_beats_c - b_beats_c + correction, 5))  # chance of A to beat all
 
         return dict(zip(self.variant_names, pbbs))
 

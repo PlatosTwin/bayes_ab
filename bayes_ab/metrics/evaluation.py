@@ -95,7 +95,7 @@ def eval_closed_form_poisson_two(a: Dict, b: Dict) -> float:
             - scipy.special.betaln(k + 1, alpha_b)
         )
 
-    return total
+    return round(total, 5)
 
 
 def eval_closed_form_poisson_three(a: Dict, b: Dict, c: Dict) -> float:
@@ -186,7 +186,7 @@ def eval_closed_form_bernoulli_two(a: Dict, b: Dict) -> float:
             - scipy.special.betaln(alpha_a, beta_a)
         )
 
-    return total
+    return round(total, 5)
 
 
 def eval_closed_form_bernoulli_three(a: Dict, b: Dict, c: Dict) -> float:

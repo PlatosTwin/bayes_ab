@@ -176,7 +176,7 @@ class PoissonDataTest(BaseDataTest):
             # chance of C to beat A
             c_beats_a = eval_closed_form_poisson_two(c, a)
             corr = eval_closed_form_poisson_three(a, b, c)
-            pbbs.append(1 - b_beats_a - c_beats_a + corr)  # chance of A to beat all
+            pbbs.append(round(1 - b_beats_a - c_beats_a + corr, 5))  # chance of A to beat all
 
             # B beats all
             # chance of A to beat B
@@ -184,7 +184,7 @@ class PoissonDataTest(BaseDataTest):
             # chance of C to beat B
             c_beats_b = eval_closed_form_poisson_two(c, b)
             corr = eval_closed_form_poisson_three(b, c, a)
-            pbbs.append(1 - a_beats_b - c_beats_b + corr)  # chance of B to beat all
+            pbbs.append(round(1 - a_beats_b - c_beats_b + corr, 5))  # chance of B to beat all
 
             # C beats all
             # chance of A to beat C
@@ -192,7 +192,7 @@ class PoissonDataTest(BaseDataTest):
             # chance of B to beat C
             b_beats_c = eval_closed_form_poisson_two(b, c)
             corr = eval_closed_form_poisson_three(c, a, b)
-            pbbs.append(1 - a_beats_c - b_beats_c + corr)  # chance of C to beat all
+            pbbs.append(round(1 - a_beats_c - b_beats_c + corr, 5))  # chance of C to beat all
 
         return dict(zip(self.variant_names, pbbs))
 
