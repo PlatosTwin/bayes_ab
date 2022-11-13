@@ -461,7 +461,6 @@ Improvements in the pipeline:
     - Add test continuation assessment (decision, confidence, bounds)
     - Create formatted output
     - Add plotting for posteriors and differences from control
-- Discretize Poisson probability distribution (as obtained from the continuous Gamma conjugate prior)
 - Refine decision rule (test continuation assessment) to include more nuance
 - Implement Markov Chain Monte Carlo in place of Monte Carlo
 - Create a method to easily plot evolutions of posteriors and evaluation metrics with time
