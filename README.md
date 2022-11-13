@@ -8,19 +8,19 @@
 
 ### Implemented tests
 
-- [BinaryDataTest](bayes_ab/experiments/binary.py)
+- [BinaryDataTest](https://github.com/PlatosTwin/bayes_ab/blob/main/bayes_ab/experiments/binary.py)
     - **_Input data_** — binary (`[0, 1, 0, ...]`)
     - Designed for binary data, such as conversions
-- [PoissonDataTest](bayes_ab/experiments/poisson.py)
+- [PoissonDataTest](https://github.com/PlatosTwin/bayes_ab/blob/main/bayes_ab/experiments/poisson.py)
     - **_Input data_** — integer counts
     - Designed for count data (e.g., number of sales per salesman, deaths per zip code)
-- [NormalDataTest](bayes_ab/experiments/normal.py)
+- [NormalDataTest](https://github.com/PlatosTwin/bayes_ab/blob/main/bayes_ab/experiments/normal.py)
     - **_Input data_** — normal data with unknown variance
     - Designed for normal data
-- [DeltaLognormalDataTest](bayes_ab/experiments/delta_lognormal.py)
+- [DeltaLognormalDataTest](https://github.com/PlatosTwin/bayes_ab/blob/main/bayes_ab/experiments/delta_lognormal.py)
     - **_Input data_** — lognormal data with zeros
     - Designed for lognormal data, such as revenue per conversions
-- [DiscreteDataTest](bayes_ab/experiments/discrete.py)
+- [DiscreteDataTest](https://github.com/PlatosTwin/bayes_ab/blob/main/bayes_ab/experiments/discrete.py)
     - **_Input data_** — categorical data with numerical categories
     - Designed for discrete data (e.g. dice rolls, star ratings, 1-10 ratings)
 
@@ -77,7 +77,7 @@ smaller samples only.
 
 Binary tests with small sample sizes will raise a warning when the error for the expected loss estimate surpasses a set
 tolerance. To reduce error, increase the simulation count. For more detail, see the docstring
-for `expected_loss_accuracy_bernoulli` in [`evaluation.py`](bayes_ab/metrics/evaluation.py)
+for `expected_loss_accuracy_bernoulli` in [`evaluation.py`](https://github.com/PlatosTwin/bayes_ab/blob/main/bayes_ab/metrics/evaluation.py)
 
 ## Installation
 
@@ -123,7 +123,7 @@ Chance to beat all and expected loss are approximated using Monte Carlo simulati
 different values for different runs. To decrease variation, you can set the `sim_count` parameter of `evaluate`
 to a higher value (the default is 200K); to fix values, set the `seed` parameter.
 
-More examples are available in the [examples directory](examples), though many examples in this directory are still in
+More examples are available in the [examples directory](https://github.com/PlatosTwin/bayes_ab/blob/main/examples/), though many examples in this directory are still in
 the process of being updated to reflect the functionality of the updated package.
 
 ### BinaryDataTest
