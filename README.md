@@ -506,7 +506,7 @@ Statistical Illogic and the Crisis of Modern Science](http://cup.columbia.edu/bo
 
 ## A note on forking
 
-This package was forked from Matus Baniar's [`bayesian_testing`](https://github.com/Matt52/bayesian-testing). Upon
+This package was forked from Matus Baniar's [`bayesian-testing`](https://github.com/Matt52/bayesian-testing). Upon
 deciding to take package development in a different direction, I detached the fork from the original repository. The
 original author's contributions are large, however, with his central contributions being to the development of the core
 infrastructure of the project. This being the first package I have worked on, the original author's work to prepare this
