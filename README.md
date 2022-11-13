@@ -123,6 +123,9 @@ Chance to beat all and expected loss are approximated using Monte Carlo simulati
 different values for different runs. To decrease variation, you can set the `sim_count` parameter of `evaluate`
 to a higher value (the default is 200K); to fix values, set the `seed` parameter.
 
+More examples are available in the [examples directory](examples), though many examples in this directory are still in
+the process of being updated to reflect the functionality of the updated package.
+
 ### BinaryDataTest
 
 Class for Bayesian A/B test for binary-like data (e.g. conversions, successes, etc.).
@@ -458,15 +461,15 @@ Improvements in the pipeline:
     - Add test continuation assessment (decision, confidence, bounds)
     - Create formatted output
     - Add plotting for posteriors and differences from control
+- Discretize Poisson probability distribution (as obtained from the continuous Gamma conjugate prior)
 - Refine decision rule (test continuation assessment) to include more nuance
 - Implement Markov Chain Monte Carlo in place of Monte Carlo
 - Create a method to easily plot evolutions of posteriors and evaluation metrics with time
 
-## References and related works
+## References and related work
 
-The development of this package has benefited from many of the resources outlined below, while other resources are
-listed simply to direct the user to related relevant material. In cases where a function or method draws directly on a
-particular derivation, the docstring contains the exact reference.
+The development of this package has relied on the resources outlined below. Where a function or method draws directly on
+a particular derivation, the docstring contains the exact reference.
 
 - [Bayesian A/B Testing at VWO](https://vwo.com/downloads/VWO_SmartStats_technical_whitepaper.pdf)
   (Chris Stucchio, 2015)
@@ -478,13 +481,17 @@ particular derivation, the docstring contains the exact reference.
 - [Formulas for Bayesian A/B Testing](https://www.evanmiller.org/bayesian-ab-testing.html) (Evan Miller, 2015)
 - [Easy Evaluation of Decision Rules in Bayesian A/B testing](
   https://www.chrisstucchio.com/blog/2014/bayesian_ab_decision_rule.html) (Chris Stucchio, 2014)
+
+There is a wealth of material on Bayesian statistics available freely online. A small and somewhat random selection is
+catalogued below.
+
+- _[Bayesian Data Analysis, Third Edition](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf)_ (Gelman et al., 2021)
 - [Bayesian Inference 2019](https://vioshyvo.github.io/Bayesian_inference/index.html) (Hyvönen & Tolonen, 2019)
-- [Continuous Monitoring of A/B Tests without Pain: Optional Stopping in Bayesian Testing](https://arxiv.org/pdf/1602.05549.pdf)
-  (Deng, Lu, & Chen, 2016)
-- [Bayesian Data Analysis, Third Edition](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf) (Gelman et al., 2021)
 - [Probabalistic programming and Bayesian methods for hackers](https://nbviewer.org/github/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers/tree/master/) (
   Cameron Davidson-Pilon, 2022)
 - [Think Bayes 2](https://allendowney.github.io/ThinkBayes2/index.html) (Downey, 2021)
+- [Continuous Monitoring of A/B Tests without Pain: Optional Stopping in Bayesian Testing](https://arxiv.org/pdf/1602.05549.pdf)
+  (Deng, Lu, & Chen, 2016)
 
 This project was inspired by Aubrey Clayton's (2022) _[Bernoulli's Fallacy:
 Statistical Illogic and the Crisis of Modern Science](http://cup.columbia.edu/book/bernoullis-fallacy/9780231199940)_.
