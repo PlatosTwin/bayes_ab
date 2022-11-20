@@ -195,10 +195,10 @@ class NormalDataTest(BaseDataTest):
         sum_values: float,
         sum_squares: float,
         sum_values_squared: float,
-        m_prior: Number = 1,
-        v_prior: Number = 0,
-        s_2_prior: Number = 0,
-        n_prior: Number = 0.01,
+        m_prior: float = 0,
+        v_prior: float = -1,
+        s_2_prior: float = 0,
+        n_prior: float = 0,
         replace: bool = True,
     ) -> None:
         """
@@ -226,7 +226,7 @@ class NormalDataTest(BaseDataTest):
         """
         if not isinstance(name, str):
             raise ValueError("Variant name has to be a string.")
-        if m_prior < 0 or v_prior < 0 or s_2_prior < 0 or n_prior < 0:
+        if m_prior < 0 or v_prior < -1 or s_2_prior < 0 or n_prior < 0:
             raise ValueError("All priors of [m, v, s_2, w] have to be non-negative numbers.")
         if total <= 0:
             raise ValueError("Input variable 'total' is expected to be positive integer.")
@@ -346,10 +346,10 @@ class NormalDataTest(BaseDataTest):
         self,
         name: str,
         data: List[Number],
-        m_prior: Number = 1,
-        v_prior: Number = 0,
-        s_2_prior: Number = 0,
-        n_prior: Number = 0.01,
+        m_prior: float = 0,
+        v_prior: float = -1,
+        s_2_prior: float = 0,
+        n_prior: float = 0,
         replace: bool = True,
     ) -> None:
         """
@@ -412,6 +412,12 @@ class NormalDataTest(BaseDataTest):
         n_0 = self.data[variant]["n_prior"]
         v_0 = self.data[variant]["v_prior"]
 
+        if 0 in [m_0, s_2_0, n_0] or v_0 == -1:
+            raise ValueError(
+                "To plot the joint prior for this variant, initialize it with at least"
+                " weakly information prior parameters."
+            )
+
         mesh = 1000
         mu = np.linspace(m_0 * 0.25, m_0 * 1.75, mesh)
         sigma = np.linspace(1e-5, np.sqrt(s_2_0) * 1.75, mesh)
@@ -453,9 +459,9 @@ class NormalDataTest(BaseDataTest):
             levels=np.arange(sigma_min, sigma_max, (sigma_max - sigma_min) / 20),
         )
 
-        ax.set(xlabel="$\mu$", ylabel="$\sigma^2$", zlabel="$\propto p(\mu, \sigma^2$)")
+        ax.set(xlabel=r"$\mu$", ylabel=r"$\sigma^2$", zlabel=r"$\propto p(\mu, \sigma^2$)")
 
-        plt.suptitle(f"Prior distribution for variant {variant}")
+        plt.suptitle(f"Joint prior distribution for variant {variant}")
 
         fig.tight_layout()
 
@@ -483,7 +489,7 @@ class NormalDataTest(BaseDataTest):
         )
 
         ###
-        # subplot 1
+        # subplot 1: mean distribution
         ###
         xmin = 1e6
         xmax = 0
@@ -506,9 +512,12 @@ class NormalDataTest(BaseDataTest):
                 sum_squares + s_2_prior * v_prior + (n_prior * n / (n_prior + n)) * (y_bar - m_prior) ** 2
             )
 
-            label = f"{var}: $\mu={mu:.2f}$"
+            label = f"{var}: " + r"$\mu=" + f"{mu:.2f}$"
             dist_names.append(label)
-            x = np.linspace(0, max(self.means) * 5, int(10000 * max(self.means)))
+            hdi_buffer = (self.data[var]["bounds"][1] - self.data[var]["bounds"][0]) / 2
+            x = np.linspace(
+                max(1e-5, self.data[var]["bounds"][0] - hdi_buffer), self.data[var]["bounds"][1] + hdi_buffer, 100000
+            )
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 y = t.pdf(x, v_n, mu, s_n_2 / n_n)
@@ -535,7 +544,7 @@ class NormalDataTest(BaseDataTest):
             if x[np.where(y >= 0.0001)[0][-1]] > xmax:
                 xmax = x[np.where(y >= 0.0001)[0][-1]]
 
-        ax1.set_xlabel("Posterior marginal distribution for $\mu$")
+        ax1.set_xlabel(r"Posterior marginal distribution for $\mu$")
 
         handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(self.data))]
         ax1.legend(handles, dist_names)
@@ -543,7 +552,7 @@ class NormalDataTest(BaseDataTest):
         ax1.set_xlim(xmin * 0.99, xmax * 1.01)
 
         ###
-        # subplot 2
+        # subplot 2: 1/sigma**2 distribution
         ###
         xmin = 1e6
         xmax = 0
@@ -559,18 +568,18 @@ class NormalDataTest(BaseDataTest):
             n = self.data[var]["total"]
 
             y_bar = sum_values / n
-            mu = (n * y_bar + n_prior * m_prior) / (n + n_prior)
             v_n = v_prior + n
             n_n = n_prior + n
             s_n_2 = (1 / v_n) * (sum_squares + s_2_prior * v_prior + (n_prior * n / n_n) * (y_bar - m_prior) ** 2)
             inv_gamma_alpha = (1 / 2) * v_n
             inv_gamma_beta = (1 / 2) * s_n_2 * v_n
 
-            label = f"{var}: " + r"$\frac{1}{\sigma^2}" + f"={inv_gamma_alpha/inv_gamma_beta:.2f}$"
+            label = f"{var}: " + r"$\frac{1}{\sigma^2}" + f"={inv_gamma_alpha / inv_gamma_beta:.2f}$"
             dist_names.append(label)
+            hdi_buffer = (1 / self.data[var]["stdev_bounds"][0] ** 2 - 1 / self.data[var]["stdev_bounds"][1] ** 2) / 2
             x = np.linspace(
-                max(1e-6, (self.data[var]["stdev_bounds"][0] - self.data[var]["stdev"]) ** 2),
-                (self.data[var]["stdev_bounds"][1] + self.data[var]["stdev"]) ** 2,
+                max(1e-5, 1 / self.data[var]["stdev_bounds"][1] ** 2 - hdi_buffer),
+                1 / self.data[var]["stdev_bounds"][0] ** 2 + hdi_buffer,
                 100000,
             )
             y = gamma.pdf(x, a=inv_gamma_alpha, scale=1 / inv_gamma_beta)
@@ -611,7 +620,7 @@ class NormalDataTest(BaseDataTest):
         ax2.set_xlim(xmin * 0.9, xmax * 1.1)
 
         ###
-        # subplot 3
+        # subplot 3: distribution of differences for mean
         ###
         m_prior = self.data[control]["m_prior"]
         s_2_prior = self.data[control]["s_2_prior"]
@@ -652,7 +661,7 @@ class NormalDataTest(BaseDataTest):
             temp_sample = (samples - control_samples) / self.data[control]["mean"] * 100
             temp_mu = (self.data[var]["mean"] - self.data[control]["mean"]) / self.data[control]["mean"]
 
-            label = f"{var}: $\mu={temp_mu:.2%}$%"
+            label = f"{var}: " + r"$\mu=" + f"{temp_mu:.2%}$%"
             hist_names.append(label)
             n, bins, patches = ax3.hist(temp_sample, num_bins, label=label, alpha=0.65)
 
@@ -663,7 +672,7 @@ class NormalDataTest(BaseDataTest):
                     p.set_facecolor(color)
 
             ax3.xaxis.set_major_formatter(mtick.PercentFormatter())
-            ax3.set_xlabel(f"Relative uplift vs. {control} (using marginal distirbutions for $\mu$)")
+            ax3.set_xlabel(f"Relative uplift vs. {control}" + r"(using marginal distirbutions for $\mu$)")
 
         handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(hist_names))]
         ax3.legend(handles, hist_names)

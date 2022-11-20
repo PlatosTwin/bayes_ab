@@ -130,7 +130,7 @@ PBB_DELTA_LOGNORMAL_AGG_INPUTS = [
             "sim_count": 20000,
             "seed": 52,
         },
-        "expected_output": ([0.00015, 0.03345, 0.9664], [0.2210276, 0.1206176, 0.0008447]),
+        "expected_output": ([0.0001, 0.0074, 0.9925], [18.7040686, 13.9443016, 0.0136494]),
     },
     {
         "input": {
@@ -141,7 +141,7 @@ PBB_DELTA_LOGNORMAL_AGG_INPUTS = [
             "sim_count": 10000,
             "seed": 52,
         },
-        "expected_output": ([0.5014, 0.4986], [0.0281956, 0.0287299]),
+        "expected_output": ([0.4987, 0.5013], [3.110729, 3.0556979]),
     },
     {
         "input": {

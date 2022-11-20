@@ -519,10 +519,10 @@ class PoissonDataTest(BaseDataTest):
             b = self.data[var]["b_prior"]
             mu = a / b
 
-            label = f"{var}: $\mu={mu:.1f}$"
+            label = f"{var}: " + r"$\mu" + f"={mu:.1f}$"
             dist_names.append(label)
-            x = np.linspace(0, mu * 100, int(10000 * mu))
-            y = stats.gamma.pdf(x, a, b)
+            x = np.linspace(0, mu + 5 * np.sqrt(a) / b, 10000)
+            y = stats.gamma.pdf(x, a, scale=1 / b)
             ax1.plot(x, y, label=label)
 
             ax1.fill_between(x, y, color=color, alpha=0.10)

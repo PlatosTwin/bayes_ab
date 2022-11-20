@@ -77,12 +77,12 @@ def test_w_priors(rev_test):
 
 def test_probabs_of_being_best(rev_test):
     pbbs = rev_test._probabs_of_being_best(sim_count=2000000, seed=314)
-    assert pbbs == {"A": 0.000164, "B": 0.0326735, "C": 0.9671625}
+    assert pbbs == {"A": 0.000167, "B": 0.008403, "C": 0.99143}
 
 
 def test_expected_loss(rev_test):
     loss = rev_test._expected_loss(sim_count=2000000, seed=314)
-    assert loss == {"A": 0.2211504, "B": 0.1213452, "C": 0.000838}
+    assert loss == {"A": 18.5688331, "B": 13.8235806, "C": 0.0160803}
 
 
 def test_evaluate(rev_test):
@@ -95,8 +95,8 @@ def test_evaluate(rev_test):
             "sum_values": 30830.02561,
             "avg_values": 0.97873,
             "avg_positive_values": 19.51267,
-            "prob_being_best": 0.000164,
-            "expected_loss": 0.2211504,
+            "prob_being_best": 0.000167,
+            "expected_loss": 18.5688331,
         },
         {
             "variant": "B",
@@ -105,8 +105,8 @@ def test_evaluate(rev_test):
             "sum_values": 35203.21689,
             "avg_values": 1.1001,
             "avg_positive_values": 20.70777,
-            "prob_being_best": 0.0326735,
-            "expected_loss": 0.1213452,
+            "prob_being_best": 0.008403,
+            "expected_loss": 13.8235806,
         },
         {
             "variant": "C",
@@ -115,7 +115,7 @@ def test_evaluate(rev_test):
             "sum_values": 37259.56336,
             "avg_values": 1.20192,
             "avg_positive_values": 24.03843,
-            "prob_being_best": 0.9671625,
-            "expected_loss": 0.000838,
+            "prob_being_best": 0.99143,
+            "expected_loss": 0.0160803,
         },
     ]

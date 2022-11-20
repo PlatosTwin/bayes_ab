@@ -1,6 +1,6 @@
 # Tests
 
-Run in top level directory:
+Run in the test directory:
 ```bash
 python -m pytest --mpl
 ```
