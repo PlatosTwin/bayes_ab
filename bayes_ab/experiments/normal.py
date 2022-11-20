@@ -455,6 +455,8 @@ class NormalDataTest(BaseDataTest):
 
         ax.set(xlabel="$\mu$", ylabel="$\sigma^2$", zlabel="$\propto p(\mu, \sigma^2$)")
 
+        plt.suptitle(f"Prior distribution for variant {variant}")
+
         fig.tight_layout()
 
         if fname:

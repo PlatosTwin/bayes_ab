@@ -327,7 +327,7 @@ test.plot_distributions(control='A', fname='normal_distributions_example.png')
     +---------+--------------+------+-----------+-----------+--------------------+---------------+----------------+----------------+-----------------+
 
 We can also plot the joint prior distribution for $\mu$ and $\sigma^2$, the posterior distributions for $\mu$ and
-$\frac{1}{\sigma^2}, and the distribution of differences from a given control.
+$\frac{1}{\sigma^2}$, and the distribution of differences from a given control.
 
 ![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/normal_prior_distribution_B_example.png)
 ![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/normal_distributions_example.png)
