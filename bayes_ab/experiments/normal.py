@@ -635,7 +635,7 @@ class NormalDataTest(BaseDataTest):
         v_n = v_prior + n
         n_n = n_prior + n
         s_n_2 = (1 / v_n) * (sum_squares + s_2_prior * v_prior + (n_prior * n / (n_prior + n)) * (y_bar - m_prior) ** 2)
-        control_samples = t.rvs(v_n, mu, s_n_2 / n_n, 200000)
+        control_samples = t.rvs(v_n, mu, s_n_2 / n_n, 200000, random_state=278)
 
         num_bins = 300
         hist_names = []
@@ -656,7 +656,7 @@ class NormalDataTest(BaseDataTest):
             s_n_2 = (1 / v_n) * (
                 sum_squares + s_2_prior * v_prior + (n_prior * n / (n_prior + n)) * (y_bar - m_prior) ** 2
             )
-            samples = t.rvs(v_n, mu, s_n_2 / n_n, 200000)
+            samples = t.rvs(v_n, mu, s_n_2 / n_n, 200000, random_state=278)
 
             temp_sample = (samples - control_samples) / self.data[control]["mean"] * 100
             temp_mu = (self.data[var]["mean"] - self.data[control]["mean"]) / self.data[control]["mean"]

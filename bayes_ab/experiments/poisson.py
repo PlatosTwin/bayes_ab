@@ -556,7 +556,7 @@ class PoissonDataTest(BaseDataTest):
             b = self.data[var]["b_prior"]
             mu = (a + totals * obs_mean) / (b + totals)
 
-            label = f"{var}: $\mu={mu:.1f}$"
+            label = f"{var}: " + r"$\mu" + f"={mu:.1f}$"
             dist_names.append(label)
             x = np.linspace(0, max(self.means) * 5, int(10000 * max(self.means)))
             y = stats.gamma.pdf(x, a=a + totals * obs_mean, scale=1 / (b + totals))
@@ -600,7 +600,7 @@ class PoissonDataTest(BaseDataTest):
             temp_sample = (self.data[var]["samples"] - self.data[control]["samples"]) / self.data[control]["mean"] * 100
             temp_mu = (self.data[var]["mean"] - self.data[control]["mean"]) / self.data[control]["mean"]
 
-            label = f"{var}: $\mu={temp_mu:.2%}$%"
+            label = f"{var}: " + r"$\mu" + f"={temp_mu:.2%}$%"
             hist_names.append(label)
             n, bins, patches = ax3.hist(temp_sample, num_bins, label=label, alpha=0.65)
 

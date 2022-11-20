@@ -562,7 +562,7 @@ class BinaryDataTest(BaseDataTest):
             b = self.data[var]["b_prior"]
             mu = a / (a + b)
 
-            label = f"{var}: $\mu={mu:.2%}$%"
+            label = f"{var}: " + r"$\mu" + f"={mu:.2%}$%"
             dist_names.append(label)
             x = np.linspace(0, 1, 10000)
             y = stats.beta.pdf(x, a, b)
@@ -601,7 +601,7 @@ class BinaryDataTest(BaseDataTest):
             n = self.data[var]["total"]
             mu = self.data[var]["mean"]
 
-            label = f"{var}: $\mu={mu:.2%}$%"
+            label = f"{var}: " + r"$\mu=" + f"{mu:.2%}$%"
             dist_names.append(label)
             x = np.linspace(0, 1, 10000)
             y = stats.beta.pdf(x, a + c, b + n - c)
@@ -647,7 +647,7 @@ class BinaryDataTest(BaseDataTest):
             temp_sample = (self.data[var]["samples"] - self.data[control]["samples"]) / self.data[control]["mean"] * 100
             temp_mu = (self.data[var]["mean"] - self.data[control]["mean"]) / self.data[control]["mean"]
 
-            label = f"{var}: $\mu={temp_mu:.2%}$%"
+            label = f"{var}: " + r"$\mu" + f"={temp_mu:.2%}$%"
             hist_names.append(label)
             n, bins, patches = ax3.hist(temp_sample, num_bins, label=label, alpha=0.65)
 
