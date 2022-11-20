@@ -43,14 +43,14 @@ def beta_posteriors_all(
 
 
 def normal_posteriors(
-    total: int,
+    n: int,
     sums: float,
     sums_2: float,
     sim_count: int = 200000,
-    prior_m: Union[float, int] = 1,
-    prior_a: Union[float, int] = 0,
-    prior_b: Union[float, int] = 0,
-    prior_w: Union[float, int] = 0.01,
+    m_prior: Union[float, int] = 1,
+    v_prior: Union[float, int] = 0,
+    s_2_prior: Union[float, int] = 0,
+    n_prior: Union[float, int] = 0.01,
     seed: Union[int, np.random.bit_generator.SeedSequence] = None,
 ) -> Tuple[List[Union[float, int]], List[Union[float, int]]]:
     """
@@ -58,39 +58,35 @@ def normal_posteriors(
 
     Parameters
     ----------
-    total : Number of data observations from normal data.
-    sums : Sum of original data.
-    sums_2 : Sum of squares of original data.
+    n : Number of observations.
+    sums : Sum of observations.
+    sums_2 : Sum of squares of observations.
     sim_count : Number of simulations.
-    prior_m : Prior mean.
-    prior_a : Prior alpha from inverse gamma dist. for unknown variance of original data.
-        In theory a > 0, but as we always have at least one observation, we can start at 0.
-    prior_b : Prior beta from inverse gamma dist. for unknown variance of original data.
-        In theory b > 0, but as we always have at least one observation, we can start at 0.
-    prior_w : Prior effective sample size.
+    m_prior : Estimate for the prior mean.
+    v_prior : Estimate for the prior degrees of freedom. This is one input to the alpha parameter for the inverse
+        gamma distribution.
+    s_2_prior : Estimate for the prior variance. This is one input to the beta parameter for the inverse gamma
+        distribution.
+    n_prior : Estimate for the prior sample size.
     seed : Random seed.
 
     Returns
     -------
-    mu_post : List of size sim_count with mus drawn from normal distribution.
-    sig_2_post : List of size sim_count with mus drawn from normal distribution.
+    mu_post : List of means of size sim_count, drawn from normal distribution.
+    sig_2_post : List of variances of size sim_count, drawn from inverse gamma distribution.
     """
     rng = np.random.default_rng(seed)
 
-    x_bar = sums / total
-    a_post = prior_a + (total / 2)
-    b_post = (
-        prior_b
-        + (1 / 2) * (sums_2 - 2 * sums * x_bar + total * (x_bar**2))
-        + ((total * prior_w) / (2 * (total + prior_w))) * ((x_bar - prior_m) ** 2)
-    )
+    y_bar = sums / n
+    inv_gamma_alpha = (v_prior + n) / 2
+    inv_gamma_beta = (1 / 2) * (sums_2 + s_2_prior * v_prior + (n_prior * n / (n_prior + n)) * (y_bar - m_prior) ** 2)
 
     # here it has to be 1/b as it is a scale, and not a rate
-    sig_2_post = 1 / rng.gamma(a_post, 1 / b_post, sim_count)
+    sig_2_post = 1 / rng.gamma(inv_gamma_alpha, 1 / inv_gamma_beta, sim_count)
 
-    m_post = (total * x_bar + prior_w * prior_m) / (total + prior_w)
+    m_post = (n * y_bar + n_prior * m_prior) / (n + n_prior)
 
-    mu_post = rng.normal(m_post, np.sqrt(sig_2_post / (total + prior_w)))
+    mu_post = rng.normal(m_post, np.sqrt(sig_2_post) / (n + n_prior))
 
     return mu_post, sig_2_post
 

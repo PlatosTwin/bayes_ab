@@ -54,7 +54,7 @@ def norm_test():
             12.2,
             11.2,
         ],
-        w_prior=0.03,
+        n_prior=0.03,
     )
     norm.add_variant_data(
         "C",
@@ -82,7 +82,7 @@ def norm_test():
             23.5,
             15.2,
         ],
-        b_prior_ig=2,
+        s_2_prior=2,
     )
     norm.add_variant_data_agg("A", 20, 193.3, 2127.71, replace=False)
     norm.add_variant_data("D", [0, 10.7, 0, 8, 0, 0, 0, 0, 0, 11.22])
@@ -104,8 +104,8 @@ def test_sum_values(norm_test):
     assert norm_test.sum_values == [386.6, 188.99999999999997, 252.69999999999996]
 
 
-def test_sum_values_2(norm_test):
-    assert norm_test.sum_values_2 == [4255.42, 2244.8200000000006, 4421.87]
+def test_sum_squares(norm_test):
+    assert norm_test.sum_squares == [4255.42, 2244.8200000000006, 4421.87]
 
 
 def test_m_priors(norm_test):
@@ -113,15 +113,15 @@ def test_m_priors(norm_test):
 
 
 def test_a_priors_ig(norm_test):
-    assert norm_test.a_priors_ig == [0, 0, 0]
+    assert norm_test.v_priors == [0, 0, 0]
 
 
 def test_b_priors_ig(norm_test):
-    assert norm_test.b_priors_ig == [0, 0, 2]
+    assert norm_test.s_2_priors == [0, 0, 2]
 
 
 def test_w_priors(norm_test):
-    assert norm_test.w_priors == [0.01, 0.03, 0.01]
+    assert norm_test.n_priors == [0.01, 0.03, 0.01]
 
 
 def test_probabs_of_being_best(norm_test):

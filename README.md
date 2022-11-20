@@ -77,7 +77,8 @@ smaller samples only.
 
 Binary tests with small sample sizes will raise a warning when the error for the expected loss estimate surpasses a set
 tolerance. To reduce error, increase the simulation count. For more detail, see the docstring
-for `expected_loss_accuracy_bernoulli` in [`evaluation.py`](https://github.com/PlatosTwin/bayes_ab/blob/main/bayes_ab/metrics/evaluation.py)
+for `expected_loss_accuracy_bernoulli`
+in [`evaluation.py`](https://github.com/PlatosTwin/bayes_ab/blob/main/bayes_ab/metrics/evaluation.py)
 
 ## Installation
 
@@ -123,8 +124,9 @@ Chance to beat all and expected loss are approximated using Monte Carlo simulati
 different values for different runs. To decrease variation, you can set the `sim_count` parameter of `evaluate`
 to a higher value (the default is 200K); to fix values, set the `seed` parameter.
 
-More examples are available in the [examples directory](https://github.com/PlatosTwin/bayes_ab/blob/main/examples/), though many examples in this directory are still in
-the process of being updated to reflect the functionality of the updated package.
+More examples are available in the [examples directory](https://github.com/PlatosTwin/bayes_ab/blob/main/examples/),
+though many examples in this directory are still in the process of being updated to reflect the functionality of the
+updated package.
 
 ### BinaryDataTest
 
@@ -290,9 +292,9 @@ import numpy as np
 from bayes_ab.experiments import NormalDataTest
 
 # generating some random data
-rng = np.random.default_rng(21)
-data_a = rng.normal(7.2, 2, 1000)
-data_b = rng.normal(7.1, 2, 800)
+rng = np.random.default_rng(314)
+data_a = rng.normal(6.9, 2, 500)
+data_b = rng.normal(6.89, 2, 800)
 data_c = rng.normal(7.0, 4, 500)
 
 # initialize a test:
@@ -300,37 +302,35 @@ test = NormalDataTest()
 
 # add variant using raw data:
 test.add_variant_data("A", data_a)
-test.add_variant_data("B", data_b)
+test.add_variant_data("B", data_b, m_prior=5, n_prior=11, v_prior=10, s_2_prior=4)
 # test.add_variant_data("C", data_c)
 
 # add variant using aggregated data:
-test.add_variant_data_agg("C", len(data_c), sum(data_c), sum(np.square(data_c)))
+test.add_variant_data_agg("C", len(data_c), sum(data_c), sum((data_c - np.mean(data_c)) ** 2), sum(np.square(data_c)))
 
 # evaluate test:
-test.evaluate(sim_count=20000, seed=52)
+test.evaluate(sim_count=200000, seed=314)
 
 # access simulation samples and evaluation metrics
 data = test.data
+
+# generate plots
+test.plot_distributions(control='A', fname='normal_distributions_example.png')
 ```
 
-    [{'variant': 'A',
-      'totals': 1000,
-      'sum_values': 7294.67901,
-      'avg_values': 7.29468,
-      'prob_being_best': 0.1707,
-      'expected_loss': 0.1968735},
-     {'variant': 'B',
-      'totals': 800,
-      'sum_values': 5685.86168,
-      'avg_values': 7.10733,
-      'prob_being_best': 0.00125,
-      'expected_loss': 0.385112},
-     {'variant': 'C',
-      'totals': 500,
-      'sum_values': 3736.91581,
-      'avg_values': 7.47383,
-      'prob_being_best': 0.82805,
-      'expected_loss': 0.0169998}]
+    +---------+--------------+------+-----------+-----------+--------------------+---------------+----------------+----------------+-----------------+
+    | Variant | Observations | Mean | Precision | Std. dev. | Chance to beat all | Expected loss | Uplift vs. "A" | 95% HDI (mean) | 95% HDI (stdev) |
+    +---------+--------------+------+-----------+-----------+--------------------+---------------+----------------+----------------+-----------------+
+    |    A    |     500      | 6.89 |   0.257   |    1.97   |       90.93%       |      0.0      |     0.00%      |  [6.88, 6.91]  |   [1.86, 2.10]  |
+    |    B    |     800      | 6.89 |   0.258   |    1.97   |       9.07%        |      0.01     |     -0.09%     |  [6.88, 6.90]  |   [1.88, 2.07]  |
+    |    C    |     500      | 6.75 |   0.066   |    3.9    |       0.00%        |      0.14     |     -2.01%     |  [6.69, 6.81]  |   [3.68, 4.16]  |
+    +---------+--------------+------+-----------+-----------+--------------------+---------------+----------------+----------------+-----------------+
+
+We can also plot the joint prior distribution for $\mu$ and $\sigma^2$, the posterior distributions for $\mu$ and
+$\frac{1}{\sigma^2}, and the distribution of differences from a given control.
+
+![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/normal_prior_distribution_B_example.png)
+![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/normal_distributions_example.png)
 
 ### DeltaLognormalDataTest
 

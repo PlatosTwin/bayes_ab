@@ -313,9 +313,9 @@ def eval_normal_agg(
     sums_2: List[float],
     sim_count: int = 20000,
     m_priors: List[Number] = None,
-    a_priors_ig: List[Number] = None,
-    b_priors_ig: List[Number] = None,
-    w_priors: List[Number] = None,
+    v_priors: List[Number] = None,
+    s_2_priors: List[Number] = None,
+    n_priors: List[Number] = None,
     seed: int = None,
 ) -> Tuple[List[float], List[float], List[float]]:
     """
@@ -329,9 +329,9 @@ def eval_normal_agg(
     sums_2 : List of sum of squares of original data for each variant.
     sim_count : Number of simulations.
     m_priors : List of prior means for each variant.
-    a_priors_ig : List of prior alphas from inverse gamma dist approximating variance.
-    b_priors_ig : List of prior betas from inverse gamma dist approximating variance.
-    w_priors : List of prior effective sample sizes for each variant.
+    v_priors : List of prior degrees of freedom, typically n_priors-1.
+    s_2_priors : List of prior variance estimates.
+    n_priors : List of prior effective sample sizes for each variant.
     seed : Random seed.
 
     Returns
@@ -345,19 +345,19 @@ def eval_normal_agg(
     # Same default priors for all variants if they are not provided.
     if not m_priors:
         m_priors = [1] * len(totals)
-    if not a_priors_ig:
-        a_priors_ig = [0] * len(totals)
-    if not b_priors_ig:
-        b_priors_ig = [0] * len(totals)
-    if not w_priors:
-        w_priors = [0.01] * len(totals)
+    if not v_priors:
+        v_priors = [0] * len(totals)
+    if not s_2_priors:
+        s_2_priors = [0] * len(totals)
+    if not n_priors:
+        n_priors = [0.01] * len(totals)
 
     # we will need different generators for each call of normal_posteriors
     # (so they are not perfectly correlated)
     ss = np.random.SeedSequence(seed)
     child_seeds = ss.spawn(len(totals))
 
-    normal_samples = np.array(
+    joint_samples = np.array(
         [
             normal_posteriors(
                 totals[i],
@@ -365,19 +365,21 @@ def eval_normal_agg(
                 sums_2[i],
                 sim_count,
                 m_priors[i],
-                a_priors_ig[i],
-                b_priors_ig[i],
-                w_priors[i],
+                v_priors[i],
+                s_2_priors[i],
+                n_priors[i],
                 child_seeds[i],
-            )[0]
+            )
             for i in range(len(totals))
         ]
     )
 
-    res_pbbs = estimate_chance_to_beat(normal_samples)
-    res_loss = estimate_expected_loss(normal_samples)
+    mu_samples = [js[0] for js in joint_samples]
 
-    return res_pbbs, res_loss, normal_samples
+    res_pbbs = estimate_chance_to_beat(mu_samples)
+    res_loss = estimate_expected_loss(mu_samples)
+
+    return res_pbbs, res_loss, joint_samples
 
 
 def eval_delta_lognormal_agg(

@@ -521,7 +521,7 @@ class PoissonDataTest(BaseDataTest):
 
             label = f"{var}: $\mu={mu:.1f}$"
             dist_names.append(label)
-            x = np.linspace(0, mu * 100, 10000)
+            x = np.linspace(0, mu * 100, int(10000 * mu))
             y = stats.gamma.pdf(x, a, b)
             ax1.plot(x, y, label=label)
 
@@ -558,7 +558,7 @@ class PoissonDataTest(BaseDataTest):
 
             label = f"{var}: $\mu={mu:.1f}$"
             dist_names.append(label)
-            x = np.linspace(0, max(self.means) * 5, 10000)
+            x = np.linspace(0, max(self.means) * 5, int(10000 * max(self.means)))
             y = stats.gamma.pdf(x, a=a + totals * obs_mean, scale=1 / (b + totals))
             ax2.plot(x, y, label=label)
 

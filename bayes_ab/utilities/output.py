@@ -1,6 +1,52 @@
 from prettytable import PrettyTable
 
 
+def print_normal_evaluation(res: list) -> None:
+    """
+    Pretty-print output of running normal test.
+    """
+    tab = PrettyTable()
+    tab.field_names = [
+        "Variant",
+        "Observations",
+        "Mean",
+        "Precision",
+        "Std. dev.",
+        "Chance to beat all",
+        "Expected loss",
+        'Uplift vs. "A"',
+        "95% HDI (mean)",
+        "95% HDI (stdev)",
+    ]
+    for r in res:
+        temp_row = r.copy()
+        temp_row["prob_being_best"] = f"{temp_row['prob_being_best']:.2%}"
+        temp_row["uplift_vs_a"] = f"{temp_row['uplift_vs_a']:.2%}"
+        temp_row["expected_loss"] = round(temp_row["expected_loss"], 2)
+        temp_row["mean"] = round(temp_row["mean"], 2)
+        temp_row["precision"] = round(temp_row["precision"], 3)
+        temp_row["stdev"] = round(temp_row["stdev"], 2)
+        temp_row = [
+            temp_row["variant"],
+            temp_row["total"],
+            temp_row["mean"],
+            temp_row["precision"],
+            temp_row["stdev"],
+            temp_row["prob_being_best"],
+            temp_row["expected_loss"],
+            temp_row["uplift_vs_a"],
+            f'[{temp_row["bounds"][0]:.2f}, {temp_row["bounds"][1]:.2f}]',
+            f'[{temp_row["stdev_bounds"][0]:.2f}, {temp_row["stdev_bounds"][1]:.2f}]',
+        ]
+
+        tab.add_row(temp_row)
+
+    tab.reversesort = True
+    tab.sortby = "Chance to beat all"
+
+    print(tab, "\n")
+
+
 def print_poisson_evaluation(res: list) -> None:
     """
     Pretty-print output of running Poisson test.

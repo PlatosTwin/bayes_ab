@@ -2,10 +2,10 @@ from typing import List, Tuple, Dict, Union
 import warnings
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
-import numpy as np
-import scipy.stats as stats
 import matplotlib.colors as mcolors
 from matplotlib.patches import Rectangle
+import numpy as np
+import scipy.stats as stats
 
 from bayes_ab.experiments.base import BaseDataTest
 from bayes_ab.metrics import eval_bernoulli_agg

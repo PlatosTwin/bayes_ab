@@ -3,6 +3,7 @@ from .output import (
     print_poisson_evaluation,
     print_bernoulli_evaluation,
     print_closed_form_comparison,
+    print_normal_evaluation,
 )
 
 __all__ = [
@@ -10,4 +11,5 @@ __all__ = [
     "print_poisson_evaluation",
     "print_bernoulli_evaluation",
     "print_closed_form_comparison",
+    "print_normal_evaluation",
 ]
