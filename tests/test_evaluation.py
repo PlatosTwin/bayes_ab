@@ -66,7 +66,7 @@ PBB_NORMAL_AGG_INPUTS = [
             "sim_count": 20000,
             "seed": 52,
         },
-        "expected_output": ([0.43605, 0.19685, 0.3671], [0.0133512, 0.0179947, 0.0137618]),
+        "expected_output": ([0.96635, 0.0, 0.03365], [2.3e-06, 0.0044012, 0.0003169]),
     },
     {
         "input": {
@@ -76,7 +76,7 @@ PBB_NORMAL_AGG_INPUTS = [
             "sim_count": 20000,
             "seed": 52,
         },
-        "expected_output": ([0.94445, 0.05555], [0.0011338, 0.0753121]),
+        "expected_output": ([1.0, 0.0], [0.0, 0.0737499]),
     },
     {
         "input": {
@@ -86,10 +86,7 @@ PBB_NORMAL_AGG_INPUTS = [
             "sim_count": 20000,
             "seed": 52,
         },
-        "expected_output": (
-            [0.40785, 0.25105, 0.1928, 0.1483],
-            [0.0058965, 0.0065083, 0.0066249, 0.0067183],
-        ),
+        "expected_output": ([0.4968, 0.2554, 0.15265, 0.09515], [0.0014045, 0.0019366, 0.0020928, 0.0021782]),
     },
     {
         "input": {
@@ -99,7 +96,7 @@ PBB_NORMAL_AGG_INPUTS = [
             "sim_count": 10000,
             "seed": 52,
         },
-        "expected_output": ([1], [0]),
+        "expected_output": ([1.0], [0.0]),
     },
     {
         "input": {
@@ -109,7 +106,7 @@ PBB_NORMAL_AGG_INPUTS = [
             "sim_count": 20000,
             "seed": 52,
         },
-        "expected_output": ([0.5024, 0.4976], [0.0250157, 0.0256253]),
+        "expected_output": ([0.5024, 0.4976], [0.0002582, 0.0002645]),
     },
     {
         "input": {

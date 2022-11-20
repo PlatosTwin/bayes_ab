@@ -315,6 +315,7 @@ test.evaluate(sim_count=200000, seed=314)
 data = test.data
 
 # generate plots
+test.plot_joint_prior(variant='B', fname='normal_prior_distribution_B_example.png')
 test.plot_distributions(control='A', fname='normal_distributions_example.png')
 ```
 

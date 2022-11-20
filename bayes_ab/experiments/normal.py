@@ -391,7 +391,7 @@ class NormalDataTest(BaseDataTest):
             replace,
         )
 
-    def plot_joint_posterior(self, variant: str, fname: str = None, dpi: int = 300) -> plt.figure:
+    def plot_joint_prior(self, variant: str, fname: str = None, dpi: int = 300) -> plt.figure:
         """
         For each variant, plot its posterior distribution.
 
@@ -463,6 +463,8 @@ class NormalDataTest(BaseDataTest):
             plt.savefig(fname, dpi=dpi)
 
         plt.show()
+
+        return fig
 
     def plot_distributions(self, control: str, fname: str = None, dpi: int = 300) -> plt.figure:
         """

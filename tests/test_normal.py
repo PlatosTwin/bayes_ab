@@ -84,7 +84,7 @@ def norm_test():
         ],
         s_2_prior=2,
     )
-    norm.add_variant_data_agg("A", 20, 193.3, 2127.71, replace=False)
+    norm.add_variant_data_agg("A", 20, 193.3, 259.4655, 2127.71, replace=False)
     norm.add_variant_data("D", [0, 10.7, 0, 8, 0, 0, 0, 0, 0, 11.22])
     norm.add_variant_data("D", [0, 10.7, 0, 8, 0, 0, 0, 0, 0, 11.22], replace=False)
     norm.add_variant_data("D", [0, 10.7, 0, 8, 0, 0, 0, 0, 0, 11.22], replace=True)
@@ -101,37 +101,75 @@ def test_totals(norm_test):
 
 
 def test_sum_values(norm_test):
-    assert norm_test.sum_values == [386.6, 188.99999999999997, 252.69999999999996]
+    assert norm_test.sum_values == [386.6, 189.0, 252.7]
+
+
+def test_sum_values_squared(norm_test):
+    assert norm_test.sum_values_squared == [4255.42, 2244.82, 4421.87]
 
 
 def test_sum_squares(norm_test):
-    assert norm_test.sum_squares == [4255.42, 2244.8200000000006, 4421.87]
+    assert norm_test.sum_squares == [518.931, 260.32, 1519.26591]
 
 
 def test_m_priors(norm_test):
     assert norm_test.m_priors == [9, 1, 1]
 
 
-def test_a_priors_ig(norm_test):
+def test_v_priors(norm_test):
     assert norm_test.v_priors == [0, 0, 0]
 
 
-def test_b_priors_ig(norm_test):
+def test_s_2_priors(norm_test):
     assert norm_test.s_2_priors == [0, 0, 2]
 
 
-def test_w_priors(norm_test):
+def test_n_priors(norm_test):
     assert norm_test.n_priors == [0.01, 0.03, 0.01]
+
+
+def test_means(norm_test):
+    assert norm_test.means == [9.66283, 10.48419, 11.4816]
+
+
+def test_bounds(norm_test):
+    assert norm_test.bounds == [[9.00655, 10.31912], [8.7815, 12.18688], [4.97001, 17.99319]]
+
+
+def test_precisions(norm_test):
+    assert norm_test.precisions == [0.07697, 0.06844, 0.01447]
+
+
+def test_stdevs(norm_test):
+    assert norm_test.stdevs == [3.60445, 3.82262, 8.31309]
+
+
+def test_stdev_bounds(norm_test):
+    assert norm_test.stdev_bounds == [[2.9593, 4.6119], [2.88842, 5.65298], [6.4293, 11.76595]]
 
 
 def test_probabs_of_being_best(norm_test):
     pbbs = norm_test._probabs_of_being_best(sim_count=20000, seed=52)
-    assert pbbs == {"A": 0.05105, "B": 0.27935, "C": 0.6696}
+    assert pbbs == {"A": 0.0, "B": 0.01485, "C": 0.98515}
 
 
 def test_expected_loss(norm_test):
     loss = norm_test._expected_loss(sim_count=20000, seed=52)
-    assert loss == {"A": 2.2696341, "B": 1.4580033, "C": 0.4464154}
+    assert loss == {"A": 1.8212161, "B": 1.0033285, "C": 0.0028303}
+
+
+@pytest.mark.mpl_image_compare
+def test_normal_plot_distributions(norm_test):
+    norm_test.evaluate(sim_count=20000, seed=52)
+    fig = norm_test.plot_distributions(control="A")
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_normal_plot_joint_prior(norm_test):
+    norm_test.evaluate(sim_count=20000, seed=52)
+    fig = norm_test.plot_joint_prior(variant="A")
+    return fig
 
 
 def test_evaluate(norm_test):
@@ -140,25 +178,37 @@ def test_evaluate(norm_test):
         {
             "variant": "A",
             "total": 40,
-            "sum_values": 386.6,
-            "avg_values": 9.665,
-            "prob_being_best": 0.05105,
-            "expected_loss": 2.2696341,
+            "mean": 9.66283,
+            "prob_being_best": 0.0,
+            "expected_loss": 1.8212161,
+            "uplift_vs_a": 0,
+            "bounds": [9.00655, 10.31912],
+            "precision": 0.07697,
+            "stdev": 3.60445,
+            "stdev_bounds": [2.9593, 4.6119],
         },
         {
             "variant": "B",
             "total": 18,
-            "sum_values": 189.0,
-            "avg_values": 10.5,
-            "prob_being_best": 0.27935,
-            "expected_loss": 1.4580033,
+            "mean": 10.48419,
+            "prob_being_best": 0.01485,
+            "expected_loss": 1.0033285,
+            "uplift_vs_a": 0.085,
+            "bounds": [8.7815, 12.18688],
+            "precision": 0.06844,
+            "stdev": 3.82262,
+            "stdev_bounds": [2.88842, 5.65298],
         },
         {
             "variant": "C",
             "total": 22,
-            "sum_values": 252.7,
-            "avg_values": 11.48636,
-            "prob_being_best": 0.6696,
-            "expected_loss": 0.4464154,
+            "mean": 11.4816,
+            "prob_being_best": 0.98515,
+            "expected_loss": 0.0028303,
+            "uplift_vs_a": 0.18822,
+            "bounds": [4.97001, 17.99319],
+            "precision": 0.01447,
+            "stdev": 8.31309,
+            "stdev_bounds": [6.4293, 11.76595],
         },
     ]
