@@ -242,8 +242,6 @@ class NormalDataTest(BaseDataTest):
             inv_gamma_alpha = (1 / 2) * v_n
             inv_gamma_beta = (1 / 2) * s_n_2 * v_n
 
-            print(mu, n_n, v_n, s_n_2)
-
             self.data[name] = {
                 "total": total,
                 "sum_values": round(sum_values, 5),
@@ -454,7 +452,7 @@ class NormalDataTest(BaseDataTest):
             z,
             zdir="x",
             cmap="coolwarm",
-            offset=mu_min * 0.75,
+            offset=m_0 * 0.25,
             levels=np.arange(mu_min, mu_max, (mu_max - mu_min) / 20),
         )
         ax.contour(
@@ -463,7 +461,7 @@ class NormalDataTest(BaseDataTest):
             z,
             zdir="y",
             cmap="coolwarm",
-            offset=sigma_max,
+            offset=np.sqrt(s_2_0) * 1.75,
             levels=np.arange(sigma_min, sigma_max, (sigma_max - sigma_min) / 20),
         )
 
@@ -490,11 +488,18 @@ class NormalDataTest(BaseDataTest):
         fname : Filename to which to save the resultant image; if None, the image is not saved.
         dpi : DPI setting for saved image; used only when fname is not None.
         """
-        fig, (ax1, ax2, ax3) = plt.subplots(
-            3,
-            1,
-            figsize=(10, 8),
-        )
+        if len(self.variant_names) == 1:
+            fig, (ax1, ax2) = plt.subplots(
+                2,
+                1,
+                figsize=(10, 8),
+            )
+        else:
+            fig, (ax1, ax2, ax3) = plt.subplots(
+                3,
+                1,
+                figsize=(10, 8),
+            )
 
         ###
         # subplot 1: mean distribution
@@ -580,7 +585,7 @@ class NormalDataTest(BaseDataTest):
             inv_gamma_alpha = (1 / 2) * v_n
             inv_gamma_beta = (1 / 2) * s_n_2 * v_n
 
-            label = f"{var}: " + r"$\frac{1}{\sigma^2}" + f"={inv_gamma_alpha / inv_gamma_beta:.2f}$"
+            label = f"{var}: " + r"$\frac{1}{\sigma^2}" + f"={inv_gamma_alpha / inv_gamma_beta:.4f}$"
             dist_names.append(label)
             hdi_buffer = (1 / self.data[var]["stdev_bounds"][0] ** 2 - 1 / self.data[var]["stdev_bounds"][1] ** 2) / 2
             x = np.linspace(
@@ -628,32 +633,14 @@ class NormalDataTest(BaseDataTest):
         ###
         # subplot 3: distribution of differences for mean
         ###
-        m_prior = self.data[control]["m_prior"]
-        s_2_prior = self.data[control]["s_2_prior"]
-        n_prior = self.data[control]["n_prior"]
-        v_prior = self.data[control]["v_prior"]
-        sum_squares = self.data[control]["sum_squares"]
-        sum_values = self.data[control]["sum_values"]
-        n = self.data[control]["total"]
-
-        y_bar = sum_values / n
-        mu = (n * y_bar + n_prior * m_prior) / (n + n_prior)
-        v_n = v_prior + n
-        n_n = n_prior + n
-        s_n_2 = (1 / v_n) * (sum_squares + s_2_prior * v_prior + (n_prior * n / (n_prior + n)) * (y_bar - m_prior) ** 2)
-        control_samples = t.rvs(v_n, mu, np.sqrt(s_n_2 / n_n), 200000, random_state=278)
-
-        num_bins = 300
-        hist_names = []
-        colors = list(mcolors.TABLEAU_COLORS.values())[1:]
-        for color, var in zip(colors, [i for i in self.variant_names if i != control]):
-            m_prior = self.data[var]["m_prior"]
-            s_2_prior = self.data[var]["s_2_prior"]
-            n_prior = self.data[var]["n_prior"]
-            v_prior = self.data[var]["v_prior"]
-            sum_squares = self.data[var]["sum_squares"]
-            sum_values = self.data[var]["sum_values"]
-            n = self.data[var]["total"]
+        if len(self.variant_names) > 1:
+            m_prior = self.data[control]["m_prior"]
+            s_2_prior = self.data[control]["s_2_prior"]
+            n_prior = self.data[control]["n_prior"]
+            v_prior = self.data[control]["v_prior"]
+            sum_squares = self.data[control]["sum_squares"]
+            sum_values = self.data[control]["sum_values"]
+            n = self.data[control]["total"]
 
             y_bar = sum_values / n
             mu = (n * y_bar + n_prior * m_prior) / (n + n_prior)
@@ -662,26 +649,47 @@ class NormalDataTest(BaseDataTest):
             s_n_2 = (1 / v_n) * (
                 sum_squares + s_2_prior * v_prior + (n_prior * n / (n_prior + n)) * (y_bar - m_prior) ** 2
             )
-            samples = t.rvs(v_n, mu, np.sqrt(s_n_2 / n_n), 200000, random_state=314)
+            control_samples = t.rvs(v_n, mu, np.sqrt(s_n_2 / n_n), 200000, random_state=278)
 
-            temp_sample = (samples - control_samples) / self.data[control]["mean"] * 100
-            temp_mu = (self.data[var]["mean"] - self.data[control]["mean"]) / self.data[control]["mean"]
+            num_bins = 300
+            hist_names = []
+            colors = list(mcolors.TABLEAU_COLORS.values())[1:]
+            for color, var in zip(colors, [i for i in self.variant_names if i != control]):
+                m_prior = self.data[var]["m_prior"]
+                s_2_prior = self.data[var]["s_2_prior"]
+                n_prior = self.data[var]["n_prior"]
+                v_prior = self.data[var]["v_prior"]
+                sum_squares = self.data[var]["sum_squares"]
+                sum_values = self.data[var]["sum_values"]
+                n = self.data[var]["total"]
 
-            label = f"{var}: " + r"$\mu=" + f"{temp_mu:.2%}$%"
-            hist_names.append(label)
-            n, bins, patches = ax3.hist(temp_sample, num_bins, label=label, alpha=0.65)
+                y_bar = sum_values / n
+                mu = (n * y_bar + n_prior * m_prior) / (n + n_prior)
+                v_n = v_prior + n
+                n_n = n_prior + n
+                s_n_2 = (1 / v_n) * (
+                    sum_squares + s_2_prior * v_prior + (n_prior * n / (n_prior + n)) * (y_bar - m_prior) ** 2
+                )
+                samples = t.rvs(v_n, mu, np.sqrt(s_n_2 / n_n), 200000, random_state=314)
 
-            for b, p in zip(bins, patches):
-                if b <= 0:
-                    p.set_facecolor("r")
-                else:
-                    p.set_facecolor(color)
+                temp_sample = (samples - control_samples) / self.data[control]["mean"] * 100
+                temp_mu = (self.data[var]["mean"] - self.data[control]["mean"]) / self.data[control]["mean"]
 
-            ax3.xaxis.set_major_formatter(mtick.PercentFormatter())
-            ax3.set_xlabel(f"Relative uplift vs. {control}" + r"(using marginal distirbutions for $\mu$)")
+                label = f"{var}: " + r"$\mu=" + f"{temp_mu:.2%}$%"
+                hist_names.append(label)
+                n, bins, patches = ax3.hist(temp_sample, num_bins, label=label, alpha=0.65)
 
-        handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(hist_names))]
-        ax3.legend(handles, hist_names)
+                for b, p in zip(bins, patches):
+                    if b <= 0:
+                        p.set_facecolor("r")
+                    else:
+                        p.set_facecolor(color)
+
+                ax3.xaxis.set_major_formatter(mtick.PercentFormatter())
+                ax3.set_xlabel(f"Relative uplift vs. {control}" + r"(using marginal distirbutions for $\mu$)")
+
+            handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(hist_names))]
+            ax3.legend(handles, hist_names)
 
         ###
 

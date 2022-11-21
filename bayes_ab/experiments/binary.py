@@ -543,11 +543,18 @@ class BinaryDataTest(BaseDataTest):
         fname : Filename to which to save the resultant image; if None, the image is not saved.
         dpi : DPI setting for saved image; used only when fname is not None.
         """
-        fig, (ax1, ax2, ax3) = plt.subplots(
-            3,
-            1,
-            figsize=(10, 8),
-        )
+        if len(self.variant_names) == 1:
+            fig, (ax1, ax2) = plt.subplots(
+                2,
+                1,
+                figsize=(10, 8),
+            )
+        else:
+            fig, (ax1, ax2, ax3) = plt.subplots(
+                3,
+                1,
+                figsize=(10, 8),
+            )
 
         ###
         # subplot 1
@@ -640,28 +647,31 @@ class BinaryDataTest(BaseDataTest):
         ###
         # subplot 3
         ###
-        num_bins = 300
-        hist_names = []
-        colors = list(mcolors.TABLEAU_COLORS.values())[1:]
-        for color, var in zip(colors, [i for i in self.variant_names if i != control]):
-            temp_sample = (self.data[var]["samples"] - self.data[control]["samples"]) / self.data[control]["mean"] * 100
-            temp_mu = (self.data[var]["mean"] - self.data[control]["mean"]) / self.data[control]["mean"]
+        if len(self.variant_names) > 1:
+            num_bins = 300
+            hist_names = []
+            colors = list(mcolors.TABLEAU_COLORS.values())[1:]
+            for color, var in zip(colors, [i for i in self.variant_names if i != control]):
+                temp_sample = (
+                    (self.data[var]["samples"] - self.data[control]["samples"]) / self.data[control]["mean"] * 100
+                )
+                temp_mu = (self.data[var]["mean"] - self.data[control]["mean"]) / self.data[control]["mean"]
 
-            label = f"{var}: " + r"$\mu" + f"={temp_mu:.2%}$%"
-            hist_names.append(label)
-            n, bins, patches = ax3.hist(temp_sample, num_bins, label=label, alpha=0.65)
+                label = f"{var}: " + r"$\mu" + f"={temp_mu:.2%}$%"
+                hist_names.append(label)
+                n, bins, patches = ax3.hist(temp_sample, num_bins, label=label, alpha=0.65)
 
-            for b, p in zip(bins, patches):
-                if b <= 0:
-                    p.set_facecolor("r")
-                else:
-                    p.set_facecolor(color)
+                for b, p in zip(bins, patches):
+                    if b <= 0:
+                        p.set_facecolor("r")
+                    else:
+                        p.set_facecolor(color)
 
-            ax3.xaxis.set_major_formatter(mtick.PercentFormatter())
-            ax3.set_xlabel(f"Relative probability uplift vs. {control}")
+                ax3.xaxis.set_major_formatter(mtick.PercentFormatter())
+                ax3.set_xlabel(f"Relative probability uplift vs. {control}")
 
-        handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(hist_names))]
-        ax3.legend(handles, hist_names)
+            handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(hist_names))]
+            ax3.legend(handles, hist_names)
 
         ###
 
