@@ -524,9 +524,9 @@ def eval_numerical_dirichlet_agg(
 
 def eval_poisson_agg(
     totals: List[int],
-    means: List[Number],
-    a_priors_gamma: List[Number] = None,
-    b_priors_gamma: List[Number] = None,
+    means: List[float],
+    a_priors_gamma: List[float] = None,
+    b_priors_gamma: List[float] = None,
     sim_count: int = 200000,
     seed: int = None,
 ) -> Tuple[List[float], List[float], List[float]]:

@@ -195,7 +195,7 @@ def test_means(norm_test):
 
 
 def test_bounds(norm_test):
-    assert norm_test.bounds == [[8.99216, 10.33784], [8.66793, 12.29713], [4.65665, 18.31608]]
+    assert norm_test.bounds == [[8.4984, 10.8316], [8.52588, 12.43918], [7.71766, 15.25507]]
 
 
 def test_precisions(norm_test):
@@ -244,7 +244,7 @@ def test_evaluate(norm_test):
             "prob_being_best": 0.0,
             "expected_loss": 1.8258233,
             "uplift_vs_a": 0,
-            "bounds": [8.99216, 10.33784],
+            "bounds": [8.4984, 10.8316],
             "precision": 0.07515,
             "stdev": 3.64773,
             "stdev_bounds": [2.98808, 4.68381],
@@ -256,7 +256,7 @@ def test_evaluate(norm_test):
             "prob_being_best": 0.01535,
             "expected_loss": 1.0101269,
             "uplift_vs_a": 0.08459,
-            "bounds": [8.66793, 12.29713],
+            "bounds": [8.52588, 12.43918],
             "precision": 0.06449,
             "stdev": 3.93792,
             "stdev_bounds": [2.95496, 5.9035],
@@ -268,7 +268,7 @@ def test_evaluate(norm_test):
             "prob_being_best": 0.98465,
             "expected_loss": 0.0031627,
             "uplift_vs_a": 0.18845,
-            "bounds": [4.65665, 18.31608],
+            "bounds": [7.71766, 15.25507],
             "precision": 0.01384,
             "stdev": 8.50004,
             "stdev_bounds": [6.53952, 12.14711],

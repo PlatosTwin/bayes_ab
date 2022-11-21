@@ -242,6 +242,8 @@ class NormalDataTest(BaseDataTest):
             inv_gamma_alpha = (1 / 2) * v_n
             inv_gamma_beta = (1 / 2) * s_n_2 * v_n
 
+            print(mu, n_n, v_n, s_n_2)
+
             self.data[name] = {
                 "total": total,
                 "sum_values": round(sum_values, 5),
@@ -252,7 +254,10 @@ class NormalDataTest(BaseDataTest):
                 "s_2_prior": s_2_prior,
                 "n_prior": n_prior,
                 "mean": round(mu, 5),
-                "bounds": [round(t.ppf(0.025, v_n, mu, s_n_2 / n_n), 5), round(t.ppf(0.975, v_n, mu, s_n_2 / n_n), 5)],
+                "bounds": [
+                    round(t.ppf(0.025, v_n, mu, np.sqrt(s_n_2 / n_n)), 5),
+                    round(t.ppf(0.975, v_n, mu, np.sqrt(s_n_2 / n_n)), 5),
+                ],
                 "precision": round(inv_gamma_alpha / inv_gamma_beta, 5),
                 "stdev": round(np.sqrt(inv_gamma_beta / inv_gamma_alpha), 5),
                 "stdev_bounds": [
@@ -289,7 +294,10 @@ class NormalDataTest(BaseDataTest):
                 "s_2_prior": s_2_prior,
                 "n_prior": n_prior,
                 "mean": round(mu, 5),
-                "bounds": [round(t.ppf(0.025, v_n, mu, s_n_2 / n_n), 5), round(t.ppf(0.975, v_n, mu, s_n_2 / n_n), 5)],
+                "bounds": [
+                    round(t.ppf(0.025, v_n, mu, np.sqrt(s_n_2 / n_n)), 5),
+                    round(t.ppf(0.975, v_n, mu, np.sqrt(s_n_2 / n_n)), 5),
+                ],
                 "precision": round(inv_gamma_alpha / inv_gamma_beta, 5),
                 "stdev": round(np.sqrt(inv_gamma_beta / inv_gamma_alpha), 5),
                 "stdev_bounds": [
@@ -328,8 +336,8 @@ class NormalDataTest(BaseDataTest):
             )
 
             self.data[name]["bounds"] = [
-                round(t.ppf(0.025, v_n, mu, s_n_2 / n_n), 5),
-                round(t.ppf(0.975, v_n, mu, s_n_2 / n_n), 5),
+                round(t.ppf(0.025, v_n, mu, np.sqrt(s_n_2 / n_n)), 5),
+                round(t.ppf(0.975, v_n, mu, np.sqrt(s_n_2 / n_n)), 5),
             ]
 
             inv_gamma_alpha = (1 / 2) * v_n
@@ -508,9 +516,7 @@ class NormalDataTest(BaseDataTest):
             mu = (n * y_bar + n_prior * m_prior) / (n + n_prior)
             v_n = v_prior + n
             n_n = n_prior + n
-            s_n_2 = (1 / v_n) * (
-                sum_squares + s_2_prior * v_prior + (n_prior * n / (n_prior + n)) * (y_bar - m_prior) ** 2
-            )
+            s_n_2 = (1 / v_n) * (sum_squares + s_2_prior * v_prior + (n_prior * n / n_n) * (y_bar - m_prior) ** 2)
 
             label = f"{var}: " + r"$\mu=" + f"{mu:.2f}$"
             dist_names.append(label)
@@ -520,7 +526,7 @@ class NormalDataTest(BaseDataTest):
             )
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                y = t.pdf(x, v_n, mu, s_n_2 / n_n)
+                y = t.pdf(x, df=v_n, loc=mu, scale=np.sqrt(s_n_2 / n_n))
             ax1.plot(x, y, label=label)
 
             x_bound = x[
@@ -635,7 +641,7 @@ class NormalDataTest(BaseDataTest):
         v_n = v_prior + n
         n_n = n_prior + n
         s_n_2 = (1 / v_n) * (sum_squares + s_2_prior * v_prior + (n_prior * n / (n_prior + n)) * (y_bar - m_prior) ** 2)
-        control_samples = t.rvs(v_n, mu, s_n_2 / n_n, 200000, random_state=278)
+        control_samples = t.rvs(v_n, mu, np.sqrt(s_n_2 / n_n), 200000, random_state=278)
 
         num_bins = 300
         hist_names = []
@@ -656,7 +662,7 @@ class NormalDataTest(BaseDataTest):
             s_n_2 = (1 / v_n) * (
                 sum_squares + s_2_prior * v_prior + (n_prior * n / (n_prior + n)) * (y_bar - m_prior) ** 2
             )
-            samples = t.rvs(v_n, mu, s_n_2 / n_n, 200000, random_state=278)
+            samples = t.rvs(v_n, mu, np.sqrt(s_n_2 / n_n), 200000, random_state=314)
 
             temp_sample = (samples - control_samples) / self.data[control]["mean"] * 100
             temp_mu = (self.data[var]["mean"] - self.data[control]["mean"]) / self.data[control]["mean"]
