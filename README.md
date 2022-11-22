@@ -6,6 +6,25 @@
 
 `bayes_ab` is a small package for running Bayesian A/B(/C/D/...) tests.
 
+## Installation
+
+`bayes_ab` can be installed using pip:
+
+```console
+pip install bayes_ab
+```
+
+Alternatively, you can clone the repository and use `poetry` manually:
+
+```console
+cd bayes_ab
+pip install poetry
+poetry install
+poetry shell
+```
+
+## Tests and metrics
+
 ### Implemented tests
 
 - [BinaryDataTest](https://github.com/PlatosTwin/bayes_ab/blob/main/bayes_ab/experiments/binary.py)
@@ -79,23 +98,6 @@ Binary tests with small sample sizes will raise a warning when the error for the
 tolerance. To reduce error, increase the simulation count. For more detail, see the docstring
 for `expected_loss_accuracy_bernoulli`
 in [`evaluation.py`](https://github.com/PlatosTwin/bayes_ab/blob/main/bayes_ab/metrics/evaluation.py)
-
-## Installation
-
-`bayes_ab` can be installed using pip:
-
-```console
-pip install bayes_ab
-```
-
-Alternatively, you can clone the repository and use `poetry` manually:
-
-```console
-cd bayes_ab
-pip install poetry
-poetry install
-poetry shell
-```
 
 ## Basic Usage
 
@@ -466,6 +468,7 @@ Improvements in the pipeline:
 - Refine decision rule (test continuation assessment) to include more nuance
 - Implement Markov Chain Monte Carlo in place of Monte Carlo
 - Create a method to easily plot evolutions of posteriors and evaluation metrics with time
+- Annotate classes with references to the relevant sections within Gelman et al., 2021
 
 ## References and related work
 
@@ -482,17 +485,20 @@ a particular derivation, the docstring contains the exact reference.
 - [Formulas for Bayesian A/B Testing](https://www.evanmiller.org/bayesian-ab-testing.html) (Evan Miller, 2015)
 - [Easy Evaluation of Decision Rules in Bayesian A/B testing](
   https://www.chrisstucchio.com/blog/2014/bayesian_ab_decision_rule.html) (Chris Stucchio, 2014)
+- _[Bayesian Data Analysis, Third Edition](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf)_ (Gelman et al., 2021)
+- [Bayesian Inference 2019](https://vioshyvo.github.io/Bayesian_inference/index.html) (Hyvönen & Tolonen, 2019)
+- [An Introduction to Bayesian Thinking](https://statswithr.github.io/book/) (Clyde et al., 2022)
 
 There is a wealth of material on Bayesian statistics available freely online. A small and somewhat random selection is
 catalogued below.
 
-- _[Bayesian Data Analysis, Third Edition](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf)_ (Gelman et al., 2021)
-- [Bayesian Inference 2019](https://vioshyvo.github.io/Bayesian_inference/index.html) (Hyvönen & Tolonen, 2019)
 - [Probabalistic programming and Bayesian methods for hackers](https://nbviewer.org/github/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers/tree/master/) (
   Cameron Davidson-Pilon, 2022)
 - [Think Bayes 2](https://allendowney.github.io/ThinkBayes2/index.html) (Downey, 2021)
 - [Continuous Monitoring of A/B Tests without Pain: Optional Stopping in Bayesian Testing](https://arxiv.org/pdf/1602.05549.pdf)
   (Deng, Lu, & Chen, 2016)
+
+The dataset `tapwater.csv` is downloaded from the [`statsr`](https://github.com/StatsWithR/statsr/tree/master/data) repository.
 
 This project was inspired by Aubrey Clayton's (2022) _[Bernoulli's Fallacy:
 Statistical Illogic and the Crisis of Modern Science](http://cup.columbia.edu/book/bernoullis-fallacy/9780231199940)_.
