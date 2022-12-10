@@ -312,7 +312,7 @@ class PoissonDataTest(BaseDataTest):
         -------
         res : List of dictionaries with results per variant.
         """
-        keys = ["variant", "total", "mean", "prob_being_best", "expected_loss", "uplift_vs_a", "bounds"]
+        keys = ["variant", "total", "obs_mean", "mean", "prob_being_best", "expected_loss", "uplift_vs_a", "bounds"]
 
         eval_pbbs, eval_loss = self._eval_simulation(sim_count, seed)
         pbbs = list(eval_pbbs.values())
@@ -333,7 +333,7 @@ class PoissonDataTest(BaseDataTest):
             self.data[var]["exp_loss"] = loss[i]
             self.data[var]["uplift_vs_a"] = uplift[i]
 
-        data = [self.variant_names, self.totals, self.means, pbbs, loss, uplift, self.bounds]
+        data = [self.variant_names, self.totals, self.obs_means, self.means, pbbs, loss, uplift, self.bounds]
         res = [dict(zip(keys, item)) for item in zip(*data)]
 
         if verbose:

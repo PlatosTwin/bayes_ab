@@ -147,6 +147,7 @@ class NormalDataTest(BaseDataTest):
         keys = [
             "variant",
             "total",
+            "obs_mean",
             "mean",
             "prob_being_best",
             "expected_loss",
@@ -172,6 +173,7 @@ class NormalDataTest(BaseDataTest):
         data = [
             self.variant_names,
             self.totals,
+            np.array(self.sum_values) / np.array(self.totals),
             self.means,
             pbbs,
             loss,

@@ -9,7 +9,8 @@ def print_normal_evaluation(res: list) -> None:
     tab.field_names = [
         "Variant",
         "Observations",
-        "Mean",
+        "Sample mean",
+        "Posterior mean",
         "Precision",
         "Std. dev.",
         "Chance to beat all",
@@ -23,12 +24,14 @@ def print_normal_evaluation(res: list) -> None:
         temp_row["prob_being_best"] = f"{temp_row['prob_being_best']:.2%}"
         temp_row["uplift_vs_a"] = f"{temp_row['uplift_vs_a']:.2%}"
         temp_row["expected_loss"] = round(temp_row["expected_loss"], 2)
+        temp_row["obs_mean"] = round(temp_row["obs_mean"], 2)
         temp_row["mean"] = round(temp_row["mean"], 2)
         temp_row["precision"] = round(temp_row["precision"], 3)
         temp_row["stdev"] = round(temp_row["stdev"], 2)
         temp_row = [
             temp_row["variant"],
             temp_row["total"],
+            temp_row["obs_mean"],
             temp_row["mean"],
             temp_row["precision"],
             temp_row["stdev"],
@@ -55,7 +58,8 @@ def print_poisson_evaluation(res: list) -> None:
     tab.field_names = [
         "Variant",
         "Observations",
-        "Mean",
+        "Sample mean",
+        "Posterior mean",
         "Chance to beat all",
         "Expected loss",
         'Uplift vs. "A"',
@@ -66,10 +70,12 @@ def print_poisson_evaluation(res: list) -> None:
         temp_row["prob_being_best"] = f"{temp_row['prob_being_best']:.2%}"
         temp_row["uplift_vs_a"] = f"{temp_row['uplift_vs_a']:.2%}"
         temp_row["expected_loss"] = round(temp_row["expected_loss"], 2)
+        temp_row["obs_mean"] = round(temp_row["obs_mean"], 1)
         temp_row["mean"] = round(temp_row["mean"], 1)
         temp_row = [
             temp_row["variant"],
             temp_row["total"],
+            temp_row["obs_mean"],
             temp_row["mean"],
             temp_row["prob_being_best"],
             temp_row["expected_loss"],
@@ -94,7 +100,8 @@ def print_bernoulli_evaluation(res: list) -> None:
         "Variant",
         "Totals",
         "Positives",
-        "Positive rate",
+        "Sample rate",
+        "Posterior rate",
         "Chance to beat all",
         "Expected loss",
         'Uplift vs. "A"',
@@ -102,12 +109,13 @@ def print_bernoulli_evaluation(res: list) -> None:
     ]
     for r in res:
         temp_row = r.copy()
-        for i in ["positive_rate", "prob_being_best", "expected_loss", "uplift_vs_a"]:
+        for i in ["sample_positive_rate", "positive_rate", "prob_being_best", "expected_loss", "uplift_vs_a"]:
             temp_row[i] = f"{temp_row[i]:.2%}"
         temp_row = [
             temp_row["variant"],
             temp_row["total"],
             temp_row["positives"],
+            temp_row["sample_positive_rate"],
             temp_row["positive_rate"],
             temp_row["prob_being_best"],
             temp_row["expected_loss"],
