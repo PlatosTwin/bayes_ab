@@ -459,8 +459,8 @@ Improvements in the pipeline:
     - Add test continuation assessment (decision, confidence, bounds)
     - Create formatted output
     - Add plotting for posteriors and differences from control
-- Implement sample size/reverse posterior calculation
 - Update Jupyter examples folder
+- Implement sample size/reverse posterior calculation
 - Create a method to easily plot evolutions of posteriors and evaluation metrics with time
 - Annotate classes with references to the relevant sections within Gelman et al., 2021
 - Implement Markov Chain Monte Carlo in place of Monte Carlo, using `pymc`
