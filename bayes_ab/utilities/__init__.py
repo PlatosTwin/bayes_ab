@@ -4,6 +4,7 @@ from .output import (
     print_bernoulli_evaluation,
     print_closed_form_comparison,
     print_normal_evaluation,
+    print_dirichlet_evaluation,
 )
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "print_bernoulli_evaluation",
     "print_closed_form_comparison",
     "print_normal_evaluation",
+    "print_dirichlet_evaluation",
 ]

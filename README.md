@@ -421,7 +421,7 @@ test.add_variant_data("C", data_c)
 # test.add_variant_data_agg("C", [1, 0, 1, 1, 1, 1]) # equivalent to rolls in data_c
 
 # evaluate test:
-test.evaluate(sim_count=20000, seed=52)
+test.evaluate(sim_count=200000, seed=52)
 
 # access simulation samples and evaluation metrics
 data = test.data
@@ -466,9 +466,9 @@ Improvements in the pipeline:
     - Add plotting for posteriors and differences from control
 - Add test continuation to `NormalDataTest`
 - Refine decision rule (test continuation assessment) to include more nuance
-- Implement Markov Chain Monte Carlo in place of Monte Carlo
 - Create a method to easily plot evolutions of posteriors and evaluation metrics with time
 - Annotate classes with references to the relevant sections within Gelman et al., 2021
+- Implement Markov Chain Monte Carlo in place of Monte Carlo
 
 ## References and related work
 

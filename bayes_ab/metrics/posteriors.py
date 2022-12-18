@@ -148,13 +148,13 @@ def dirichlet_posteriors(
     seed: Union[int, np.random.bit_generator.SeedSequence] = None,
 ) -> np.ndarray:
     """
-    Drawing from dirichlet posterior for a single variant.
+    Drawing from Dirichlet posterior for a single variant.
 
     Parameters
     ----------
-    concentration : List of numbers of observation for each possible category.
-        In dice example it would be numbers of observations for each possible face.
-    prior : List of prior values for each category in dirichlet distribution.
+    concentration : List of numbers of observation for each possible category. E.g., for dice, this would be
+        a list of length six with each entry representing the number of times the die came up with that face.
+    prior : List of prior values for each category in Dirichlet distribution.
     sim_count : Number of simulations.
     seed : Random seed.
 

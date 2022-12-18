@@ -1,6 +1,60 @@
 from prettytable import PrettyTable
 
 
+def print_dirichlet_evaluation(res: list, states: list) -> None:
+    """
+    Pretty-print output of running standard Dirichlet test.
+    """
+
+    tab = PrettyTable()
+    tab.field_names = [
+        "Variant",
+        "Concentrations",
+        "Sample mean",
+        "Posterior mean",
+        "Relative prob.",
+        "Chance to beat all",
+        "Expected loss",
+        'Uplift vs. "A"',
+        "95% HDI",
+    ]
+    for r in res:
+        temp_row = r.copy()
+        for i in ["prob_being_best", "expected_loss", "uplift_vs_a"]:
+            temp_row[i] = f"{temp_row[i]:.2%}"
+        for i, rp in enumerate(r["relative_probs"]):
+            temp_row["relative_probs"][i] = f"{rp:.2%}"
+
+        temp_row["relative_probs"] = dict(zip(states, temp_row["relative_probs"]))
+        relative_prob_str = ""
+        for key, value in temp_row["relative_probs"].items():
+            relative_prob_str += f"{key}: {value}, "
+        relative_prob_str.strip(",")
+
+        concentration_str = ""
+        for key, value in temp_row["concentration"].items():
+            concentration_str += f"{key}: {int(value)}, "
+
+        temp_row = [
+            temp_row["variant"],
+            concentration_str.strip(", "),
+            round(temp_row["sample_mean"], 2),
+            round(temp_row["posterior_mean"], 2),
+            relative_prob_str.strip(", "),
+            temp_row["prob_being_best"],
+            temp_row["expected_loss"],
+            temp_row["uplift_vs_a"],
+            f'[{temp_row["bounds"][0]:.2%}, {temp_row["bounds"][1]:.2%}]',
+        ]
+
+        tab.add_row(temp_row)
+
+    tab.reversesort = True
+    tab.sortby = "Chance to beat all"
+
+    print(tab, "\n")
+
+
 def print_normal_evaluation(res: list) -> None:
     """
     Pretty-print output of running normal test.
@@ -23,20 +77,15 @@ def print_normal_evaluation(res: list) -> None:
         temp_row = r.copy()
         temp_row["prob_being_best"] = f"{temp_row['prob_being_best']:.2%}"
         temp_row["uplift_vs_a"] = f"{temp_row['uplift_vs_a']:.2%}"
-        temp_row["expected_loss"] = round(temp_row["expected_loss"], 2)
-        temp_row["obs_mean"] = round(temp_row["obs_mean"], 2)
-        temp_row["mean"] = round(temp_row["mean"], 2)
-        temp_row["precision"] = round(temp_row["precision"], 3)
-        temp_row["stdev"] = round(temp_row["stdev"], 2)
         temp_row = [
             temp_row["variant"],
             temp_row["total"],
-            temp_row["obs_mean"],
-            temp_row["mean"],
-            temp_row["precision"],
-            temp_row["stdev"],
+            round(temp_row["obs_mean"], 2),
+            round(temp_row["mean"], 2),
+            round(temp_row["precision"], 3),
+            round(temp_row["stdev"], 2),
             temp_row["prob_being_best"],
-            temp_row["expected_loss"],
+            round(temp_row["expected_loss"], 2),
             temp_row["uplift_vs_a"],
             f'[{temp_row["bounds"][0]:.2f}, {temp_row["bounds"][1]:.2f}]',
             f'[{temp_row["stdev_bounds"][0]:.2f}, {temp_row["stdev_bounds"][1]:.2f}]',

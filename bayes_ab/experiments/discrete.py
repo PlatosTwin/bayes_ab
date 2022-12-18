@@ -4,7 +4,7 @@ import numpy as np
 
 from bayes_ab.experiments.base import BaseDataTest
 from bayes_ab.metrics import eval_numerical_dirichlet_agg
-from bayes_ab.utilities import get_logger
+from bayes_ab.utilities import get_logger, print_dirichlet_evaluation
 
 logger = get_logger("bayes_ab")
 
@@ -48,6 +48,38 @@ class DiscreteDataTest(BaseDataTest):
                 res = False
         return res
 
+    @property
+    def means(self):
+        return [self.data[k]["mean"] for k in self.data]
+
+    @property
+    def relative_probs(self):
+        return [self.data[k]["relative_probs"] for k in self.data]
+
+    @property
+    def chance_to_beat(self):
+        try:
+            return [self.data[k]["chance_to_beat"] for k in self.data]
+        except KeyError:
+            msg = "You must run the evaluate method before attempting to access this property."
+            raise NotImplementedError(msg)
+
+    @property
+    def exp_loss(self):
+        try:
+            return [self.data[k]["exp_loss"] for k in self.data]
+        except KeyError:
+            msg = "You must run the evaluate method before attempting to access this property."
+            raise NotImplementedError(msg)
+
+    @property
+    def uplift_vs_a(self):
+        try:
+            return [self.data[k]["uplift_vs_a"] for k in self.data]
+        except KeyError:
+            msg = "You must run the evaluate method before attempting to access this property."
+            raise NotImplementedError(msg)
+
     def _eval_simulation(self, sim_count: int = 20000, seed: int = None) -> Tuple[dict, dict]:
         """
         Calculate probabilities of being best and expected loss for a current class state.
@@ -73,12 +105,13 @@ class DiscreteDataTest(BaseDataTest):
 
         return res_pbbs, res_loss
 
-    def evaluate(self, sim_count: int = 20000, seed: int = None) -> List[dict]:
+    def evaluate(self, verbose: bool = True, sim_count: int = 20000, seed: int = None) -> List[dict]:
         """
         Evaluation of experiment.
 
         Parameters
         ----------
+        verbose : If True, output prints to console.
         sim_count : Number of simulations to be used for probability estimation.
         seed : Random seed.
 
@@ -86,19 +119,47 @@ class DiscreteDataTest(BaseDataTest):
         -------
         res : List of dictionaries with results per variant.
         """
-        keys = ["variant", "concentration", "average_value", "prob_being_best", "expected_loss"]
+        keys = [
+            "variant",
+            "concentration",
+            "sample_mean",
+            "relative_probs",
+            "posterior_mean",
+            "uplift_vs_a",
+            "prob_being_best",
+            "expected_loss",
+            "bounds",
+        ]
+
         eval_pbbs, eval_loss = self._eval_simulation(sim_count, seed)
         pbbs = list(eval_pbbs.values())
         loss = list(eval_loss.values())
         average_values = [np.sum(np.multiply(i, self.states)) / np.sum(i) for i in self.concentrations]
+
+        uplift = [0]
+        for i in self.means[1:]:
+            uplift.append(round((i - self.means[0]) / self.means[0], 5))
+
+        for i, var in enumerate(self.variant_names):
+            self.data[var]["chance_to_beat"] = pbbs[i]
+            self.data[var]["exp_loss"] = loss[i]
+            self.data[var]["uplift_vs_a"] = uplift[i]
+
         data = [
             self.variant_names,
             [dict(zip(self.states, i)) for i in self.concentrations],
             average_values,
+            self.relative_probs,
+            self.means,
+            self.uplift_vs_a,
             pbbs,
             loss,
+            [[0, 0], [0, 0], [0, 0]],
         ]
         res = [dict(zip(keys, item)) for item in zip(*data)]
+
+        if verbose:
+            print_dirichlet_evaluation(res, self.states)
 
         return res
 
@@ -110,18 +171,16 @@ class DiscreteDataTest(BaseDataTest):
         replace: bool = True,
     ) -> None:
         """
-        Add variant data to test class using aggregated discrete data.
-        This can be convenient as aggregation can be done on database level.
+        Add variant data to test class using already aggregated discrete data.
 
-        Default prior setup is Dirichlet(1,...,1) which is low information prior
-        (we can interpret it as prior 1 observation of each state).
+        The default prior is Dirichlet(1,...,1), a non-informative prior which sets alpha = 1 for each state.
 
         Parameters
         ----------
         name : Variant name.
         concentration : Total number of experiment observations for each state
-            (e.g. number of rolls for each side in a die roll data).
-        prior : Prior alpha parameters of Dirichlet distribution.
+            (e.g. number of rolls for each side in a die roll).
+        prior : Prior alpha parameters for the Dirichlet distribution, one for each state.
         replace : Replace data if variant already exists.
             If set to False, data of existing variant will be appended to existing data.
         """
@@ -140,14 +199,26 @@ class DiscreteDataTest(BaseDataTest):
             prior = [1] * len(self.states)
 
         if name not in self.variant_names:
-            self.data[name] = {"concentration": concentration, "prior": prior}
+            a_0 = sum(prior + concentration)
+            self.data[name] = {
+                "concentration": concentration,
+                "prior": prior,
+                "mean": round(sum([x[-1] * sum(x[:-1]) / a_0 for x in zip(prior, concentration, self.states)]), 5),
+                "relative_probs": [round(sum(x) / a_0, 5) for x in zip(prior, concentration)],
+            }
         elif name in self.variant_names and replace:
             msg = (
                 f"Variant {name} already exists - new data is replacing it. "
                 "If you wish to append instead, use replace=False."
             )
             logger.info(msg)
-            self.data[name] = {"concentration": concentration, "prior": prior}
+            a_0 = sum([sum(x) for x in zip(prior, concentration)])
+            self.data[name] = {
+                "concentration": concentration,
+                "prior": prior,
+                "mean": round(sum([x[-1] * sum(x[:-1]) / a_0 for x in zip(prior, concentration, self.states)]), 5),
+                "relative_probs": [round(sum(x) / a_0, 5) for x in zip(prior, concentration)],
+            }
         elif name in self.variant_names and not replace:
             msg = (
                 f"Variant {name} already exists - new data is appended to variant, "
@@ -155,7 +226,14 @@ class DiscreteDataTest(BaseDataTest):
                 "If you wish to replace data instead, use replace=True."
             )
             logger.info(msg)
-            self.data[name]["concentration"] = [sum(x) for x in zip(self.data[name]["concentration"], concentration)]
+            concentration_updated = [sum(x) for x in zip(self.data[name]["concentration"], concentration)]
+            self.data[name]["concentration"] = concentration_updated
+
+            a_0 = sum([sum(x) for x in zip(prior, concentration_updated)])
+            self.data[name]["mean"] = round(
+                sum([x[-1] * sum(x[:-1]) / a_0 for x in zip(prior, concentration_updated, self.states)]), 5
+            )
+            self.data[name]["relative_probs"] = [round(sum(x) / a_0, 5) for x in zip(prior, concentration_updated)]
 
     def add_variant_data(
         self,

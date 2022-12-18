@@ -352,10 +352,9 @@ class BinaryDataTest(BaseDataTest):
         replace: bool = True,
     ) -> None:
         """
-        Add variant data to test class using aggregated binary data.
-        This can be convenient as aggregation can be done on database level.
+        Add variant data to test class using already aggregated binary data.
 
-        Default prior is Beta(1, 1), which is the Bayes-Laplace non-informative prior. Other
+        The default prior is Beta(1, 1), which is the Bayes-Laplace non-informative prior. Other
         common non-informative priors are the Jeffreys beta(1/2, 1/2) and Haldane beta(0, 0).
         While the selection of an appropriate prior is not always straightforward, the effect of
         selecting the Bayes-Laplace over either the Jeffreys or the Haldane priors will be

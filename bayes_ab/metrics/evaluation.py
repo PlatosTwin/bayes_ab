@@ -478,12 +478,12 @@ def eval_numerical_dirichlet_agg(
     states: List[Union[float, int]],
     concentrations: List[List[int]],
     prior_alphas: List[List[Union[float, int]]] = None,
-    sim_count: int = 20000,
+    sim_count: int = 200000,
     seed: int = None,
 ) -> Tuple[List[float], List[float], List[float]]:
     """
-    Method estimating probabilities of being best and expected loss for dirichlet-multinomial
-    aggregated data per variant. States in this case are expected to be a numerical values
+    Method estimating probabilities of being best and expected loss for Dirichlet-multinomial
+    aggregated data per variant. States in this case are expected to be numerical values
     (e.g. dice numbers, number of stars in a rating, etc.).
 
     Parameters
