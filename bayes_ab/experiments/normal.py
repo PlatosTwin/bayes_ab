@@ -1,5 +1,5 @@
 from numbers import Number
-from typing import List, Tuple
+from typing import List, Tuple, Union, Dict
 from scipy.stats import t, gamma
 import numpy as np
 import matplotlib.pyplot as plt
@@ -87,7 +87,7 @@ class NormalDataTest(BaseDataTest):
             return [self.data[k]["chance_to_beat"] for k in self.data]
         except KeyError:
             msg = "You must run the evaluate method before attempting to access this property."
-            raise NotImplementedError(msg)
+            raise RuntimeError(msg)
 
     @property
     def exp_loss(self):
@@ -95,7 +95,90 @@ class NormalDataTest(BaseDataTest):
             return [self.data[k]["exp_loss"] for k in self.data]
         except KeyError:
             msg = "You must run the evaluate method before attempting to access this property."
-            raise NotImplementedError(msg)
+            raise RuntimeError(msg)
+
+    @property
+    def uplift_vs_a(self):
+        try:
+            return [self.data[k]["uplift_vs_a"] for k in self.data]
+        except KeyError:
+            msg = "You must run the evaluate method before attempting to access this property."
+            raise RuntimeError(msg)
+
+    def _decision_rule(
+        self, control: str, rope: float, precision: float, interval: float, verbose: bool
+    ) -> Union[Dict, None]:
+        """
+        This method implements a basic experimentation decision rule, based largely on the decision
+        rules outlined by Yanir Seroussi
+        (https://yanirseroussi.com/2016/06/19/making-bayesian-ab-testing-more-accessible/),
+        themselves based on decision rules outlined by John K. Kruschke
+        (http://doingbayesiandataanalysis.blogspot.com/2013/11/
+        optional-stopping-in-data-collection-p.html). The motivation for both authors is outlined
+        by David Robinson (http://varianceexplained.org/r/bayesian-ab-testing/).
+
+        If the width of the high-density interval (HDI) is less than <precision>*<rope>, the
+        decision is made with high confidence; otherwise, the decision is made with low confidence.
+
+        If the HDI fully excludes the Region of Practical Equivalence (ROPE), the recommendation is
+        to stop and select the better variant. If the HDI partially contains the ROPE, the
+        recommendation is to continue gathering data. If the HDI fully contains the ROPE, the
+        decision is to select either variant.
+        Parameters
+        ----------
+        control : Denotes the variant to treat as the control.
+        rope : Region of Practical Equivalence. Should be passed in absolute terms: 0.1% = 0.001.
+        precision : Controls experiment stopping. HDI is compared to (rope * precision).
+        interval : The percentage width of the HDI. Must be in (0, 1).
+
+        Returns
+        -------
+        confidence : Whether the recommendation is made with high or low confidence, based on width of bound.
+        decision : The recommendation of what to do given the test data.
+        lower_bound : The lower bound of the HDI given by <interval>.
+        upper_bound : The upper bound of the HDI given by <interval>.
+        """
+        if not control or len(self.totals) != 2:
+            return None
+
+        if len(self.totals) == 2:
+            var_names = self.variant_names.copy()
+            var_names.remove(control)
+            diff_distribution = self.data[var_names[0]]["samples"][0] - self.data[control]["samples"][0]
+            lower_bound = round(np.percentile(diff_distribution, 100 * (1 - interval) / 2), 5)
+            upper_bound = round(np.percentile(diff_distribution, 100 * (1 - interval) / 2 + 100 * interval), 5)
+
+            if upper_bound - lower_bound < rope * precision:
+                confidence = "High"
+            else:
+                confidence = "Low"
+
+            if (rope < lower_bound or -rope > upper_bound) and confidence == "Low":
+                decision = "If you were to stop testing now, you would be better off selecting the better variant."
+            elif (-rope > lower_bound and rope < upper_bound) and confidence == "Low":
+                decision = "If you were to stop testing now, you could select either variant."
+            elif (rope < lower_bound or -rope > upper_bound) and confidence == "High":
+                decision = "You may stop testing now, and should select the better variant."
+            elif (-rope > lower_bound and rope < upper_bound) and confidence == "High":
+                decision = "You may stop testing now, and may select either variant."
+            else:
+                decision = "Continue collecting data."
+
+            if verbose:
+                print(
+                    f"Decision: {decision} Confidence: {confidence}. "
+                    f"Bounds: [{lower_bound:.2%}, {upper_bound:.2%}].",
+                    "\n",
+                )
+
+            assessment = {
+                "decision": decision,
+                "confidence": confidence,
+                "lower_bound": lower_bound,
+                "upper_bound": upper_bound,
+            }
+
+            return assessment
 
     def _eval_simulation(self, sim_count: int = 20000, seed: int = None) -> Tuple[dict, dict]:
         """
@@ -130,7 +213,16 @@ class NormalDataTest(BaseDataTest):
 
         return res_pbbs, res_loss
 
-    def evaluate(self, sim_count: int = 20000, verbose: bool = True, seed: int = None) -> List[dict]:
+    def evaluate(
+        self,
+        sim_count: int = 20000,
+        verbose: bool = True,
+        seed: int = None,
+        control: str = None,
+        rope: float = 0.001,
+        precision: float = 0.8,
+        interval: float = 0.95,
+    ) -> List[dict]:
         """
         Evaluation of experiment.
 
@@ -139,6 +231,13 @@ class NormalDataTest(BaseDataTest):
         sim_count : Number of simulations to be used for probability estimation.
         verbose : If True, output prints to console.
         seed : Random seed.
+        control : Denotes the variant to treat as the control. If not None, used in generating a
+            stopping decision.
+        rope : Region of Practical Equivalence. Should be passed in absolute terms: 0.1% = 0.001.
+            Defaults to 0.001.
+        precision : Controls experiment stopping. HDI is compared to (rope * precision). Defaults
+            to 0.8.
+        interval : The percentage width of the HDI. Defaults to 95%. Must be in (0, 1).
 
         Returns
         -------
@@ -188,7 +287,9 @@ class NormalDataTest(BaseDataTest):
         if verbose:
             print_normal_evaluation(res)
 
-        return res
+        assessment = self._decision_rule(control, rope, precision, interval, verbose)
+
+        return res, assessment
 
     def add_variant_data_agg(
         self,

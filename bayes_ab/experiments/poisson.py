@@ -70,7 +70,7 @@ class PoissonDataTest(BaseDataTest):
             return [self.data[k]["chance_to_beat"] for k in self.data]
         except KeyError:
             msg = "You must run the evaluate method before attempting to access this property."
-            raise NotImplementedError(msg)
+            raise RuntimeError(msg)
 
     @property
     def exp_loss(self):
@@ -78,7 +78,7 @@ class PoissonDataTest(BaseDataTest):
             return [self.data[k]["exp_loss"] for k in self.data]
         except KeyError:
             msg = "You must run the evaluate method before attempting to access this property."
-            raise NotImplementedError(msg)
+            raise RuntimeError(msg)
 
     @property
     def uplift_vs_a(self):
@@ -86,7 +86,7 @@ class PoissonDataTest(BaseDataTest):
             return [self.data[k]["uplift_vs_a"] for k in self.data]
         except KeyError:
             msg = "You must run the evaluate method before attempting to access this property."
-            raise NotImplementedError(msg)
+            raise RuntimeError(msg)
 
     def _eval_simulation(self, sim_count: int = 20000, seed: int = None) -> Tuple[dict, dict]:
         """
@@ -257,10 +257,14 @@ class PoissonDataTest(BaseDataTest):
             else:
                 confidence = "Low"
 
-            if rope < lower_bound or -rope > upper_bound:
-                decision = "Stop and select better variant."
-            elif -rope > lower_bound and rope < upper_bound:
-                decision = "Stop and implement either variant."
+            if (rope < lower_bound or -rope > upper_bound) and confidence == "Low":
+                decision = "If you were to stop testing now, you would be better off selecting the better variant."
+            elif (-rope > lower_bound and rope < upper_bound) and confidence == "Low":
+                decision = "If you were to stop testing now, you could select either variant."
+            elif (rope < lower_bound or -rope > upper_bound) and confidence == "High":
+                decision = "You may stop testing now, and should select the better variant."
+            elif (-rope > lower_bound and rope < upper_bound) and confidence == "High":
+                decision = "You may stop testing now, and may select either variant."
             else:
                 decision = "Continue collecting data."
 
@@ -389,11 +393,11 @@ class PoissonDataTest(BaseDataTest):
                 "stdev": round(np.sqrt((a_prior + total * obs_mean)) / (b_prior + total), 5),
                 "bounds": [
                     round(
-                        stats.gamma.ppf(1 - 0.95, a=a_prior + total * obs_mean, scale=1 / (b_prior + total)),
+                        stats.gamma.ppf(0.025, a=a_prior + total * obs_mean, scale=1 / (b_prior + total)),
                         5,
                     ),
                     round(
-                        stats.gamma.ppf(0.95, a=a_prior + total * obs_mean, scale=1 / (b_prior + total)),
+                        stats.gamma.ppf(0.975, a=a_prior + total * obs_mean, scale=1 / (b_prior + total)),
                         5,
                     ),
                 ],

@@ -511,15 +511,17 @@ def eval_numerical_dirichlet_agg(
     child_seeds = ss.spawn(len(concentrations))
 
     means_samples = []
+    relative_probs = []
     for i in range(len(concentrations)):
         dir_post = dirichlet_posteriors(concentrations[i], prior_alphas[i], sim_count, child_seeds[i])
+        relative_probs.append(dir_post)
         means = np.sum(np.multiply(dir_post, np.array(states)), axis=1)
         means_samples.append(list(means))
 
     res_pbbs = estimate_chance_to_beat(means_samples)
     res_loss = estimate_expected_loss(means_samples)
 
-    return res_pbbs, res_loss, means_samples
+    return res_pbbs, res_loss, relative_probs
 
 
 def eval_poisson_agg(

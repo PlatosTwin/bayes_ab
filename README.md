@@ -60,9 +60,9 @@ Evaluation metrics are calculated using Monte Carlo simulations from posterior d
 
 ### Decision rules for test continuation
 
-For tests between two variants, `bayes_ab` can additionally provide a continuation recommendation—that is, a
-recommendation as to the variant to select, or to continue testing. See the docstrings and examples for usage
-guidelines.
+For tests between two variants with binary, Poisson, and normal data, `bayes_ab` can additionally provide a continuation
+recommendation—that is, a recommendation as to the variant to select, or to continue testing.
+See the docstrings and examples for usage guidelines.
 
 The decision method makes use of the following concepts:
 
@@ -75,9 +75,10 @@ The decision method makes use of the following concepts:
 The recommendation output has three elements:
 
 1. **Decision**
-    - _Stop and select either variant_ if the ROPE is fully contained within the 95% HDI.
-    - _Continue testing_ if the ROPE partially overlaps the 95% HDI.
-    - _Stop testing and select the better variant_ if the ROPE and the 95% HDI do not overlap.
+    - Select either variant if the ROPE is fully contained within the 95% HDI.
+    - Select the better variant if the ROPE and the 95% HDI do not overlap.
+    - Continue testing if the ROPE partially overlaps the 95% HDI.
+    - _Note: There are high-confidence and low-confidence variations of the first two messages.
 2. **Confidence**
     - _High_ if the width of the 95% HDI is less than or equal to `0.8*rope`.
     - _Low_ if the width of the 95% HDI is greater than `0.8*rope`.
@@ -132,7 +133,7 @@ updated package.
 
 ### BinaryDataTest
 
-Class for Bayesian A/B test for binary-like data (e.g. conversions, successes, etc.).
+Class for Bayesian A/B testing of binary-like data (e.g. conversions, successes, etc.).
 
 **Example:**
 
@@ -208,7 +209,7 @@ Finally, we can plot the prior and posterior distributions, as well as the distr
 
 ### PoissonDataTest
 
-Class for Bayesian A/B test for count data. This can be used to compare, e.g., the number of sales per day from
+Class for Bayesian A/B testing of count data. This can be used to compare, e.g., the number of sales per day from
 different salesmen, or the number of deaths from a given disease per zip code.
 
 **Example:**
@@ -337,7 +338,7 @@ $\frac{1}{\sigma^2}$, and the distribution of differences from a given control.
 
 ### DeltaLognormalDataTest
 
-Class for Bayesian A/B test for delta-lognormal data (log-normal with zeros). Delta-lognormal data is typical case of
+Class for Bayesian A/B testing of delta-lognormal data (log-normal with zeros). Delta-lognormal data is typical case of
 revenue per session data where many sessions have 0 revenue but non-zero values are positive numbers with possible
 log-normal distribution. To handle this data, the calculation is combining binary Bayes model for zero vs non-zero
 "conversions" and log-normal model for non-zero values.
@@ -394,8 +395,9 @@ data = test.data
 
 ### DiscreteDataTest
 
-Class for Bayesian A/B test for discrete data with finite number of numerical categories (states), representing some
-value. This test can be used for instance for dice rolls data (when looking for the "best" of multiple dice) or rating
+Class for Bayesian A/B testing for discrete data having a finite number of numerical categories (states).
+This test can be used, e.g., to find the biases of different dice and to decide which of them of multiple for the "best"
+of multiple dice) or rating
 data
 (e.g. 1-5 stars or 1-10 scale).
 
@@ -427,21 +429,17 @@ test.evaluate(sim_count=200000, seed=52)
 data = test.data
 ```
 
-    [{'variant': 'A',
-      'concentration': {1: 2.0, 2: 4.0, 3: 4.0, 4: 2.0, 5: 2.0, 6: 6.0},
-      'average_value': 3.8,
-      'prob_being_best': 0.54685,
-      'expected_loss': 0.199953},
-     {'variant': 'B',
-      'concentration': {1: 1.0, 2: 6.0, 3: 2.0, 4: 1.0, 5: 0.0, 6: 0.0},
-      'average_value': 2.3,
-      'prob_being_best': 0.008,
-      'expected_loss': 1.1826766},
-     {'variant': 'C',
-      'concentration': {1: 1.0, 2: 0.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0},
-      'average_value': 3.8,
-      'prob_being_best': 0.44515,
-      'expected_loss': 0.2870247}]
+    +---------+------------------------------------+-------------+----------------+------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------+--------------------+---------------+----------------+----------------+
+    | Variant |           Concentrations           | Sample mean | Posterior mean |                          Relative prob.                          |                                                 95% HDI (relative prob.)                                                | Chance to beat all | Expected loss | Uplift vs. "A" | 95% HDI (mean) |
+    +---------+------------------------------------+-------------+----------------+------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------+--------------------+---------------+----------------+----------------+
+    |    A    | 1: 2, 2: 4, 3: 4, 4: 2, 5: 2, 6: 6 |     3.8     |      3.73      | 1: 11.54%, 2: 19.23%, 3: 19.23%, 4: 11.54%, 5: 11.54%, 6: 26.92% | 1: [2.55%, 26.02%], 2: [6.82%, 36.06%], 3: [6.85%, 36.12%], 4: [2.54%, 25.96%], 5: [2.59%, 26.09%], 6: [12.10%, 45.17%] |       55.21%       |     19.71%    |     0.00%      |  [3.07, 4.40]  |
+    |    C    | 1: 1, 2: 0, 3: 1, 4: 1, 5: 1, 6: 1 |     3.8     |      3.64      | 1: 18.18%, 2: 9.09%, 3: 18.18%, 4: 18.18%, 5: 18.18%, 6: 18.18%  |  1: [2.50%, 44.45%], 2: [0.26%, 30.78%], 3: [2.51%, 44.54%], 4: [2.47%, 44.48%], 5: [2.53%, 44.57%], 6: [2.52%, 44.54%] |       44.02%       |     29.09%    |     -2.53%     |  [2.64, 4.58]  |
+    |    B    | 1: 1, 2: 6, 3: 2, 4: 1, 5: 0, 6: 0 |     2.3     |      2.75      |  1: 12.50%, 2: 43.75%, 3: 18.75%, 4: 12.50%, 5: 6.25%, 6: 6.25%  | 1: [1.66%, 31.97%], 2: [21.33%, 67.67%], 3: [4.31%, 40.47%], 4: [1.65%, 31.96%], 5: [0.17%, 21.78%], 6: [0.17%, 21.84%] |       0.78%        |    117.81%    |    -26.29%     |  [2.18, 3.45]  |
+    +---------+------------------------------------+-------------+----------------+------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------+--------------------+---------------+----------------+----------------+
+
+Finally, we can plot the posterior distribution for each state for each variant.
+
+![](https://raw.githubusercontent.com/PlatosTwin/bayes_ab/main/examples/plots/dirichlet_distributions_example.png)
 
 ## Development
 
@@ -457,18 +455,15 @@ poetry run pre-commit install
 
 Improvements in the pipeline:
 
-- Implement sample size/reverse posterior calculation
-- Update Jupyter examples folder
-- Validate `DeltaLognormalDataTest` and `DiscreteDataTest`
-- Improve `DeltaLognormalDataTest` and `DiscreteDataTest`
+- Validate and improve `DeltaLognormalDataTest`
     - Add test continuation assessment (decision, confidence, bounds)
     - Create formatted output
     - Add plotting for posteriors and differences from control
-- Add test continuation to `NormalDataTest`
-- Refine decision rule (test continuation assessment) to include more nuance
+- Implement sample size/reverse posterior calculation
+- Update Jupyter examples folder
 - Create a method to easily plot evolutions of posteriors and evaluation metrics with time
 - Annotate classes with references to the relevant sections within Gelman et al., 2021
-- Implement Markov Chain Monte Carlo in place of Monte Carlo
+- Implement Markov Chain Monte Carlo in place of Monte Carlo, using `pymc`
 
 ## References and related work
 
@@ -498,7 +493,8 @@ catalogued below.
 - [Continuous Monitoring of A/B Tests without Pain: Optional Stopping in Bayesian Testing](https://arxiv.org/pdf/1602.05549.pdf)
   (Deng, Lu, & Chen, 2016)
 
-The dataset `tapwater.csv` is downloaded from the [`statsr`](https://github.com/StatsWithR/statsr/tree/master/data) repository.
+The dataset `tapwater.csv` is downloaded from the [`statsr`](https://github.com/StatsWithR/statsr/tree/master/data)
+repository.
 
 This project was inspired by Aubrey Clayton's (2022) _[Bernoulli's Fallacy:
 Statistical Illogic and the Crisis of Modern Science](http://cup.columbia.edu/book/bernoullis-fallacy/9780231199940)_.

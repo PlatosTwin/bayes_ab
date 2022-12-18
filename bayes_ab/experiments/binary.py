@@ -63,7 +63,7 @@ class BinaryDataTest(BaseDataTest):
             return [self.data[k]["chance_to_beat"] for k in self.data]
         except KeyError:
             msg = "You must run the evaluate method before attempting to access this property."
-            raise NotImplementedError(msg)
+            raise RuntimeError(msg)
 
     @property
     def exp_loss(self):
@@ -71,7 +71,7 @@ class BinaryDataTest(BaseDataTest):
             return [self.data[k]["exp_loss"] for k in self.data]
         except KeyError:
             msg = "You must run the evaluate method before attempting to access this property."
-            raise NotImplementedError(msg)
+            raise RuntimeError(msg)
 
     @property
     def uplift_vs_a(self):
@@ -79,7 +79,7 @@ class BinaryDataTest(BaseDataTest):
             return [self.data[k]["uplift_vs_a"] for k in self.data]
         except KeyError:
             msg = "You must run the evaluate method before attempting to access this property."
-            raise NotImplementedError(msg)
+            raise RuntimeError(msg)
 
     def _eval_simulation(self, sim_count: int = 200000, seed: int = None) -> Tuple[dict, dict]:
         """
@@ -208,15 +208,12 @@ class BinaryDataTest(BaseDataTest):
         ----------
         control : Denotes the variant to treat as the control.
         rope : Region of Practical Equivalence. Should be passed in absolute terms: 0.1% = 0.001.
-        precision : Controls experiment stopping. HDI is compared to (rope * precision). Defaults
-        to 0.8.
-        interval : The percentage width of the HDI. Defaults to 95%. Defaults to 95%.
-        Must be in (0, 1).
+        precision : Controls experiment stopping. HDI is compared to (rope * precision).
+        interval : The percentage width of the HDI. Must be in (0, 1).
 
         Returns
         -------
-        confidence : Whether the recommendation is made with high or low confidence, based on width
-        of bound.
+        confidence : Whether the recommendation is made with high or low confidence, based on width of bound.
         decision : The recommendation of what to do given the test data.
         lower_bound : The lower bound of the HDI given by <interval>.
         upper_bound : The upper bound of the HDI given by <interval>.
@@ -236,10 +233,14 @@ class BinaryDataTest(BaseDataTest):
             else:
                 confidence = "Low"
 
-            if rope < lower_bound or -rope > upper_bound:
-                decision = "Stop and select better variant."
-            elif -rope > lower_bound and rope < upper_bound:
-                decision = "Stop and implement either variant."
+            if (rope < lower_bound or -rope > upper_bound) and confidence == "Low":
+                decision = "If you were to stop testing now, you would be better off selecting the better variant."
+            elif (-rope > lower_bound and rope < upper_bound) and confidence == "Low":
+                decision = "If you were to stop testing now, you could select either variant."
+            elif (rope < lower_bound or -rope > upper_bound) and confidence == "High":
+                decision = "You may stop testing now, and should select the better variant."
+            elif (-rope > lower_bound and rope < upper_bound) and confidence == "High":
+                decision = "You may stop testing now, and may select either variant."
             else:
                 decision = "Continue collecting data."
 
@@ -280,11 +281,11 @@ class BinaryDataTest(BaseDataTest):
         seed : Random seed.
         verbose : If True, output prints to console.
         control : Denotes the variant to treat as the control. If not None, used in generating a
-        stopping decision.
+            stopping decision.
         rope : Region of Practical Equivalence. Should be passed in absolute terms: 0.1% = 0.001.
-        Defaults to 0.001.
+            Defaults to 0.001.
         precision : Controls experiment stopping. HDI is compared to (rope * precision). Defaults
-        to 0.8.
+            to 0.8.
         interval : The percentage width of the HDI. Defaults to 95%. Must be in (0, 1).
 
         Returns
@@ -417,10 +418,10 @@ class BinaryDataTest(BaseDataTest):
                 ),
                 "bounds": [
                     round(
-                        stats.beta.ppf(1 - 0.95, a_prior + positives, b_prior + total - positives),
+                        stats.beta.ppf(0.025, a_prior + positives, b_prior + total - positives),
                         5,
                     ),
-                    round(stats.beta.ppf(0.95, a_prior + positives, b_prior + total - positives), 5),
+                    round(stats.beta.ppf(0.975, a_prior + positives, b_prior + total - positives), 5),
                 ],
             }
         elif name in self.variant_names and replace:
@@ -550,6 +551,7 @@ class BinaryDataTest(BaseDataTest):
                 1,
                 figsize=(10, 8),
             )
+            ax3 = None
         else:
             fig, (ax1, ax2, ax3) = plt.subplots(
                 3,

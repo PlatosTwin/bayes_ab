@@ -1,5 +1,9 @@
 from numbers import Number
 from typing import List, Tuple, Union
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
+import matplotlib.colors as mcolors
+from matplotlib.patches import Rectangle
 import numpy as np
 
 from bayes_ab.experiments.base import BaseDataTest
@@ -57,12 +61,28 @@ class DiscreteDataTest(BaseDataTest):
         return [self.data[k]["relative_probs"] for k in self.data]
 
     @property
+    def bounds(self):
+        try:
+            return [self.data[k]["bounds"] for k in self.data]
+        except KeyError:
+            msg = "You must run the evaluate method before attempting to access this property."
+            raise RuntimeError(msg)
+
+    @property
+    def rel_bounds(self):
+        try:
+            return [self.data[k]["rel_bounds"] for k in self.data]
+        except KeyError:
+            msg = "You must run the evaluate method before attempting to access this property."
+            raise RuntimeError(msg)
+
+    @property
     def chance_to_beat(self):
         try:
             return [self.data[k]["chance_to_beat"] for k in self.data]
         except KeyError:
             msg = "You must run the evaluate method before attempting to access this property."
-            raise NotImplementedError(msg)
+            raise RuntimeError(msg)
 
     @property
     def exp_loss(self):
@@ -70,7 +90,7 @@ class DiscreteDataTest(BaseDataTest):
             return [self.data[k]["exp_loss"] for k in self.data]
         except KeyError:
             msg = "You must run the evaluate method before attempting to access this property."
-            raise NotImplementedError(msg)
+            raise RuntimeError(msg)
 
     @property
     def uplift_vs_a(self):
@@ -78,7 +98,7 @@ class DiscreteDataTest(BaseDataTest):
             return [self.data[k]["uplift_vs_a"] for k in self.data]
         except KeyError:
             msg = "You must run the evaluate method before attempting to access this property."
-            raise NotImplementedError(msg)
+            raise RuntimeError(msg)
 
     def _eval_simulation(self, sim_count: int = 20000, seed: int = None) -> Tuple[dict, dict]:
         """
@@ -125,6 +145,8 @@ class DiscreteDataTest(BaseDataTest):
             "sample_mean",
             "relative_probs",
             "posterior_mean",
+            "bounds",
+            "rel_bounds",
             "uplift_vs_a",
             "prob_being_best",
             "expected_loss",
@@ -145,16 +167,21 @@ class DiscreteDataTest(BaseDataTest):
             self.data[var]["exp_loss"] = loss[i]
             self.data[var]["uplift_vs_a"] = uplift[i]
 
+            means = np.sum(np.multiply(self.data[var]["samples"], np.array(self.states)), axis=1)
+            self.data[var]["bounds"] = np.quantile(means, (0.025, 0.975))
+            self.data[var]["rel_bounds"] = np.quantile(self.data[var]["samples"], (0.025, 0.975), axis=0)
+
         data = [
             self.variant_names,
             [dict(zip(self.states, i)) for i in self.concentrations],
             average_values,
             self.relative_probs,
             self.means,
+            self.bounds,
+            self.rel_bounds,
             self.uplift_vs_a,
             pbbs,
             loss,
-            [[0, 0], [0, 0], [0, 0]],
         ]
         res = [dict(zip(keys, item)) for item in zip(*data)]
 
@@ -268,3 +295,45 @@ class DiscreteDataTest(BaseDataTest):
         concentration = [counter_dict[i] for i in self.states]
 
         self.add_variant_data_agg(name, concentration, prior, replace)
+
+    def plot_distributions(self, control: str, fname: str = None, dpi: int = 300) -> plt.figure:
+        """
+        For each variant, plot the posterior distribution for each state.
+
+        For 10 states and fewer, state colors will be distinct; for more than 10 states, colors will duplicate.
+
+        Parameters
+        ----------
+        control : The variant to treat as control; this variant will be subtracted from each other variant.
+        fname : Filename to which to save the resultant image; if None, the image is not saved.
+        dpi : DPI setting for saved image; used only when fname is not None.
+        """
+        fig = plt.figure(figsize=(10, 8))
+        colors = list(mcolors.TABLEAU_COLORS.values())
+        for i, var in enumerate(self.data):
+            dist_names = []
+            ax = fig.add_subplot(len(self.variant_names), 1, i + 1)
+
+            for j, (state, color) in enumerate(zip(self.data[var]["samples"].T, colors)):
+                mu = state.mean()
+                label = f"{var} | {self.states[j]}: " + r"$\mu=" + f"{mu:.2%}$%"
+                dist_names.append(label)
+
+                ax.hist(state * 100, label=label, color=color, alpha=0.5, bins=200)
+
+            handles = [Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(self.states))]
+            ax.legend(handles, dist_names)
+            ax.set_xlabel("Posterior probability")
+            ax.set_xlim(0, 100)
+            ax.set_title(f'Variant "{var}"')
+            ax.xaxis.set_major_formatter(mtick.PercentFormatter())
+
+        fig.suptitle("Posterior probability for each state, by variant", fontsize=15)
+        fig.tight_layout()
+
+        if fname:
+            plt.savefig(fname, dpi=dpi)
+
+        plt.show()
+
+        return fig

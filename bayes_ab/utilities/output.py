@@ -13,10 +13,11 @@ def print_dirichlet_evaluation(res: list, states: list) -> None:
         "Sample mean",
         "Posterior mean",
         "Relative prob.",
+        "95% HDI (relative prob.)",
         "Chance to beat all",
         "Expected loss",
         'Uplift vs. "A"',
-        "95% HDI",
+        "95% HDI (mean)",
     ]
     for r in res:
         temp_row = r.copy()
@@ -32,8 +33,13 @@ def print_dirichlet_evaluation(res: list, states: list) -> None:
         relative_prob_str.strip(",")
 
         concentration_str = ""
-        for key, value in temp_row["concentration"].items():
+        for i, (key, value) in enumerate(temp_row["concentration"].items()):
             concentration_str += f"{key}: {int(value)}, "
+
+        temp_row["rel_bounds"] = dict(zip(states, temp_row["rel_bounds"].T))
+        rel_bounds_str = ""
+        for i, (key, value) in enumerate(temp_row["rel_bounds"].items()):
+            rel_bounds_str += f"{key}: [{value[0]:.2%}, {value[1]:.2%}], "
 
         temp_row = [
             temp_row["variant"],
@@ -41,10 +47,11 @@ def print_dirichlet_evaluation(res: list, states: list) -> None:
             round(temp_row["sample_mean"], 2),
             round(temp_row["posterior_mean"], 2),
             relative_prob_str.strip(", "),
+            rel_bounds_str.strip(", "),
             temp_row["prob_being_best"],
             temp_row["expected_loss"],
             temp_row["uplift_vs_a"],
-            f'[{temp_row["bounds"][0]:.2%}, {temp_row["bounds"][1]:.2%}]',
+            f'[{temp_row["bounds"][0]:.2f}, {temp_row["bounds"][1]:.2f}]',
         ]
 
         tab.add_row(temp_row)
