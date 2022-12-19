@@ -93,6 +93,62 @@ def norm_test():
 
 
 @pytest.fixture
+def norm_test_assessment():
+    norm = NormalDataTest()
+    norm.add_variant_data(
+        "A",
+        [
+            11.8,
+            12.2,
+            12.4,
+            9.5,
+            2.2,
+            3.3,
+            16.2,
+            4.9,
+            12.4,
+            6.8,
+            8.7,
+            9.8,
+            5.4,
+            9.0,
+            15.0,
+            12.3,
+            9.6,
+            12.5,
+            9.1,
+            10.2,
+        ],
+        m_prior=9,
+    )
+    norm.add_variant_data(
+        "B",
+        [
+            10.6,
+            5.1,
+            9.4,
+            11.2,
+            2.0,
+            13.4,
+            14.1,
+            15.4,
+            16.3,
+            11.7,
+            7.3,
+            6.8,
+            8.2,
+            16.2,
+            10.8,
+            7.1,
+            12.2,
+            11.2,
+        ],
+        n_prior=0.03,
+    )
+    return norm
+
+
+@pytest.fixture
 def norm_test_plotting():
     norm = NormalDataTest()
     norm.add_variant_data(
@@ -234,8 +290,51 @@ def test_normal_plot_joint_prior(norm_test_plotting):
     return fig
 
 
+def test_evaluate_assessment(norm_test_assessment):
+    eval_report, assessment = norm_test_assessment.evaluate(control="A", sim_count=2000000, seed=314)
+
+    assert eval_report == [
+        {
+            "bounds": [7.93549, 11.39451],
+            "expected_loss": 0.8180757,
+            "mean": 9.665,
+            "obs_mean": 9.665000000000001,
+            "precision": 0.07323,
+            "prob_being_best": 0.00457,
+            "stdev": 3.69541,
+            "stdev_bounds": [2.81033, 5.39742],
+            "total": 20,
+            "uplift_vs_a": 0,
+            "variant": "A",
+        },
+        {
+            "bounds": [8.52588, 12.43918],
+            "expected_loss": 0.000525,
+            "mean": 10.48253,
+            "obs_mean": 10.5,
+            "precision": 0.06449,
+            "prob_being_best": 0.99543,
+            "stdev": 3.93792,
+            "stdev_bounds": [2.95496, 5.9035],
+            "total": 18,
+            "uplift_vs_a": 0.08459,
+            "variant": "B",
+        },
+    ] and assessment == {
+        "confidence": "Low",
+        "decision": "If you were to stop testing now, you would be better off " "selecting the better variant.",
+        "lower_bound": 0.21896,
+        "upper_bound": 1.41692,
+    } != {
+        "confidence": "Low",
+        "decision": "If you were to stop testing now, you could select either " "variant.",
+        "lower_bound": -0.42908,
+        "upper_bound": 0.26873,
+    }
+
+
 def test_evaluate(norm_test):
-    eval_report = norm_test.evaluate(sim_count=20000, seed=52)
+    eval_report, _ = norm_test.evaluate(sim_count=20000, seed=52)
     assert eval_report == [
         {
             "bounds": [8.4984, 10.8316],

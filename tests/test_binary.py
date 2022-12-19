@@ -53,7 +53,7 @@ def test_stdevs(conv_test):
 
 
 def test_bounds(conv_test):
-    assert conv_test.bounds == [[0.13508, 0.56437], [0.07882, 0.47009], [0.06605, 0.4101]]
+    assert conv_test.bounds == [[0.10926, 0.60974], [0.06022, 0.51776], [0.05038, 0.45447]]
 
 
 def test_probabs_of_being_best(conv_test):
@@ -100,7 +100,7 @@ def test_evaluate_assessment(conv_test_assessment):
         eval_report
         == [
             {
-                "bounds": [0.13508, 0.56437],
+                "bounds": [0.10926, 0.60974],
                 "expected_loss": 0.037059,
                 "positive_rate": 0.33333,
                 "positives": 3,
@@ -111,7 +111,7 @@ def test_evaluate_assessment(conv_test_assessment):
                 "variant": "A",
             },
             {
-                "bounds": [0.07882, 0.47009],
+                "bounds": [0.06022, 0.51776],
                 "expected_loss": 0.1202106,
                 "positive_rate": 0.25,
                 "positives": 2,
@@ -125,8 +125,8 @@ def test_evaluate_assessment(conv_test_assessment):
         and cf_pbbs == [0.68244, 0.31756]
         and assessment
         == {
-            "decision": "Stop and implement either variant.",
             "confidence": "Low",
+            "decision": "If you were to stop testing now, you could select either " "variant.",
             "lower_bound": -0.42908,
             "upper_bound": 0.26873,
         }
@@ -137,7 +137,7 @@ def test_evaluate(conv_test):
     eval_report, cf_pbbs, _ = conv_test.evaluate(closed_form=True, sim_count=2000000, seed=314)
     assert eval_report == [
         {
-            "bounds": [0.13508, 0.56437],
+            "bounds": [0.10926, 0.60974],
             "expected_loss": 0.0509394,
             "positive_rate": 0.33333,
             "positives": 3,
@@ -148,7 +148,7 @@ def test_evaluate(conv_test):
             "variant": "A",
         },
         {
-            "bounds": [0.07882, 0.47009],
+            "bounds": [0.06022, 0.51776],
             "expected_loss": 0.1340909,
             "positive_rate": 0.25,
             "positives": 2,
@@ -159,7 +159,7 @@ def test_evaluate(conv_test):
             "variant": "B",
         },
         {
-            "bounds": [0.06605, 0.4101],
+            "bounds": [0.05038, 0.45447],
             "expected_loss": 0.1701915,
             "positive_rate": 0.21429,
             "positives": 2,

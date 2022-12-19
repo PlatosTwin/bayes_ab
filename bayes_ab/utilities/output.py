@@ -1,4 +1,5 @@
 from prettytable import PrettyTable
+import numpy as np
 
 
 def print_dirichlet_evaluation(res: list, states: list) -> None:
@@ -23,12 +24,12 @@ def print_dirichlet_evaluation(res: list, states: list) -> None:
         temp_row = r.copy()
         for i in ["prob_being_best", "expected_loss", "uplift_vs_a"]:
             temp_row[i] = f"{temp_row[i]:.2%}"
-        for i, rp in enumerate(r["relative_probs"]):
-            temp_row["relative_probs"][i] = f"{rp:.2%}"
+        for i, rp in enumerate(r["rel_probs"]):
+            temp_row["rel_probs"][i] = f"{rp:.2%}"
 
-        temp_row["relative_probs"] = dict(zip(states, temp_row["relative_probs"]))
+        temp_row["rel_probs"] = dict(zip(states, temp_row["rel_probs"]))
         relative_prob_str = ""
-        for key, value in temp_row["relative_probs"].items():
+        for key, value in temp_row["rel_probs"].items():
             relative_prob_str += f"{key}: {value}, "
         relative_prob_str.strip(",")
 
@@ -36,7 +37,7 @@ def print_dirichlet_evaluation(res: list, states: list) -> None:
         for i, (key, value) in enumerate(temp_row["concentration"].items()):
             concentration_str += f"{key}: {int(value)}, "
 
-        temp_row["rel_bounds"] = dict(zip(states, temp_row["rel_bounds"].T))
+        temp_row["rel_bounds"] = dict(zip(states, np.array(temp_row["rel_bounds"]).T))
         rel_bounds_str = ""
         for i, (key, value) in enumerate(temp_row["rel_bounds"].items()):
             rel_bounds_str += f"{key}: [{value[0]:.2%}, {value[1]:.2%}], "

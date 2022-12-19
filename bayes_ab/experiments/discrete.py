@@ -57,8 +57,8 @@ class DiscreteDataTest(BaseDataTest):
         return [self.data[k]["mean"] for k in self.data]
 
     @property
-    def relative_probs(self):
-        return [self.data[k]["relative_probs"] for k in self.data]
+    def rel_probs(self):
+        return [self.data[k]["rel_probs"] for k in self.data]
 
     @property
     def bounds(self):
@@ -143,7 +143,7 @@ class DiscreteDataTest(BaseDataTest):
             "variant",
             "concentration",
             "sample_mean",
-            "relative_probs",
+            "rel_probs",
             "posterior_mean",
             "bounds",
             "rel_bounds",
@@ -168,14 +168,16 @@ class DiscreteDataTest(BaseDataTest):
             self.data[var]["uplift_vs_a"] = uplift[i]
 
             means = np.sum(np.multiply(self.data[var]["samples"], np.array(self.states)), axis=1)
-            self.data[var]["bounds"] = np.quantile(means, (0.025, 0.975))
-            self.data[var]["rel_bounds"] = np.quantile(self.data[var]["samples"], (0.025, 0.975), axis=0)
+            bounds = np.quantile(means, (0.025, 0.975))
+            self.data[var]["bounds"] = [round(bounds[0], 5), round(bounds[1], 5)]
+            rel_bounds = np.quantile(self.data[var]["samples"], (0.025, 0.975), axis=0)
+            self.data[var]["rel_bounds"] = [[round(b[0], 5), round(b[1], 5)] for b in rel_bounds.T]
 
         data = [
             self.variant_names,
             [dict(zip(self.states, i)) for i in self.concentrations],
             average_values,
-            self.relative_probs,
+            self.rel_probs,
             self.means,
             self.bounds,
             self.rel_bounds,
@@ -231,7 +233,7 @@ class DiscreteDataTest(BaseDataTest):
                 "concentration": concentration,
                 "prior": prior,
                 "mean": round(sum([x[-1] * sum(x[:-1]) / a_0 for x in zip(prior, concentration, self.states)]), 5),
-                "relative_probs": [round(sum(x) / a_0, 5) for x in zip(prior, concentration)],
+                "rel_probs": [round(sum(x) / a_0, 5) for x in zip(prior, concentration)],
             }
         elif name in self.variant_names and replace:
             msg = (
@@ -244,7 +246,7 @@ class DiscreteDataTest(BaseDataTest):
                 "concentration": concentration,
                 "prior": prior,
                 "mean": round(sum([x[-1] * sum(x[:-1]) / a_0 for x in zip(prior, concentration, self.states)]), 5),
-                "relative_probs": [round(sum(x) / a_0, 5) for x in zip(prior, concentration)],
+                "rel_probs": [round(sum(x) / a_0, 5) for x in zip(prior, concentration)],
             }
         elif name in self.variant_names and not replace:
             msg = (
@@ -260,7 +262,7 @@ class DiscreteDataTest(BaseDataTest):
             self.data[name]["mean"] = round(
                 sum([x[-1] * sum(x[:-1]) / a_0 for x in zip(prior, concentration_updated, self.states)]), 5
             )
-            self.data[name]["relative_probs"] = [round(sum(x) / a_0, 5) for x in zip(prior, concentration_updated)]
+            self.data[name]["rel_probs"] = [round(sum(x) / a_0, 5) for x in zip(prior, concentration_updated)]
 
     def add_variant_data(
         self,
@@ -296,7 +298,7 @@ class DiscreteDataTest(BaseDataTest):
 
         self.add_variant_data_agg(name, concentration, prior, replace)
 
-    def plot_distributions(self, control: str, fname: str = None, dpi: int = 300) -> plt.figure:
+    def plot_distributions(self, fname: str = None, dpi: int = 300) -> plt.figure:
         """
         For each variant, plot the posterior distribution for each state.
 
@@ -304,7 +306,6 @@ class DiscreteDataTest(BaseDataTest):
 
         Parameters
         ----------
-        control : The variant to treat as control; this variant will be subtracted from each other variant.
         fname : Filename to which to save the resultant image; if None, the image is not saved.
         dpi : DPI setting for saved image; used only when fname is not None.
         """

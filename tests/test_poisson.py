@@ -49,7 +49,7 @@ def test_stdevs(conv_test):
 
 
 def test_bounds(conv_test):
-    assert conv_test.bounds == [[2.66609, 4.52804], [2.90347, 4.83613], [2.72621, 4.43807]]
+    assert conv_test.bounds == [[2.52116, 4.74163], [2.75181, 5.05647], [2.5906, 4.63181]]
 
 
 def test_a_priors(conv_test):
@@ -104,7 +104,7 @@ def test_evaluate_assessment(conv_test_assessment):
         eval_report
         == [
             {
-                "bounds": [2.66609, 4.52804],
+                "bounds": [2.52116, 4.74163],
                 "expected_loss": 0.4793632,
                 "mean": 3.54545,
                 "obs_mean": 3.8,
@@ -114,7 +114,7 @@ def test_evaluate_assessment(conv_test_assessment):
                 "variant": "A",
             },
             {
-                "bounds": [2.90347, 4.83613],
+                "bounds": [2.75181, 5.05647],
                 "expected_loss": 0.2066501,
                 "mean": 3.81818,
                 "obs_mean": 4.1,
@@ -127,8 +127,14 @@ def test_evaluate_assessment(conv_test_assessment):
         and cf_pbbs == [0.36878, 0.63122]
         and assessment
         == {
-            "decision": "Stop and implement either variant.",
             "confidence": "Low",
+            "decision": "If you were to stop testing now, you could select either " "variant.",
+            "lower_bound": -1.33075,
+            "upper_bound": 1.8851,
+        }
+        != {
+            "confidence": "Low",
+            "decision": "Stop and implement either variant.",
             "lower_bound": -1.33075,
             "upper_bound": 1.8851,
         }
@@ -139,7 +145,7 @@ def test_evaluate(conv_test):
     eval_report, cf_pbbs, _ = conv_test.evaluate(closed_form=True, sim_count=2000000, seed=314)
     assert eval_report == [
         {
-            "bounds": [2.66609, 4.52804],
+            "bounds": [2.52116, 4.74163],
             "expected_loss": 0.5896207,
             "mean": 3.54545,
             "obs_mean": 3.8,
@@ -149,7 +155,7 @@ def test_evaluate(conv_test):
             "variant": "A",
         },
         {
-            "bounds": [2.90347, 4.83613],
+            "bounds": [2.75181, 5.05647],
             "expected_loss": 0.3169076,
             "mean": 3.81818,
             "obs_mean": 4.1,
@@ -159,7 +165,7 @@ def test_evaluate(conv_test):
             "variant": "B",
         },
         {
-            "bounds": [2.72621, 4.43807],
+            "bounds": [2.5906, 4.63181],
             "expected_loss": 0.5965555,
             "mean": 3.53846,
             "obs_mean": 4,
