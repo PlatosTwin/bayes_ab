@@ -15,12 +15,12 @@ logger = get_logger("bayes_ab")
 
 class DiscreteDataTest(BaseDataTest):
     """
-    Class for Bayesian A/B test for data with finite discrete states (i.e. categorical data
+    Class for Bayesian A/B test.js for data with finite discrete states (i.e. categorical data
     with numerical categories). As a real world examples we can think of dice rolls,
     1-5 star ratings, 1-10 ratings, etc.
 
     After class initialization, use add_variant methods to insert variant data.
-    Then to get results of the test, use for instance `evaluate` method.
+    Then to get results of the test.js, use for instance `evaluate` method.
     """
 
     def __init__(self, states: List[Union[float, int]]) -> None:
@@ -33,7 +33,7 @@ class DiscreteDataTest(BaseDataTest):
         """
         super().__init__()
         if not self.check_if_numerical(states):
-            raise ValueError("States in the test have to be numbers (int or float).")
+            raise ValueError("States in the test.js have to be numbers (int or float).")
         self.states = states
 
     @property
@@ -200,7 +200,7 @@ class DiscreteDataTest(BaseDataTest):
         replace: bool = True,
     ) -> None:
         """
-        Add variant data to test class using already aggregated discrete data.
+        Add variant data to test.js class using already aggregated discrete data.
 
         The default prior is Dirichlet(1,...,1), a non-informative prior which sets alpha = 1 for each state.
 
@@ -217,7 +217,7 @@ class DiscreteDataTest(BaseDataTest):
             raise ValueError("Variant name has to be a string.")
         if not len(self.states) == len(concentration):
             msg = (
-                f"Concentration list has to have same size as number of states in a test "
+                f"Concentration list has to have same size as number of states in a test.js "
                 f"{len(concentration)} != {len(self.states)}."
             )
             raise ValueError(msg)
@@ -272,7 +272,7 @@ class DiscreteDataTest(BaseDataTest):
         replace: bool = True,
     ) -> None:
         """
-        Add variant data to test class using raw discrete data.
+        Add variant data to test.js class using raw discrete data.
 
         Default prior setup is Dirichlet(1,...,1) which is low information prior
         (we can interpret it as prior 1 observation of each state).

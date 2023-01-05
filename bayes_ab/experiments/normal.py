@@ -17,10 +17,10 @@ logger = get_logger("bayes_ab")
 
 class NormalDataTest(BaseDataTest):
     """
-    Class for Bayesian A/B test for normal data.
+    Class for Bayesian A/B test.js for normal data.
 
     After class initialization, use add_variant methods to insert variant data.
-    Then to get results of the test, use for instance `evaluate` method.
+    Then to get results of the test.js, use for instance `evaluate` method.
     """
 
     def __init__(self) -> None:
@@ -134,7 +134,7 @@ class NormalDataTest(BaseDataTest):
         Returns
         -------
         confidence : Whether the recommendation is made with high or low confidence, based on width of bound.
-        decision : The recommendation of what to do given the test data.
+        decision : The recommendation of what to do given the test.js data.
         lower_bound : The lower bound of the HDI given by <interval>.
         upper_bound : The upper bound of the HDI given by <interval>.
         """
@@ -305,7 +305,7 @@ class NormalDataTest(BaseDataTest):
         replace: bool = True,
     ) -> None:
         """
-        Add variant data to test class using aggregated normal data.
+        Add variant data to test.js class using aggregated normal data.
         This can be convenient as aggregation can be done on database level.
 
         The goal of default prior setup is to be low information.
@@ -462,7 +462,7 @@ class NormalDataTest(BaseDataTest):
         replace: bool = True,
     ) -> None:
         """
-        Add variant data to test class using raw normal data.
+        Add variant data to test.js class using raw normal data.
 
         The goal of default prior setup is to be low information. It should be tuned with caution.
 

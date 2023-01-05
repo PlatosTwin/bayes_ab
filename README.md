@@ -148,19 +148,19 @@ data_a = rng.binomial(n=1, p=0.052, size=1500)
 # random 1x1200 array of 0/1 data with 6.7% probability for 1:
 data_b = rng.binomial(n=1, p=0.067, size=1200)
 
-# initialize a test:
+# initialize a test.js:
 test = BinaryDataTest()
 
 # add variant using raw data (arrays of zeros and ones) and specifying priors:
 test.add_variant_data("A", data_a, a_prior=10, b_prior=17)
 test.add_variant_data("B", data_b, a_prior=5, b_prior=30)
 # the default priors are a=b=1
-# test.add_variant_data("C", data_c)
+# test.js.add_variant_data("C", data_c)
 
 # add variant using aggregated data:
 test.add_variant_data_agg("C", total=1000, positives=50)
 
-# evaluate test:
+# evaluate test.js:
 test.evaluate(seed=314)
 
 # access simulation samples and evaluation metrics
@@ -225,18 +225,18 @@ data_a = rng.poisson(43, size=20)
 data_b = rng.poisson(39, size=25)
 data_c = rng.poisson(37, size=15)
 
-# initialize a test:
+# initialize a test.js:
 test = PoissonDataTest()
 
 # add variant using raw data (arrays of zeros and ones) and specifying priors:
 test.add_variant_data("A", data_a, a_prior=30, b_prior=7)
 test.add_variant_data("B", data_b, a_prior=5, b_prior=5)
-# test.add_variant_data("C", data_c)
+# test.js.add_variant_data("C", data_c)
 
 # add variant using aggregated data:
 test.add_variant_data_agg("C", total=len(data_c), obs_mean=np.mean(data_c), obs_sum=sum(data_c))
 
-# evaluate test:
+# evaluate test.js:
 test.evaluate(seed=314)
 
 # access simulation samples and evaluation metrics
@@ -300,18 +300,18 @@ data_a = rng.normal(6.9, 2, 500)
 data_b = rng.normal(6.89, 2, 800)
 data_c = rng.normal(7.0, 4, 500)
 
-# initialize a test:
+# initialize a test.js:
 test = NormalDataTest()
 
 # add variant using raw data:
 test.add_variant_data("A", data_a)
 test.add_variant_data("B", data_b, m_prior=5, n_prior=11, v_prior=10, s_2_prior=4)
-# test.add_variant_data("C", data_c)
+# test.js.add_variant_data("C", data_c)
 
 # add variant using aggregated data:
 test.add_variant_data_agg("C", len(data_c), sum(data_c), sum((data_c - np.mean(data_c)) ** 2), sum(np.square(data_c)))
 
-# evaluate test:
+# evaluate test.js:
 test.evaluate(sim_count=200000, seed=314)
 
 # access simulation samples and evaluation metrics
@@ -356,7 +356,7 @@ data_b = [4.0, 0, 3.3, 19.3, 18.5, 0, 0, 0, 12.9, 0, 0, 0, 10.2, 0, 0, 23.1, 0, 
 
 # adding variant using raw data:
 test.add_variant_data("A", data_a)
-# test.add_variant_data("B", data_b)
+# test.js.add_variant_data("B", data_b)
 
 # alternatively, variant can be also added using aggregated data:
 # (looks more complicated but for large data it can be quite handy to move around only these sums)
@@ -369,7 +369,7 @@ test.add_variant_data_agg(
     sum_logs_2=sum([np.square(np.log(x)) for x in data_b if x > 0])
 )
 
-# evaluate test:
+# evaluate test.js:
 test.evaluate(seed=21)
 
 # access simulation samples and evaluation metrics
@@ -411,7 +411,7 @@ data_a = [2, 5, 1, 4, 6, 2, 2, 6, 3, 2, 6, 3, 4, 6, 3, 1, 6, 3, 5, 6]
 data_b = [1, 2, 2, 2, 2, 3, 2, 3, 4, 2]
 data_c = [1, 3, 6, 5, 4]
 
-# initialize a test with all possible states (i.e. numerical categories):
+# initialize a test.js with all possible states (i.e. numerical categories):
 test = DiscreteDataTest(states=[1, 2, 3, 4, 5, 6])
 
 # add variant using raw data:
@@ -420,9 +420,9 @@ test.add_variant_data("B", data_b)
 test.add_variant_data("C", data_c)
 
 # add variant using aggregated data:
-# test.add_variant_data_agg("C", [1, 0, 1, 1, 1, 1]) # equivalent to rolls in data_c
+# test.js.add_variant_data_agg("C", [1, 0, 1, 1, 1, 1]) # equivalent to rolls in data_c
 
-# evaluate test:
+# evaluate test.js:
 test.evaluate(sim_count=200000, seed=52)
 
 # access simulation samples and evaluation metrics

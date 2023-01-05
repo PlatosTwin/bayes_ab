@@ -17,10 +17,10 @@ logger = get_logger("bayes_ab")
 
 class BinaryDataTest(BaseDataTest):
     """
-    Class for Bayesian A/B test for binary-like data (conversions, successes, ...).
+    Class for Bayesian A/B test.js for binary-like data (conversions, successes, ...).
 
     After class initialization, use add_variant methods to insert variant data.
-    Then to get results of the test, use for instance `evaluate` method.
+    Then to get results of the test.js, use for instance `evaluate` method.
     """
 
     def __init__(self) -> None:
@@ -109,7 +109,7 @@ class BinaryDataTest(BaseDataTest):
     def _closed_form_bernoulli(self) -> dict:
         """
         Calculate the probability to beat all via a closed-form solution.
-        Implemented for up to three variants only; will generate a warning if run for test with
+        Implemented for up to three variants only; will generate a warning if run for test.js with
         many observations. For tests with many observations, the user may choose to implement an
         asymptotic forumla, as described by Chris Stucchio here:
         https://www.chrisstucchio.com/blog/2014/bayesian_asymptotics.html.
@@ -214,7 +214,7 @@ class BinaryDataTest(BaseDataTest):
         Returns
         -------
         confidence : Whether the recommendation is made with high or low confidence, based on width of bound.
-        decision : The recommendation of what to do given the test data.
+        decision : The recommendation of what to do given the test.js data.
         lower_bound : The lower bound of the HDI given by <interval>.
         upper_bound : The upper bound of the HDI given by <interval>.
         """
@@ -353,7 +353,7 @@ class BinaryDataTest(BaseDataTest):
         replace: bool = True,
     ) -> None:
         """
-        Add variant data to test class using already aggregated binary data.
+        Add variant data to test.js class using already aggregated binary data.
 
         The default prior is Beta(1, 1), which is the Bayes-Laplace non-informative prior. Other
         common non-informative priors are the Jeffreys beta(1/2, 1/2) and Haldane beta(0, 0).
@@ -491,7 +491,7 @@ class BinaryDataTest(BaseDataTest):
         replace: bool = True,
     ) -> None:
         """
-        Add variant data to test class using aggregated binary data.
+        Add variant data to test.js class using aggregated binary data.
         This can be convenient as aggregation can be done on database level.
 
         Default prior is Beta(1, 1), which is the Bayes-Laplace non-informative prior. Other

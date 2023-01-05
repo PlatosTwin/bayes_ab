@@ -22,7 +22,7 @@ data_a = rng.poisson(43, size=200)
 data_b = rng.poisson(43, size=250)
 data_c = rng.poisson(38, size=150)
 
-# initialize a test:
+# initialize a test.js:
 test = PoissonDataTest()
 
 # add variant using raw data (arrays of zeros and ones) and informative priors:
@@ -30,7 +30,7 @@ test.add_variant_data("A", data_a, a_prior=10, b_prior=17)
 test.add_variant_data("B", data_b, a_prior=5, b_prior=30)
 test.add_variant_data("C", data_c, a_prior=10, b_prior=10)
 
-# evaluate test:
+# evaluate test.js:
 test.evaluate(closed_form=False, sim_count=2000000)
 
 # access simulation samples and evaluation metrics
@@ -76,7 +76,7 @@ xmin, xmax = min_max(xmin, xmax, x, y)
 
 ax.set_xlim(xmin * 0.95, xmax * 1.05)
 ax.legend()
-plt.title("Poisson test: sampled posterior distribution vs. analytical posterior distribution")
+plt.title("Poisson test.js: sampled posterior distribution vs. analytical posterior distribution")
 
 fig.tight_layout()
 

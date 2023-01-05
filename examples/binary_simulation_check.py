@@ -23,7 +23,7 @@ data_a = rng.binomial(n=1, p=0.052, size=1500)
 # random 1x1200 array of 0/1 data with 6.7% probability for 1:
 data_b = rng.binomial(n=1, p=0.067, size=1200)
 
-# initialize a test:
+# initialize a test.js:
 test = BinaryDataTest()
 
 # add variant using raw data (arrays of zeros and ones) and informative priors:
@@ -33,7 +33,7 @@ test.add_variant_data("B", data_b, a_prior=5, b_prior=30)
 # add variant using aggregated data and non-informative priors:
 test.add_variant_data_agg("C", total=1000, positives=50)
 
-# evaluate test:
+# evaluate test.js:
 test.evaluate(closed_form=False, sim_count=2000000)
 
 # access simulation samples and evaluation metrics
@@ -80,7 +80,7 @@ xmin, xmax = min_max(xmin, xmax, x, y)
 ax.xaxis.set_major_formatter(mtick.PercentFormatter())
 ax.set_xlim(xmin * 80, xmax * 120)
 ax.legend()
-plt.title("Binary test: sampled posterior distribution vs. analytical posterior distribution")
+plt.title("Binary test.js: sampled posterior distribution vs. analytical posterior distribution")
 
 fig.tight_layout()
 

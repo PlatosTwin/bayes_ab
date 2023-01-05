@@ -4,7 +4,7 @@ import numpy as np
 
 def print_dirichlet_evaluation(res: list, states: list) -> None:
     """
-    Pretty-print output of running standard Dirichlet test.
+    Pretty-print output of running standard Dirichlet test.js.
     """
 
     tab = PrettyTable()
@@ -65,7 +65,7 @@ def print_dirichlet_evaluation(res: list, states: list) -> None:
 
 def print_normal_evaluation(res: list) -> None:
     """
-    Pretty-print output of running normal test.
+    Pretty-print output of running normal test.js.
     """
     tab = PrettyTable()
     tab.field_names = [
@@ -109,7 +109,7 @@ def print_normal_evaluation(res: list) -> None:
 
 def print_poisson_evaluation(res: list) -> None:
     """
-    Pretty-print output of running Poisson test.
+    Pretty-print output of running Poisson test.js.
     """
     tab = PrettyTable()
     tab.field_names = [
@@ -150,7 +150,7 @@ def print_poisson_evaluation(res: list) -> None:
 
 def print_bernoulli_evaluation(res: list) -> None:
     """
-    Pretty-print output of running standard binary test.
+    Pretty-print output of running standard binary test.js.
     """
     tab = PrettyTable()
     tab.field_names = [

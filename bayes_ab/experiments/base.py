@@ -4,7 +4,7 @@ import warnings
 
 class BaseDataTest:
     """
-    Base class for Bayesian A/B test.
+    Base class for Bayesian A/B test.js.
     """
 
     def __init__(self) -> None:

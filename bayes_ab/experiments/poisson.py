@@ -20,10 +20,10 @@ logger = get_logger("bayes_ab")
 
 class PoissonDataTest(BaseDataTest):
     """
-    Class for Bayesian A/B test for count data.
+    Class for Bayesian A/B test.js for count data.
 
     After class initialization, use add_variant methods to insert variant data.
-    Then to get results of the test, use for instance `evaluate` method.
+    Then to get results of the test.js, use for instance `evaluate` method.
     """
 
     def __init__(self) -> None:
@@ -121,7 +121,7 @@ class PoissonDataTest(BaseDataTest):
     def _closed_form_poisson(self) -> dict:
         """
         Calculate the probability to beat all via a closed-form solution.
-        Implemented for up to three variants only; will generate a warning if run for test with
+        Implemented for up to three variants only; will generate a warning if run for test.js with
         many observations.
 
         Credit: Closed-form chance-to-beat solutions (for two and three variants) are due to
@@ -228,7 +228,7 @@ class PoissonDataTest(BaseDataTest):
         -------
         confidence : Whether the recommendation is made with high or low confidence, based on width
         of bound.
-        decision : The recommendation of what to do given the test data.
+        decision : The recommendation of what to do given the test.js data.
         lower_bound : The lower bound of the HDI given by <interval>.
         upper_bound : The upper bound of the HDI given by <interval>.
         """
@@ -358,7 +358,7 @@ class PoissonDataTest(BaseDataTest):
         replace: bool = True,
     ) -> None:
         """
-        Add variant data to test class using aggregated normal data.
+        Add variant data to test.js class using aggregated normal data.
         This can be convenient as aggregation can be done on database level.
 
         The goal of default prior setup is to be low information.
@@ -464,7 +464,7 @@ class PoissonDataTest(BaseDataTest):
         replace: bool = True,
     ) -> None:
         """
-        Add variant data to test class using raw normal data.
+        Add variant data to test.js class using raw normal data.
 
         The goal of default prior setup is to be low information. It should be tuned with caution.
 

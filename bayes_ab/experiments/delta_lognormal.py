@@ -12,14 +12,14 @@ logger = get_logger("bayes_ab")
 
 class DeltaLognormalDataTest(BaseDataTest):
     """
-    Class for Bayesian A/B test for delta-lognormal data (log-normal with possible zeros).
+    Class for Bayesian A/B test.js for delta-lognormal data (log-normal with possible zeros).
     Delta-lognormal data is typical case of revenue/session data where many
     sessions are with 0 revenue.
     To handle this data, the evaluation methods are combining binary bayes model for
     zero vs non-zero "conversion" and log-normal model for non-zero values.
 
     After class initialization, use add_variant methods to insert variant data.
-    Then to get results of the test, use for instance `evaluate` method.
+    Then to get results of the test.js, use for instance `evaluate` method.
     """
 
     def __init__(self) -> None:
@@ -167,7 +167,7 @@ class DeltaLognormalDataTest(BaseDataTest):
         replace: bool = True,
     ) -> None:
         """
-        Add variant data to test class using aggregated delta-lognormal data.
+        Add variant data to test.js class using aggregated delta-lognormal data.
         This can be convenient as aggregation can be done on database level.
 
         The goal of default prior setup is to be low information.
@@ -262,7 +262,7 @@ class DeltaLognormalDataTest(BaseDataTest):
         replace: bool = True,
     ) -> None:
         """
-        Add variant data to test class using raw delta-lognormal data.
+        Add variant data to test.js class using raw delta-lognormal data.
 
         The goal of default prior setup is to be low information. It should be tuned with caution.
 
